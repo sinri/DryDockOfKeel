@@ -1,6 +1,6 @@
-package io.github.sinri.drydock.test;
+package io.github.sinri.drydock.test.naval;
 
-import io.github.sinri.drydock.ironclad.Ironclad;
+import io.github.sinri.drydock.naval.ironclad.Ironclad;
 import io.github.sinri.keel.web.http.KeelHttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;

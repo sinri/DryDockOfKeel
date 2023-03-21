@@ -1,6 +1,6 @@
-package io.github.sinri.drydock.test;
+package io.github.sinri.drydock.test.naval;
 
-import io.github.sinri.drydock.caravel.Caravel;
+import io.github.sinri.drydock.naval.caravel.Caravel;
 import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 

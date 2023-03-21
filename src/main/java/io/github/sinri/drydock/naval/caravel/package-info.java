@@ -1,1 +1,1 @@
-package io.github.sinri.drydock.caravel;
+package io.github.sinri.drydock.naval.caravel;

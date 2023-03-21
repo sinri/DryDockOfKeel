@@ -36,3 +36,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+.idea/
+log/
+src/main/resources/config.properties
+src/test/resources/config.properties

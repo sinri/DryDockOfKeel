@@ -1,4 +1,4 @@
-package io.github.sinri.drydock.galley;
+package io.github.sinri.drydock.naval.galley;
 
 import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.logger.event.KeelEventLog;

@@ -1,6 +1,6 @@
-package io.github.sinri.drydock.caravel;
+package io.github.sinri.drydock.naval.caravel;
 
-import io.github.sinri.drydock.galley.Galley;
+import io.github.sinri.drydock.naval.galley.Galley;
 import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
@@ -10,8 +10,6 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.function.Supplier;
 
 /**
  * 轻快帆船。

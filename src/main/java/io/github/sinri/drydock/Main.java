@@ -1,4 +1,4 @@
-package io.github.sinri;
+package io.github.sinri.drydock;
 
 public class Main {
     public static void main(String[] args) {

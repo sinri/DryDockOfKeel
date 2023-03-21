@@ -1,1 +1,1 @@
-package io.github.sinri.drydock.ironclad;
+package io.github.sinri.drydock.naval.ironclad;

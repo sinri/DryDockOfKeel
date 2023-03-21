@@ -1,1 +1,1 @@
-package io.github.sinri.drydock.galley;
+package io.github.sinri.drydock.naval.galley;

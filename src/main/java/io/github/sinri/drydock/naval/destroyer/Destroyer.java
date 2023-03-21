@@ -1,7 +1,7 @@
-package io.github.sinri.drydock.destroyer;
+package io.github.sinri.drydock.naval.destroyer;
 
-import io.github.sinri.drydock.caravel.AliyunSLSAdapterImpl;
-import io.github.sinri.drydock.ironclad.Ironclad;
+import io.github.sinri.drydock.naval.caravel.AliyunSLSAdapterImpl;
+import io.github.sinri.drydock.naval.ironclad.Ironclad;
 import io.github.sinri.keel.servant.funnel.KeelFunnel;
 import io.github.sinri.keel.servant.sundial.KeelSundial;
 import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
@@ -66,7 +66,7 @@ abstract public class Destroyer extends Ironclad {
     }
 
 
-    public void putIntoFunnel(Supplier<Future<Void>> supplier) {
+    public void funnel(Supplier<Future<Void>> supplier) {
         Objects.requireNonNull(funnel).add(supplier);
     }
 }

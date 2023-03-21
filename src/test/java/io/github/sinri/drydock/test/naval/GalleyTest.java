@@ -1,6 +1,6 @@
-package io.github.sinri.drydock.test;
+package io.github.sinri.drydock.test.naval;
 
-import io.github.sinri.drydock.galley.Galley;
+import io.github.sinri.drydock.naval.galley.Galley;
 import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 
