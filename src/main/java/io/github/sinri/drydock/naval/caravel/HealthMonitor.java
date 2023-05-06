@@ -6,6 +6,9 @@ import io.github.sinri.keel.verticles.KeelVerticleBase;
 import io.vertx.core.json.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * @since 1.0.0
+ */
 public class HealthMonitor extends KeelVerticleBase {
     private final KeelEventLogger topicEventLogger;
 

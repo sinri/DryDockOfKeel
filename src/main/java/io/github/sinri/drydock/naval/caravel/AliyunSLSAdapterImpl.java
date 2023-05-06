@@ -18,11 +18,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @since 1.0.0
+ */
 public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
     public static final String TopicHealthMonitor = "HealthMonitor";
     public static final String TopicSundial="Sundial";
-    public static final String TopicFunnel="Funnel";
-//    public static final String TOPIC_RECEPTIONIST = "receptionist";
+    public static final String TopicFunnel = "Funnel";
+    public static final String TopicQueue = "Queue";
+    //    public static final String TOPIC_RECEPTIONIST = "receptionist";
 //    public static final String TOPIC_RECEPTIONIST_SUPPORT = "receptionist_support";
 //    public static final String TOPIC_JOB = "job";
 //    public static final String TOPIC_SCHEDULER = "scheduler";

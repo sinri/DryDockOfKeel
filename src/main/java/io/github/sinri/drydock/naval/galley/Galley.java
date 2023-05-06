@@ -13,6 +13,8 @@ import io.vertx.core.VertxOptions;
  * Absolutely customized VertxOptions to initialize, standalone or clustered.
  * Pure STDOUT logger.
  * Fundamental Keel Initialization.
+ *
+ * @since 1.0.0
  */
 public abstract class Galley {
     private KeelEventLogCenter logCenter;
@@ -34,7 +36,7 @@ public abstract class Galley {
         return new VertxOptions();
     }
 
-    public void launch() {
+    public final void launch() {
         VertxOptions vertxOptions = buildVertxOptions();
         Keel.initializeVertx(vertxOptions)
                 .onSuccess(done -> {

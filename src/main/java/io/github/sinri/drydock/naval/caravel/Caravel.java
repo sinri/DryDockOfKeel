@@ -17,6 +17,8 @@ import org.jetbrains.annotations.Nullable;
  * Load one configure file.
  * Aliyun SLS support.
  * Health Monitor support.
+ *
+ * @since 1.0.0
  */
 public abstract class Caravel extends Galley {
 

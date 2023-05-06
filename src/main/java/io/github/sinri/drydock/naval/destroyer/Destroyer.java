@@ -12,6 +12,13 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+/**
+ * 驱逐舰。
+ * Based on Ironclad.
+ * Support Sundial and Funnel.
+ *
+ * @since 1.0.0
+ */
 abstract public class Destroyer extends Ironclad {
     private KeelSundial sundial = null;
     private KeelFunnel funnel = null;
