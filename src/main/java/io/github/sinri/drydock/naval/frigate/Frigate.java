@@ -16,11 +16,14 @@ import java.util.Collection;
  */
 public abstract class Frigate extends Caravel {
 
+    public Frigate() {
+        super();
+    }
+
     @Override
     final protected void launchAsCaravel() {
         KeelQueue queue = this.buildQueue();
         if (queue != null) {
-            queue.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicQueue, null));
             queue.deployMe(new DeploymentOptions().setWorker(true));
         }
 
@@ -28,6 +31,8 @@ public abstract class Frigate extends Caravel {
         if (sundial != null) {
             sundial.deployMe(new DeploymentOptions().setWorker(true));
         }
+
+        launchAsFrigate();
     }
 
     abstract protected void launchAsFrigate();
