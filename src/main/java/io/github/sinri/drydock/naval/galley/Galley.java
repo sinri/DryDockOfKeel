@@ -1,6 +1,7 @@
 package io.github.sinri.drydock.naval.galley;
 
 import io.github.sinri.keel.facade.Keel;
+import io.github.sinri.keel.helper.KeelHelpers;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
@@ -17,11 +18,18 @@ import io.vertx.core.VertxOptions;
  * @since 1.0.0
  */
 public abstract class Galley {
+    private final KeelEventLogger navalLogger;
     private KeelEventLogCenter logCenter;
     public static final int EXIT_CODE_FOR_KEEL_INIT_FAILED = 1;
 
     public Galley() {
+        this.navalLogger = KeelOutputEventLogCenter.getInstance()
+                .createLogger("DryDock::Naval", x -> x
+                        .put("local_address", KeelHelpers.netHelper().getLocalHostAddress()));
+    }
 
+    protected KeelEventLogger getNavalLogger() {
+        return navalLogger;
     }
 
     protected KeelEventLogCenter buildLogCenter() {
@@ -40,6 +48,8 @@ public abstract class Galley {
         VertxOptions vertxOptions = buildVertxOptions();
         Keel.initializeVertx(vertxOptions)
                 .onSuccess(done -> {
+                    getNavalLogger().info("KEEL INITIALIZED");
+
                     logCenter = buildLogCenter();
                     launchAsGalley();
                 })
@@ -49,7 +59,7 @@ public abstract class Galley {
     abstract protected void launchAsGalley();
 
     protected void shipwreck(Throwable throwable) {
-        KeelOutputEventLogCenter.instantLogger().exception(throwable, "Keel Initialized");
+        getNavalLogger().exception(throwable, "Failed to initialize Keel");
         System.exit(EXIT_CODE_FOR_KEEL_INIT_FAILED);
     }
 

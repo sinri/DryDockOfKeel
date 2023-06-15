@@ -32,10 +32,15 @@ public abstract class Caravel extends Galley {
 
     @Override
     final protected void launchAsGalley() {
-        HealthMonitor healthMonitor = buildHealthMonitor();
-        healthMonitor.deployMe(new DeploymentOptions().setWorker(true));
-
-        launchAsCaravel();
+        buildHealthMonitor()
+                .deployMe(new DeploymentOptions().setWorker(true))
+                .onSuccess(done -> {
+                    getNavalLogger().info("Deployed HealthMonitor");
+                    launchAsCaravel();
+                })
+                .onFailure(throwable -> {
+                    getNavalLogger().exception(throwable, "Failed to deploy HealthMonitor");
+                });
     }
 
     abstract protected void launchAsCaravel();

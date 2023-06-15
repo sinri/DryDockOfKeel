@@ -5,8 +5,10 @@ import io.github.sinri.drydock.naval.ironclad.Ironclad;
 import io.github.sinri.keel.servant.funnel.KeelFunnel;
 import io.github.sinri.keel.servant.sundial.KeelSundial;
 import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -39,28 +41,63 @@ abstract public class Destroyer extends Ironclad {
     }
 
     @Override
-    final protected void launchAsIronclad() {
-        if (sundial != null) {
-            sundial = new KeelSundial() {
-                @Override
-                protected Future<Collection<KeelSundialPlan>> fetchPlans() {
-                    return reloadSundialPlans();
-                }
-            };
-            sundial.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicSundial, null));
-            sundial.deployMe(new DeploymentOptions().setWorker(true));
-        }
-
-        if (funnel != null) {
-            funnel.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicFunnel, null));
-            funnel.deployMe(new DeploymentOptions().setWorker(true));
-        }
-
-        launchAsDestroyer();
+    final protected void launchAsIronclad(Promise<Void> promise) {
+        getNavalLogger().info("to deploy sundial and funnel");
+        CompositeFuture.all(
+                        Future.succeededFuture()
+                                .compose(v -> {
+                                    if (sundial != null) {
+                                        sundial = new KeelSundial() {
+                                            @Override
+                                            protected Future<Collection<KeelSundialPlan>> fetchPlans() {
+                                                return reloadSundialPlans();
+                                            }
+                                        };
+                                        sundial.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicSundial, null));
+                                        return sundial.deployMe(new DeploymentOptions().setWorker(true));
+                                    } else {
+                                        return Future.succeededFuture("SUNDIAL DISABLED");
+                                    }
+                                })
+                                .onSuccess(sundialDeploymentID -> {
+                                    getNavalLogger().info("DEPLOY SUNDIAL: " + sundialDeploymentID);
+                                })
+                                .onFailure(sundialDeployFailure -> {
+                                    getNavalLogger().exception(sundialDeployFailure, "DEPLOY SUNDIAL FAILED");
+                                }),
+                        Future.succeededFuture()
+                                .compose(v -> {
+                                    if (funnel != null) {
+                                        funnel.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicFunnel, null));
+                                        return funnel.deployMe(new DeploymentOptions().setWorker(true));
+                                    } else {
+                                        return Future.succeededFuture("FUNNEL DISABLED");
+                                    }
+                                })
+                                .onSuccess(sundialDeploymentID -> {
+                                    getNavalLogger().info("DEPLOY FUNNEL: " + sundialDeploymentID);
+                                })
+                                .onFailure(sundialDeployFailure -> {
+                                    getNavalLogger().exception(sundialDeployFailure, "DEPLOY FUNNEL FAILED");
+                                })
+                )
+                .compose(compositeFuture -> {
+                    Promise<Void> destroyerPromise = Promise.promise();
+                    launchAsDestroyer(destroyerPromise);
+                    return destroyerPromise.future();
+                })
+                .onComplete(promise);
+        getNavalLogger().info("Make Ironclad Strong Again!");
     }
 
+    @Deprecated(since = "1.0.1")
     protected void launchAsDestroyer() {
         // if anymore to prepare
+    }
+
+    protected void launchAsDestroyer(Promise<Void> promise) {
+        launchAsDestroyer();
+        promise.complete();
     }
 
     /**

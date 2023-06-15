@@ -88,6 +88,7 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
 
             list.forEach(eventLog -> {
                 LogItem logItem = new LogItem(Math.toIntExact(eventLog.timestamp() / 1000));
+                //logItem.PushBack("_timestamp_in_ms", eventLog.timestampExpression());
                 logItem.PushBack(KeelEventLog.RESERVED_KEY_LEVEL, eventLog.level().name());
                 eventLog.forEach(entry -> {
                     if (entry.getValue() == null) {
