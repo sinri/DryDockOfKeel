@@ -9,7 +9,6 @@ import io.github.sinri.keel.web.http.KeelHttpServer;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
-import org.checkerframework.checker.units.qual.K;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -21,7 +20,7 @@ public class DestroyerTest extends Destroyer {
     }
 
     public static void main(String[] args) {
-        new DestroyerTest("config.properties",true,true)
+        new DestroyerTest("config.properties", true, true)
                 .launch();
     }
 
@@ -35,7 +34,7 @@ public class DestroyerTest extends Destroyer {
 
             @Override
             public KeelCronExpression cronExpression() {
-                return new KeelCronExpression( "* * * * *");
+                return new KeelCronExpression("* * * * *");
             }
 
             @Override
@@ -49,8 +48,8 @@ public class DestroyerTest extends Destroyer {
     @Override
     protected void launchAsDestroyer() {
         KeelEventLogger funnelLogger = generateLogger("DestroyerTest-Funnel", null);
-        Keel.getVertx().setPeriodic(30_000L,timer->{
-            this.funnel(()->{
+        Keel.getVertx().setPeriodic(30_000L, timer -> {
+            this.funnel(() -> {
                 funnelLogger.info("funnel event");
                 return Future.succeededFuture();
             });
@@ -60,6 +59,11 @@ public class DestroyerTest extends Destroyer {
     @Override
     protected KeelHttpServer buildHttpServer() {
         return new HS();
+    }
+
+    @Override
+    protected Future<Void> loadRemoteConfiguration() {
+        return Future.succeededFuture();
     }
 
     public static class HS extends KeelHttpServer {

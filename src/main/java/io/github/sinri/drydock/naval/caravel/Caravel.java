@@ -21,12 +21,18 @@ import org.jetbrains.annotations.Nullable;
  * @since 1.0.0
  */
 public abstract class Caravel extends Galley {
+    private final String configPropertiesFile;
 
     public Caravel() {
         this("config.properties");
     }
 
     public Caravel(String configPropertiesFile) {
+        this.configPropertiesFile = configPropertiesFile;
+    }
+
+    @Override
+    protected void loadLocalConfiguration() {
         Keel.getConfiguration().loadPropertiesFile(configPropertiesFile);
     }
 

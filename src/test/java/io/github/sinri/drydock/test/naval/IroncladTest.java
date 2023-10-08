@@ -2,6 +2,7 @@ package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.ironclad.Ironclad;
 import io.github.sinri.keel.web.http.KeelHttpServer;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
@@ -18,6 +19,11 @@ public class IroncladTest extends Ironclad {
     @Override
     protected KeelHttpServer buildHttpServer() {
         return new HS();
+    }
+
+    @Override
+    protected Future<Void> loadRemoteConfiguration() {
+        return Future.succeededFuture();
     }
 
     public static class HS extends KeelHttpServer {
