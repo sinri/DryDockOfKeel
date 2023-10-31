@@ -41,3 +41,4 @@ build/
 log/
 src/main/resources/config.properties
 src/test/resources/config.properties
+/dependency-reduced-pom.xml

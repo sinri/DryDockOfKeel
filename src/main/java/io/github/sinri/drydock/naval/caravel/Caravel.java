@@ -56,9 +56,17 @@ public abstract class Caravel extends Galley {
         return new HealthMonitor(topicEventLogger);
     }
 
+    /**
+     * @since 1.0.6 Add a Naval Log when create Aliyun SLS Log Center failed.
+     */
     @Override
     protected KeelEventLogCenter buildLogCenter() {
-        return new KeelAsyncEventLogCenter(new AliyunSLSAdapterImpl());
+        try {
+            return new KeelAsyncEventLogCenter(new AliyunSLSAdapterImpl());
+        } catch (Throwable e) {
+            getNavalLogger().exception(e, "Failed in io.github.sinri.drydock.naval.caravel.Caravel.buildLogCenter");
+            throw e;
+        }
     }
 
     @Override
