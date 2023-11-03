@@ -1,20 +1,20 @@
 package io.github.sinri.drydock.naval.frigate;
 
-import io.github.sinri.drydock.naval.caravel.AliyunSLSAdapterImpl;
+import io.github.sinri.drydock.naval.boat.QueueMixin;
+import io.github.sinri.drydock.naval.boat.SundialMixin;
 import io.github.sinri.drydock.naval.caravel.Caravel;
 import io.github.sinri.keel.servant.queue.KeelQueue;
-import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
 import io.github.sinri.keel.servant.sundial.KeelSundial;
-import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
-
-import java.util.Collection;
 
 /**
+ * 护卫舰。
+ * 专门搞队列和定时任务，不提供HTTP服务。
+ *
  * @since 1.0.1
+ * @since 1.1.0
  */
-public abstract class Frigate extends Caravel {
+public abstract class Frigate extends Caravel implements QueueMixin, SundialMixin {
 
     public Frigate() {
         super();
@@ -36,65 +36,4 @@ public abstract class Frigate extends Caravel {
     }
 
     abstract protected void launchAsFrigate();
-
-    /**
-     * @return an instance of KeelSundial, or null to turn off sundial
-     */
-    protected KeelSundial buildSundial() {
-        var sundial = new KeelSundial() {
-            @Override
-            protected Future<Collection<KeelSundialPlan>> fetchPlans() {
-                return fetchSundialPlans();
-            }
-        };
-        sundial.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicSundial, null));
-        return sundial;
-    }
-
-    /**
-     * If sundial is turned on, it would be called to refresh sundial plans regularly.
-     *
-     * @return a future of: Collection of KeelSundialPlan, or null for NOT MODIFIED
-     */
-    protected Future<Collection<KeelSundialPlan>> fetchSundialPlans() {
-        // NOT MODIFIED
-        return null;
-    }
-
-    /**
-     * You must override buildQueueNextTaskSeeker and buildSignalReader if queue is turned on.
-     *
-     * @return an instance of KeelQueue, or null to turn off queue
-     */
-    protected KeelQueue buildQueue() {
-        var queue = new KeelQueue() {
-            @Override
-            protected KeelQueueNextTaskSeeker getNextTaskSeeker() {
-                return buildQueueNextTaskSeeker();
-            }
-
-            @Override
-            protected SignalReader getSignalReader() {
-                return buildSignalReader();
-            }
-        };
-        queue.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicQueue, null));
-        return queue;
-    }
-
-    /**
-     * @return an instance of KeelQueueNextTaskSeeker
-     */
-    protected KeelQueueNextTaskSeeker buildQueueNextTaskSeeker() {
-        return () -> Future.failedFuture(new Exception("buildQueueNextTaskSeeker TO BE OVERRODE"));
-    }
-
-    protected KeelQueue.SignalReader buildSignalReader() {
-        return new KeelQueue.SignalReader() {
-            @Override
-            public Future<KeelQueue.QueueSignal> readSignal() {
-                return Future.failedFuture(new Exception("readSignal TO BE OVERRODE"));
-            }
-        };
-    }
 }

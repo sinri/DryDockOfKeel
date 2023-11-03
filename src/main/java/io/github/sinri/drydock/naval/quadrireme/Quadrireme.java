@@ -8,9 +8,10 @@ import io.github.sinri.drydock.naval.galley.Galley;
  */
 @Deprecated
 abstract public class Quadrireme extends Galley {
+
     @Override
-    final protected void launchAsGalley() {
-        this.launchAsQuadrireme();
+    protected void launchAsGalley() {
+        launchAsQuadrireme();
     }
 
     abstract protected void launchAsQuadrireme();

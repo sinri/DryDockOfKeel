@@ -21,34 +21,42 @@ import org.jetbrains.annotations.Nullable;
  * @since 1.0.0
  */
 public abstract class Caravel extends Galley {
-    private final String configPropertiesFile;
 
-    public Caravel() {
-        this("config.properties");
-    }
-
-    public Caravel(String configPropertiesFile) {
-        this.configPropertiesFile = configPropertiesFile;
-    }
 
     @Override
     protected void loadLocalConfiguration() {
-        Keel.getConfiguration().loadPropertiesFile(configPropertiesFile);
+        Keel.getConfiguration().loadPropertiesFile("config.properties");
     }
 
     @Override
     final protected void launchAsGalley() {
-        buildHealthMonitor()
-                .deployMe(new DeploymentOptions().setWorker(true))
+        // 航海日志共享大计
+        this.getNavalLogger().addBypassLogger(
+                generateLogger(
+                        AliyunSLSAdapterImpl.TopicNaval,
+                        log -> log.put("warship", getClass().getName())
+                )
+        );
+        // 加载健康检查模块
+        buildHealthMonitor().deployMe(
+                        new DeploymentOptions()
+                                .setWorker(true)
+                )
                 .onSuccess(done -> {
                     getNavalLogger().info("Deployed HealthMonitor");
+                    // 成功加载健康检查模块之后，为轻快帆船加载模块。
                     launchAsCaravel();
                 })
                 .onFailure(throwable -> {
                     getNavalLogger().exception(throwable, "Failed to deploy HealthMonitor");
+                    // 如果无法加载健康检查模块，直接自沉。
+                    sink();
                 });
     }
 
+    /**
+     * 为轻快帆船加载模块。
+     */
     abstract protected void launchAsCaravel();
 
     public HealthMonitor buildHealthMonitor() {

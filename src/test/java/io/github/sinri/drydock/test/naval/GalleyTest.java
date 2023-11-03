@@ -17,7 +17,7 @@ public class GalleyTest extends Galley {
     }
 
     @Override
-    protected void launchAsGalley() {
+    protected void launchAsWarship() {
         KeelEventLogger logger = generateLogger("GalleyTest", null);
         logger.info("launched");
         Keel.getVertx().close();

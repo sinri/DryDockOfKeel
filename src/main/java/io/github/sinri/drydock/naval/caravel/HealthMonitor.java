@@ -20,6 +20,9 @@ public class HealthMonitor extends KeelVerticleBase {
         return this.topicEventLogger;
     }
 
+    /**
+     * 如果需要初始化一些数据记录器等，就在这里。
+     */
     protected void prepare() {
 
     }
@@ -32,8 +35,9 @@ public class HealthMonitor extends KeelVerticleBase {
     @Override
     public void start() {
         prepare();
-        new KeelRuntimeMonitor()
-                .startRuntimeMonitor(60_000L, monitorSnapshot -> {
+        new KeelRuntimeMonitor().startRuntimeMonitor(
+                60_000L,
+                monitorSnapshot -> {
                     topicEventLogger.info(eventLog -> {
                         var snapshot = new JsonObject()
                                 .put("gc", monitorSnapshot.getGCStat().toJsonObject())
@@ -45,6 +49,7 @@ public class HealthMonitor extends KeelVerticleBase {
                         }
                         eventLog.put("snapshot", snapshot);
                     });
-                });
+                }
+        );
     }
 }

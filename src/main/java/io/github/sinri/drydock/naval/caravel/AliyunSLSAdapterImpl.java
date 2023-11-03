@@ -22,14 +22,12 @@ import java.util.Objects;
  * @since 1.0.0
  */
 public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
+    public static final String TopicNaval = "Naval";
     public static final String TopicHealthMonitor = "HealthMonitor";
-    public static final String TopicSundial="Sundial";
+    public static final String TopicSundial = "Sundial";
     public static final String TopicFunnel = "Funnel";
     public static final String TopicQueue = "Queue";
-    //    public static final String TOPIC_RECEPTIONIST = "receptionist";
-//    public static final String TOPIC_RECEPTIONIST_SUPPORT = "receptionist_support";
-//    public static final String TOPIC_JOB = "job";
-//    public static final String TOPIC_SCHEDULER = "scheduler";
+    public static final String TopicReceptionist = "Receptionist";
     private static boolean disabled;
     private final String project;
     private final String logstore;
@@ -123,7 +121,6 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
                 this.producer.close();
                 promise.complete();
             } catch (InterruptedException | ProducerException e) {
-                //throw new RuntimeException(e);
                 promise.fail(e);
             }
         } else {

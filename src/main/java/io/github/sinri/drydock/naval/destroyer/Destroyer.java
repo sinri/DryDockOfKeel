@@ -1,113 +1,100 @@
 package io.github.sinri.drydock.naval.destroyer;
 
-import io.github.sinri.drydock.naval.caravel.AliyunSLSAdapterImpl;
+import io.github.sinri.drydock.naval.boat.FunnelMixin;
+import io.github.sinri.drydock.naval.boat.QueueMixin;
+import io.github.sinri.drydock.naval.boat.SundialMixin;
 import io.github.sinri.drydock.naval.ironclad.Ironclad;
 import io.github.sinri.keel.servant.funnel.KeelFunnel;
+import io.github.sinri.keel.servant.queue.KeelQueue;
 import io.github.sinri.keel.servant.sundial.KeelSundial;
-import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 
-import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
  * 驱逐舰。
+ * 为在单节点服务器上运行的独立应用设计，在主炮（HTTP服务）之外，新增了副炮、鱼雷等辅助武器。
  * Based on Ironclad.
- * Support Sundial and Funnel.
+ * Support Sundial, Queue and Funnel.
  *
  * @since 1.0.0
  */
-abstract public class Destroyer extends Ironclad {
-    private KeelSundial sundial = null;
-    private KeelFunnel funnel = null;
-
-    public Destroyer(String configPropertiesFile, boolean useSundial, boolean useFunnel) {
-        super(configPropertiesFile);
-        if (useFunnel) {
-            funnel = new KeelFunnel();
-        }
-        if (useSundial) {
-            sundial = new KeelSundial() {
-                @Override
-                protected Future<Collection<KeelSundialPlan>> fetchPlans() {
-                    return reloadSundialPlans();
-                }
-            };
-        }
-    }
+abstract public class Destroyer extends Ironclad implements SundialMixin, QueueMixin, FunnelMixin {
+    private KeelFunnel funnel;
 
     @Override
-    final protected void launchAsIronclad(Promise<Void> promise) {
-        getNavalLogger().info("to deploy sundial and funnel");
-        CompositeFuture.all(
-                        Future.succeededFuture()
-                                .compose(v -> {
-                                    if (sundial != null) {
-                                        sundial = new KeelSundial() {
-                                            @Override
-                                            protected Future<Collection<KeelSundialPlan>> fetchPlans() {
-                                                return reloadSundialPlans();
-                                            }
-                                        };
-                                        sundial.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicSundial, null));
-                                        return sundial.deployMe(new DeploymentOptions().setWorker(true));
-                                    } else {
-                                        return Future.succeededFuture("SUNDIAL DISABLED");
-                                    }
-                                })
-                                .onSuccess(sundialDeploymentID -> {
-                                    getNavalLogger().info("DEPLOY SUNDIAL: " + sundialDeploymentID);
-                                })
-                                .onFailure(sundialDeployFailure -> {
-                                    getNavalLogger().exception(sundialDeployFailure, "DEPLOY SUNDIAL FAILED");
-                                }),
-                        Future.succeededFuture()
-                                .compose(v -> {
-                                    if (funnel != null) {
-                                        funnel.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicFunnel, null));
-                                        return funnel.deployMe(new DeploymentOptions().setWorker(true));
-                                    } else {
-                                        return Future.succeededFuture("FUNNEL DISABLED");
-                                    }
-                                })
-                                .onSuccess(sundialDeploymentID -> {
-                                    getNavalLogger().info("DEPLOY FUNNEL: " + sundialDeploymentID);
-                                })
-                                .onFailure(sundialDeployFailure -> {
-                                    getNavalLogger().exception(sundialDeployFailure, "DEPLOY FUNNEL FAILED");
-                                })
+    final protected Future<Void> launchAsIronclad() {
+        getNavalLogger().info("To deploy async services");
+
+        return Future.all(
+                        this.loadFunnel(),
+                        this.loadQueue(),
+                        this.loadSundial()
                 )
                 .compose(compositeFuture -> {
-                    Promise<Void> destroyerPromise = Promise.promise();
-                    launchAsDestroyer(destroyerPromise);
-                    return destroyerPromise.future();
-                })
-                .onComplete(promise);
-        getNavalLogger().info("Make Ironclad Strong Again!");
+                    getNavalLogger().info("Async services loaded.");
+
+                    return this.launchAsDestroyer();
+                });
     }
 
-    @Deprecated(since = "1.0.1")
-    protected void launchAsDestroyer() {
-        // if anymore to prepare
+    private Future<Void> loadQueue() {
+        return Future.succeededFuture()
+                .compose(v -> {
+                    KeelQueue queue = this.buildQueue();
+                    if (queue != null) {
+                        return queue.deployMe(new DeploymentOptions().setWorker(true))
+                                .onFailure(throwable -> {
+                                    getNavalLogger().exception(throwable, "load queue failed");
+                                })
+                                .compose(deploymentId -> {
+                                    getNavalLogger().info("load queue: " + deploymentId);
+                                    return Future.succeededFuture();
+                                });
+                    } else
+                        return Future.succeededFuture();
+                });
     }
 
-    protected void launchAsDestroyer(Promise<Void> promise) {
-        launchAsDestroyer();
-        promise.complete();
+    private Future<Void> loadSundial() {
+        return Future.succeededFuture()
+                .compose(v -> {
+                    KeelSundial sundial = this.buildSundial();
+                    if (sundial != null) {
+                        return sundial.deployMe(new DeploymentOptions().setWorker(true))
+                                .onFailure(throwable -> {
+                                    getNavalLogger().exception(throwable, "load sundial failed");
+                                })
+                                .compose(deploymentId -> {
+                                    getNavalLogger().info("load sundial: " + deploymentId);
+                                    return Future.succeededFuture();
+                                });
+                    } else
+                        return Future.succeededFuture();
+                });
     }
 
-    /**
-     * If the plan collection returned in future is null, the sundial would not be deployed.
-     *
-     * @return future of plans or null.
-     */
-    protected Future<Collection<KeelSundialPlan>> reloadSundialPlans() {
-        return Future.succeededFuture(null);
+    private Future<Void> loadFunnel() {
+        return Future.succeededFuture()
+                .compose(v -> {
+                    funnel = this.buildFunnel();
+                    if (funnel != null) {
+                        return funnel.deployMe(new DeploymentOptions().setWorker(true))
+                                .onFailure(throwable -> {
+                                    getNavalLogger().exception(throwable, "load funnel failed");
+                                })
+                                .compose(deploymentId -> {
+                                    getNavalLogger().info("load funnel: " + deploymentId);
+                                    return Future.succeededFuture();
+                                });
+                    } else
+                        return Future.succeededFuture();
+                });
     }
+
+    abstract protected Future<Void> launchAsDestroyer();
 
 
     public void funnel(Supplier<Future<Void>> supplier) {
