@@ -1,8 +1,9 @@
-package io.github.sinri.drydock.naval.galley;
+package io.github.sinri.drydock.naval.melee;
 
-import io.github.sinri.drydock.naval.boat.Warship;
+import io.github.sinri.drydock.naval.base.Warship;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
+import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
 
 /**
@@ -17,7 +18,8 @@ import io.vertx.core.VertxOptions;
  */
 public abstract class Galley extends Warship {
     public VertxOptions buildVertxOptions() {
-        return new VertxOptions();
+        return new VertxOptions()
+                .setWorkerPoolSize(32);
     }
 
     protected KeelEventLogCenter buildLogCenter() {
@@ -25,12 +27,12 @@ public abstract class Galley extends Warship {
     }
 
     @Override
-    protected final void launchAsWarship() {
-        launchAsGalley();
+    protected final Future<Void> launchAsWarship() {
+        return launchAsGalley();
     }
 
     /**
      * 在桨帆船的基础上安装模块。
      */
-    abstract protected void launchAsGalley();
+    abstract protected Future<Void> launchAsGalley();
 }

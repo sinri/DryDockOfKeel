@@ -1,6 +1,6 @@
 package io.github.sinri.drydock.test.naval;
 
-import io.github.sinri.drydock.naval.ironclad.Ironclad;
+import io.github.sinri.drydock.naval.melee.Ironclad;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -21,7 +21,7 @@ public class IroncladTest extends Ironclad {
     }
 
     @Override
-    protected void getHttpServerRouteHandler(Router router) {
+    public void configureHttpServerRoutes(Router router) {
         router.route("/").handler(routingContext -> {
             routingContext.json(new JsonObject().put("a", "b"));
         });

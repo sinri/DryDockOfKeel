@@ -1,4 +1,4 @@
-package io.github.sinri.drydock.naval.boat;
+package io.github.sinri.drydock.naval.base;
 
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;

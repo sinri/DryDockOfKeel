@@ -1,4 +1,4 @@
-package io.github.sinri.drydock.naval.boat;
+package io.github.sinri.drydock.naval.base;
 
 import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.helper.KeelHelpers;
@@ -70,10 +70,10 @@ abstract public class Warship implements Boat {
                     getNavalLogger().info(" LOCAL CONFIG LOADED (if any)");
                     return loadRemoteConfiguration();
                 })
-                .onSuccess(done -> {
+                .compose(done -> {
                     getNavalLogger().info(" REMOTE CONFIG LOADED (if any)");
                     logCenter = buildLogCenter();
-                    launchAsWarship();
+                    return launchAsWarship();
                 })
                 .onFailure(this::shipwreck);
     }
@@ -92,14 +92,14 @@ abstract public class Warship implements Boat {
     /**
      * 加载其他模块。
      */
-    abstract protected void launchAsWarship();
+    abstract protected Future<Void> launchAsWarship();
 
     /**
      * 发生海难时的标准处理程序，即向航海日志记录事故并以指定故障码退出。
      */
     @Override
     public void shipwreck(Throwable throwable) {
-        getNavalLogger().exception(throwable, "Failed to initialize Keel");
+        getNavalLogger().exception(throwable, "Failed to launch, shipwreck");
         System.exit(EXIT_CODE_FOR_KEEL_INIT_FAILED);
     }
 

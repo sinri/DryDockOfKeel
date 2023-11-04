@@ -1,4 +1,4 @@
-package io.github.sinri.drydock.naval.caravel;
+package io.github.sinri.drydock.naval.base;
 
 import io.github.sinri.keel.helper.runtime.KeelRuntimeMonitor;
 import io.github.sinri.keel.logger.event.KeelEventLogger;

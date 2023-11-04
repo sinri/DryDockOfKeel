@@ -1,10 +1,11 @@
 package io.github.sinri.drydock.test.naval;
 
-import io.github.sinri.drydock.naval.destroyer.Destroyer;
+import io.github.sinri.drydock.naval.melee.Destroyer;
 import io.github.sinri.keel.servant.queue.KeelQueue;
 import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
 import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
 import java.util.Collection;
@@ -28,21 +29,24 @@ public class DestroyerTest extends Destroyer {
 
     @Override
     public Future<Collection<KeelSundialPlan>> fetchSundialPlans() {
-        return null;
+        return Future.succeededFuture();
     }
 
     @Override
     protected Future<Void> loadRemoteConfiguration() {
-        return null;
+        return Future.succeededFuture();
     }
 
     @Override
     protected Future<Void> launchAsDestroyer() {
-        return null;
+        return Future.succeededFuture();
     }
 
-    @Override
-    protected void getHttpServerRouteHandler(Router router) {
 
+    @Override
+    public void configureHttpServerRoutes(Router router) {
+        router.route("/").handler(routingContext -> {
+            routingContext.json(new JsonObject().put("a", "b"));
+        });
     }
 }

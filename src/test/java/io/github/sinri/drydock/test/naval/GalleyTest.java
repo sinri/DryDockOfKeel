@@ -1,8 +1,7 @@
 package io.github.sinri.drydock.test.naval;
 
-import io.github.sinri.drydock.naval.galley.Galley;
+import io.github.sinri.drydock.naval.melee.Galley;
 import io.github.sinri.keel.facade.Keel;
-import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.vertx.core.Future;
 
 public class GalleyTest extends Galley {
@@ -17,10 +16,13 @@ public class GalleyTest extends Galley {
     }
 
     @Override
-    protected void launchAsWarship() {
-        KeelEventLogger logger = generateLogger("GalleyTest", null);
-        logger.info("launched");
-        Keel.getVertx().close();
+    protected Future<Void> launchAsGalley() {
+        getNavalLogger().info("launched");
+        Keel.getVertx().setTimer(2000L, timer -> {
+            getNavalLogger().info("time up");
+            Keel.getVertx().close();
+        });
+        return Future.succeededFuture();
     }
 
     public static void main(String[] args) {

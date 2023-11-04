@@ -1,4 +1,4 @@
-package io.github.sinri.drydock.naval.caravel;
+package io.github.sinri.drydock.naval.base;
 
 import com.aliyun.openservices.aliyun.log.producer.LogProducer;
 import com.aliyun.openservices.aliyun.log.producer.Producer;
