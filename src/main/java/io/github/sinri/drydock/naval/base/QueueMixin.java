@@ -2,6 +2,7 @@ package io.github.sinri.drydock.naval.base;
 
 import io.github.sinri.keel.servant.queue.KeelQueue;
 import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
+import io.github.sinri.keel.servant.queue.QueueWorkerPoolManager;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import org.jetbrains.annotations.NotNull;
@@ -21,9 +22,23 @@ public interface QueueMixin extends Boat {
             protected @NotNull SignalReader getSignalReader() {
                 return buildSignalReader();
             }
+
+            @NotNull
+            @Override
+            protected QueueWorkerPoolManager getQueueWorkerPoolManager() {
+                var x = configuredQueueWorkerPoolSize();
+                return new QueueWorkerPoolManager(x);
+            }
         };
         queue.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicQueue, null));
         return queue;
+    }
+
+    /**
+     * @return zero for unlimited.
+     */
+    default int configuredQueueWorkerPoolSize() {
+        return 0;
     }
 
     KeelQueue.SignalReader buildSignalReader();

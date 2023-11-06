@@ -13,6 +13,13 @@ import io.vertx.core.Future;
  * @since 1.0.0
  */
 abstract public class Destroyer extends Ironclad implements SundialMixin, QueueMixin {
+
+    @Override
+    protected Future<Void> loadRemoteConfiguration() {
+        // For Destroyer, config file could be packaged.
+        return Future.succeededFuture();
+    }
+
     @Override
     final protected Future<Void> launchAsIronclad() {
         getNavalLogger().info("To deploy async services");

@@ -14,8 +14,9 @@ import io.vertx.core.VertxOptions;
  * 一切海军舰船的基底，首先，得具备海洋航行的能力。
  * 1. 建立航海日志记录器，藉此向标准输出记录一切运行时底层信息。
  * 2. 获取本地配置。
- * 3. 获取远程配置。
- * 4. 建立事件通信中心，用于向事件日志中心进行事件报告。
+ * 3. 建立Keel引擎。
+ * 4. 获取远程配置。
+ * 5. 建立事件通信中心，用于向事件日志中心进行事件报告。
  *
  * @since 1.1.0
  */
@@ -35,7 +36,7 @@ abstract public class Warship implements Boat {
      * 航海日志：向标准输出记录一切运行时底层信息。
      */
     @Override
-    public KeelEventLogger getNavalLogger() {
+    public final KeelEventLogger getNavalLogger() {
         return navalLogger;
     }
 
@@ -47,7 +48,7 @@ abstract public class Warship implements Boat {
     /**
      * @return 事件日志中心。
      */
-    public KeelEventLogCenter getLogCenter() {
+    public final KeelEventLogCenter getLogCenter() {
         return logCenter;
     }
 
@@ -61,17 +62,18 @@ abstract public class Warship implements Boat {
      */
     @Override
     public final void launch() {
+        loadLocalConfiguration();
+        getNavalLogger().info("LOCAL CONFIG LOADED (if any)");
+
         VertxOptions vertxOptions = buildVertxOptions();
+
         Keel.initializeVertx(vertxOptions)
                 .compose(initialized -> {
                     getNavalLogger().info("KEEL INITIALIZED");
-
-                    loadLocalConfiguration();
-                    getNavalLogger().info(" LOCAL CONFIG LOADED (if any)");
                     return loadRemoteConfiguration();
                 })
                 .compose(done -> {
-                    getNavalLogger().info(" REMOTE CONFIG LOADED (if any)");
+                    getNavalLogger().info("REMOTE CONFIG LOADED (if any)");
                     logCenter = buildLogCenter();
                     return launchAsWarship();
                 })

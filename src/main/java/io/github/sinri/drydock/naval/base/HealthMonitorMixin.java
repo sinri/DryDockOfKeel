@@ -5,14 +5,14 @@ import io.vertx.core.Future;
 
 public interface HealthMonitorMixin extends Boat {
     default HealthMonitor buildHealthMonitor() {
-        var topicEventLogger = generateLogger(AliyunSLSAdapterImpl.TopicHealthMonitor, null);
-        return new HealthMonitor(topicEventLogger);
+        return new HealthMonitor();
     }
 
     default Future<Void> loadHealthMonitor() {
         return Future.succeededFuture(buildHealthMonitor())
                 .compose(healthMonitor -> {
                     if (healthMonitor == null) return Future.succeededFuture();
+                    healthMonitor.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicHealthMonitor, null));
                     return healthMonitor.deployMe(new DeploymentOptions().setWorker(true));
                 })
                 .onFailure(throwable -> {
