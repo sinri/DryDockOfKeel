@@ -5,7 +5,8 @@ import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
 import io.github.sinri.keel.servant.queue.QueueWorkerPoolManager;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
-import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
 
 /**
  * @since 1.1.0
@@ -14,16 +15,16 @@ public interface QueueMixin extends Boat {
     default KeelQueue buildQueue() {
         var queue = new KeelQueue() {
             @Override
-            protected @NotNull KeelQueueNextTaskSeeker getNextTaskSeeker() {
+            protected @Nonnull KeelQueueNextTaskSeeker getNextTaskSeeker() {
                 return buildQueueNextTaskSeeker();
             }
 
             @Override
-            protected @NotNull SignalReader getSignalReader() {
+            protected @Nonnull SignalReader getSignalReader() {
                 return buildSignalReader();
             }
 
-            @NotNull
+            @Nonnull
             @Override
             protected QueueWorkerPoolManager getQueueWorkerPoolManager() {
                 var x = configuredQueueWorkerPoolSize();

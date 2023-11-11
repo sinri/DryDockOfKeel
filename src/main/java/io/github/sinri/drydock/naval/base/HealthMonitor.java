@@ -3,7 +3,8 @@ package io.github.sinri.drydock.naval.base;
 import io.github.sinri.keel.helper.runtime.KeelRuntimeMonitor;
 import io.github.sinri.keel.verticles.KeelVerticleBase;
 import io.vertx.core.json.JsonObject;
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nullable;
 
 /**
  * @since 1.0.0
