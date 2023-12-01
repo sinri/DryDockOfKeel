@@ -27,9 +27,9 @@ abstract public class Warship implements Boat {
     private KeelEventLogCenter logCenter;
 
     public Warship() {
-        this.navalLogger = KeelOutputEventLogCenter.getInstance()
-                .createLogger("DryDock::Naval", x -> x
-                        .put("local_address", KeelHelpers.netHelper().getLocalHostAddress()));
+        this.logCenter = KeelOutputEventLogCenter.getInstance();
+        this.navalLogger = this.logCenter.createLogger("DryDock::Naval", x -> x
+                .put("local_address", KeelHelpers.netHelper().getLocalHostAddress()));
     }
 
     /**
@@ -126,6 +126,6 @@ abstract public class Warship implements Boat {
      */
     @Override
     public KeelEventLogger generateLogger(String topic, Handler<KeelEventLog> eventLogHandler) {
-        return KeelOutputEventLogCenter.getInstance().createLogger(topic, eventLogHandler);
+        return logCenter.createLogger(topic, eventLogHandler);
     }
 }

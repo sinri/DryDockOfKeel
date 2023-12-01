@@ -8,26 +8,29 @@ import com.aliyun.openservices.aliyun.log.producer.errors.ProducerException;
 import com.aliyun.openservices.log.common.LogItem;
 import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.facade.KeelConfiguration;
+import io.github.sinri.keel.helper.KeelHelpers;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.adapter.AliyunSLSAdapter;
 import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import javax.annotation.Nullable;
+import java.util.*;
 
 /**
  * @since 1.0.0
  */
 public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
     public static final String TopicNaval = "Naval";
+    public static final String TopicFlight = "Flight";
     public static final String TopicHealthMonitor = "HealthMonitor";
     public static final String TopicSundial = "Sundial";
     public static final String TopicFunnel = "Funnel";
     public static final String TopicQueue = "Queue";
     public static final String TopicReceptionist = "Receptionist";
+
+    public static final String RESERVED_KEY_LEVEL = "level";
     private static boolean disabled;
     private final String project;
     private final String logstore;
@@ -63,6 +66,27 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
             producer = null;
         }
     }
+    public static final Set<String> ignorableStackPackageSet = new HashSet<>();
+
+    @Override
+    public void close(Promise<Void> promise) {
+        if (!disabled) {
+            try {
+                this.producer.close();
+                promise.complete();
+            } catch (InterruptedException | ProducerException e) {
+                promise.fail(e);
+            }
+        } else {
+            promise.complete();
+        }
+    }
+
+    static {
+        ignorableStackPackageSet.add("io.vertx.");
+        ignorableStackPackageSet.add("io.netty.");
+        ignorableStackPackageSet.add("java.lang.");
+    }
 
     @Override
     public Future<Void> dealWithLogsForOneTopic(String topic, List<KeelEventLog> list) {
@@ -87,7 +111,7 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
             list.forEach(eventLog -> {
                 LogItem logItem = new LogItem(Math.toIntExact(eventLog.timestamp() / 1000));
                 //logItem.PushBack("_timestamp_in_ms", eventLog.timestampExpression());
-                logItem.PushBack(KeelEventLog.RESERVED_KEY_LEVEL, eventLog.level().name());
+                logItem.PushBack(RESERVED_KEY_LEVEL, eventLog.level().name());
                 eventLog.forEach(entry -> {
                     if (entry.getValue() == null) {
                         logItem.PushBack(entry.getKey(), null);
@@ -114,17 +138,9 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
         return promise.future();
     }
 
+    @Nullable
     @Override
-    public void close(Promise<Void> promise) {
-        if (!disabled) {
-            try {
-                this.producer.close();
-                promise.complete();
-            } catch (InterruptedException | ProducerException e) {
-                promise.fail(e);
-            }
-        } else {
-            promise.complete();
-        }
+    public Object processThrowable(@Nullable Throwable throwable) {
+        return KeelHelpers.jsonHelper().renderThrowableChain(throwable, ignorableStackPackageSet);
     }
 }
