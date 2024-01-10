@@ -6,9 +6,7 @@ import com.aliyun.openservices.aliyun.log.producer.ProducerConfig;
 import com.aliyun.openservices.aliyun.log.producer.ProjectConfig;
 import com.aliyun.openservices.aliyun.log.producer.errors.ProducerException;
 import com.aliyun.openservices.log.common.LogItem;
-import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.facade.KeelConfiguration;
-import io.github.sinri.keel.helper.KeelHelpers;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.adapter.AliyunSLSAdapter;
 import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
@@ -17,6 +15,9 @@ import io.vertx.core.Promise;
 
 import javax.annotation.Nullable;
 import java.util.*;
+
+import static io.github.sinri.keel.facade.KeelInstance.Keel;
+import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 /**
  * @since 1.0.0

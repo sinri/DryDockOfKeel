@@ -1,9 +1,10 @@
 package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.melee.Caravel;
-import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.vertx.core.Future;
+
+import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 public class CaravelTest extends Caravel {
     public static void main(String[] args) {

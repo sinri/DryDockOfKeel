@@ -1,7 +1,5 @@
 package io.github.sinri.drydock.naval.base;
 
-import io.github.sinri.keel.facade.Keel;
-import io.github.sinri.keel.helper.KeelHelpers;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
@@ -9,6 +7,9 @@ import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
+
+import static io.github.sinri.keel.facade.KeelInstance.Keel;
+import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 /**
  * 一切海军舰船的基底，首先，得具备海洋航行的能力。

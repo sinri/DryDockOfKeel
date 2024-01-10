@@ -2,10 +2,11 @@ package io.github.sinri.drydock.naval.melee;
 
 import io.github.sinri.drydock.naval.base.AliyunSLSAdapterImpl;
 import io.github.sinri.drydock.naval.base.HealthMonitorMixin;
-import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.center.KeelAsyncEventLogCenter;
 import io.vertx.core.Future;
+
+import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
  * 轻快帆船。

@@ -1,11 +1,12 @@
 package io.github.sinri.drydock.naval.ranged;
 
 import io.github.sinri.drydock.naval.base.Warship;
-import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
+
+import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
  * 四段帆船。

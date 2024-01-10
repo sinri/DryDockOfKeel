@@ -1,8 +1,9 @@
 package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.melee.Galley;
-import io.github.sinri.keel.facade.Keel;
 import io.vertx.core.Future;
+
+import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 public class GalleyTest extends Galley {
     @Override

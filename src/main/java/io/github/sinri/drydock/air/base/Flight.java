@@ -1,9 +1,7 @@
 package io.github.sinri.drydock.air.base;
 
 import io.github.sinri.keel.core.TechnicalPreview;
-import io.github.sinri.keel.facade.Keel;
 import io.github.sinri.keel.facade.launcher.KeelLauncherAdapter;
-import io.github.sinri.keel.helper.KeelHelpers;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.vertx.core.DeploymentOptions;
@@ -12,6 +10,9 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 
 import javax.annotation.Nullable;
+
+import static io.github.sinri.keel.facade.KeelInstance.Keel;
+import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 @TechnicalPreview
 public class Flight implements KeelLauncherAdapter {
