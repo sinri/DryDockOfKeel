@@ -6,6 +6,8 @@ import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.center.KeelAsyncEventLogCenter;
 import io.vertx.core.Future;
 
+import javax.annotation.Nonnull;
+
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
@@ -25,6 +27,14 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
         Keel.getConfiguration().loadPropertiesFile("config.properties");
     }
 
+    /**
+     * 在本地和远端配置加载完毕、航海和应用日志记录完备之后，准备数据源，如MySQL等。
+     *
+     * @since 1.2.0
+     */
+    @Nonnull
+    abstract protected Future<Void> prepareDataSources();
+
     @Override
     final protected Future<Void> launchAsGalley() {
         return Future.succeededFuture()
@@ -35,6 +45,10 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
                             log -> log.put("warship", getClass().getName())
                     );
                     this.getNavalLogger().addBypassLogger(bypassLogger);
+                    // 加载数据源（例如MySQL等）
+                    return prepareDataSources();
+                })
+                .compose(v -> {
                     // 加载健康检查模块
                     return loadHealthMonitor();
                 })
@@ -44,11 +58,16 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
     }
 
     /**
+     * 航海日志已可报告给应用日志中心。
+     * 数据源等已加载。
+     * 在桨帆船的基础上增加了健康检查模块。
      * 为轻快帆船加载模块。
      */
     abstract protected Future<Void> launchAsCaravel();
 
     /**
+     * 轻快帆船默认采用Aliyun SLS提供应用日志服务。
+     *
      * @since 1.0.6 Add a Naval Log when create Aliyun SLS Log Center failed.
      */
     @Override

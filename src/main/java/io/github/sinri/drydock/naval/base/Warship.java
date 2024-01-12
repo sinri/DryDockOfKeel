@@ -24,13 +24,21 @@ import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 abstract public class Warship implements Boat {
     public static final int EXIT_CODE_FOR_KEEL_INIT_FAILED = 1;
     public static final int EXIT_CODE_FOR_SELF_SINK = 0;
+    /**
+     * 航海日志记录器
+     */
     private final KeelEventLogger navalLogger;
+    /**
+     * 应用级事件日志中心
+     */
     private KeelEventLogCenter logCenter;
 
     public Warship() {
         this.logCenter = KeelOutputEventLogCenter.getInstance();
-        this.navalLogger = this.logCenter.createLogger("DryDock::Naval", x -> x
-                .put("local_address", KeelHelpers.netHelper().getLocalHostAddress()));
+        this.navalLogger = this.logCenter.createLogger(
+                AliyunSLSAdapterImpl.TopicNaval,//"DryDock::Naval",
+                x -> x
+                        .put("local_address", KeelHelpers.netHelper().getLocalHostAddress()));
     }
 
     /**
@@ -42,7 +50,9 @@ abstract public class Warship implements Boat {
     }
 
     /**
-     * @return 建立事件日志中心的方法。
+     * 建立应用级事件日志中心。
+     * 此时已加载本地和远程的配置。
+     * 可以使用航海日志记录器。
      */
     abstract protected KeelEventLogCenter buildLogCenter();
 
@@ -54,7 +64,8 @@ abstract public class Warship implements Boat {
     }
 
     /**
-     * 给Vertx配置。
+     * 通过已加载的本地配置进行Vertx配置的构造。
+     * 此时可以使用航海日志记录器。
      */
     abstract public VertxOptions buildVertxOptions();
 
@@ -68,6 +79,7 @@ abstract public class Warship implements Boat {
 
         VertxOptions vertxOptions = buildVertxOptions();
 
+        // todo 此处未考虑舰队模式，如果需要要新增 cluster master 的设定
         Keel.initializeVertx(vertxOptions)
                 .compose(initialized -> {
                     getNavalLogger().info("KEEL INITIALIZED");
@@ -83,17 +95,23 @@ abstract public class Warship implements Boat {
 
     /**
      * 加载本地配置。
+     * 仅可以使用航海日志记录器。
      */
     abstract protected void loadLocalConfiguration();
 
     /**
      * 加载远程配置。
+     * 此时已加载本地配置，已初始化Keel(Vert.x)。
+     * 仅可以使用航海日志记录器。
      */
 
     abstract protected Future<Void> loadRemoteConfiguration();
 
     /**
-     * 加载其他模块。
+     * 本地及远端配置文件已加载。
+     * Keel已初始化。
+     * 可使用航海日志记录器以及应用级事件日志记录器。
+     * 在此方法中加载其他模块并开始航行。
      */
     abstract protected Future<Void> launchAsWarship();
 
@@ -114,13 +132,18 @@ abstract public class Warship implements Boat {
     @Override
     public void sink() {
         getNavalLogger().fatal("SINK");
-        Keel.getVertx().close(ar -> {
-            System.exit(EXIT_CODE_FOR_SELF_SINK);
-        });
+        Keel.close()
+                .onComplete(ar -> {
+                    if (ar.failed()) {
+                        getNavalLogger().exception(ar.cause(), "Failure in closing Keel.");
+                    }
+                    getNavalLogger().fatal("Keel Sank.");
+                    System.exit(EXIT_CODE_FOR_SELF_SINK);
+                });
     }
 
     /**
-     * 建立一个向事件日志中心进行通报的日志记录器。
+     * 建立一个向应用级事件日志中心进行通报的应用日志记录器。
      *
      * @param topic           事件主题
      * @param eventLogHandler 事件日志处理器

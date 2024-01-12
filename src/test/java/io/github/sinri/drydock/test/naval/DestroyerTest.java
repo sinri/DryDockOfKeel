@@ -8,6 +8,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 
 public class DestroyerTest extends Destroyer {
@@ -48,5 +49,11 @@ public class DestroyerTest extends Destroyer {
         router.route("/").handler(routingContext -> {
             routingContext.json(new JsonObject().put("a", "b"));
         });
+    }
+
+    @Nonnull
+    @Override
+    protected Future<Void> prepareDataSources() {
+        return Future.succeededFuture();
     }
 }

@@ -15,6 +15,9 @@ import io.vertx.core.Future;
 public abstract class Ironclad extends Caravel implements HttpServerMixin {
 
     /**
+     * 航海日志已可报告给应用日志中心。
+     * 数据源等已加载。
+     * 在桨帆船的基础上增加了健康检查模块。
      * 先加载必要模块如数据缓存服务等，才能启动对外网络服务。
      */
     @Override

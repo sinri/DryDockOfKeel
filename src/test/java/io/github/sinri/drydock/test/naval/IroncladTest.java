@@ -5,6 +5,8 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
+import javax.annotation.Nonnull;
+
 public class IroncladTest extends Ironclad {
     public static void main(String[] args) {
         new IroncladTest().launch();
@@ -25,5 +27,11 @@ public class IroncladTest extends Ironclad {
         router.route("/").handler(routingContext -> {
             routingContext.json(new JsonObject().put("a", "b"));
         });
+    }
+
+    @Nonnull
+    @Override
+    protected Future<Void> prepareDataSources() {
+        return Future.succeededFuture();
     }
 }

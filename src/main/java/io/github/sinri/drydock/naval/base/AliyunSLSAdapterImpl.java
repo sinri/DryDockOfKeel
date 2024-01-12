@@ -23,8 +23,8 @@ import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
  * @since 1.0.0
  */
 public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
-    public static final String TopicNaval = "Naval";
-    public static final String TopicFlight = "Flight";
+    public static final String TopicNaval = "DryDock::Naval";
+    public static final String TopicFlight = "DryDock::Flight";
     public static final String TopicHealthMonitor = "HealthMonitor";
     public static final String TopicSundial = "Sundial";
     public static final String TopicFunnel = "Funnel";
@@ -67,6 +67,7 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
             producer = null;
         }
     }
+
     public static final Set<String> ignorableStackPackageSet = new HashSet<>();
 
     @Override
