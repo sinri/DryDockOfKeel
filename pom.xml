@@ -6,7 +6,7 @@
 
     <groupId>io.github.sinri</groupId>
     <artifactId>DryDock</artifactId>
-    <version>1.2.3</version>
+    <version>1.2.4</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
