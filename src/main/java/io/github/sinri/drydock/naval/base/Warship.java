@@ -83,6 +83,10 @@ abstract public class Warship implements Boat {
         Keel.initializeVertx(vertxOptions)
                 .compose(initialized -> {
                     getNavalLogger().info("KEEL INITIALIZED");
+
+                    // since 1.2.5
+                    Keel.setLogger(getNavalLogger());
+
                     return loadRemoteConfiguration();
                 })
                 .compose(done -> {
