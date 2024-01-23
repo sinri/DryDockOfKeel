@@ -46,7 +46,13 @@ public class HealthMonitor extends KeelVerticleBase {
                         var snapshot = new JsonObject()
                                 .put("gc", monitorSnapshot.getGCStat().toJsonObject())
                                 .put("cpu_time", monitorSnapshot.getCPUTime().toJsonObject())
-                                .put("memory", monitorSnapshot.getMemory().toJsonObject());
+                                .put("hardware_memory", monitorSnapshot.getHardwareMemory().toJsonObject())
+                                .put("jvm_memory", monitorSnapshot.getJvmMemory().toJsonObject())
+                                .put("jvm_heap_memory", monitorSnapshot.getJvmHeapMemory().toJsonObject());
+
+                        // removed since 1.2.6
+                        //snapshot.put("memory", monitorSnapshot.getHardwareMemory().toJsonObject());
+
                         JsonObject entries = moreEntriesForSnapshot();
                         if (entries != null) {
                             entries.forEach(entry -> snapshot.put(entry.getKey(), entry.getValue()));
