@@ -13,6 +13,7 @@ import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -49,7 +50,7 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
         this.project = aliyunSlsConfig.readString("project");
         this.logstore = aliyunSlsConfig.readString("logstore");
         this.endpoint = aliyunSlsConfig.readString("endpoint");
-        this.source = Objects.requireNonNullElse(aliyunSlsConfig.readString("source"), "");
+        this.source = buildSource(aliyunSlsConfig.readString("source"));
 
         if (!disabled) {
             String accessKeyId = aliyunSlsConfig.readString("accessKeyId");
@@ -68,10 +69,32 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
         }
     }
 
+    /**
+     * Build source from configuration.
+     * Source Expression should be:
+     * - EMPTY/BLANK STRING or NULL: use SLS default source generation;
+     * - A TEMPLATED STRING
+     * --- Rule 1: Replace [IP] to local address;
+     *
+     * @since 1.2.7 add source template and rule 1.
+     */
+    private static String buildSource(@Nullable String configuredSourceExpression) {
+        if (configuredSourceExpression == null || configuredSourceExpression.isBlank()) {
+            return "";
+        }
+        // Rule 1: Replace [IP] to local address
+        String localHostAddress = KeelHelpers.netHelper().getLocalHostAddress();
+        if (localHostAddress == null) {
+            Keel.getLogger().warning("Could not get local host address for SLS source!");
+            return "";
+        }
+        return configuredSourceExpression.replaceAll("\\[IP]", localHostAddress);
+    }
+
     public static final Set<String> ignorableStackPackageSet = new HashSet<>();
 
     @Override
-    public void close(Promise<Void> promise) {
+    public void close(@Nonnull Promise<Void> promise) {
         if (!disabled) {
             try {
                 this.producer.close();
@@ -91,8 +114,9 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
     }
 
     @Override
-    public Future<Void> dealWithLogsForOneTopic(String topic, List<KeelEventLog> list) {
-        if (list == null || list.isEmpty()) return Future.succeededFuture();
+    @Nonnull
+    public Future<Void> dealWithLogsForOneTopic(@Nonnull String topic, @Nonnull List<KeelEventLog> list) {
+        if (list.isEmpty()) return Future.succeededFuture();
 
 //        System.out.println("dealWithLogsForOneTopic<"+topic+"> handling "+list.size()+" logs");
 
