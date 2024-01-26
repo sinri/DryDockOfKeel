@@ -110,6 +110,8 @@ abstract public class Plane extends KeelVerticleBase implements Flyable {
     public final void start(Promise<Void> startPromise) throws Exception {
         start();
 
+        setLogger(getFlightLogger());
+
         // local config.properties had been loaded into this verticle's config.
         Future.succeededFuture()
                 .compose(v -> {
