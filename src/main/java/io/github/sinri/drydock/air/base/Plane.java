@@ -20,7 +20,7 @@ import java.lang.reflect.Modifier;
  */
 @TechnicalPreview
 abstract public class Plane extends KeelVerticleBase implements Flyable {
-    private static KeelEventLogger flightLogger;
+    //private static KeelEventLogger flightLogger;
     private KeelEventLogCenter logCenter;
 
     public static void main(String[] args) {
@@ -51,7 +51,6 @@ abstract public class Plane extends KeelVerticleBase implements Flyable {
                 }
             }
         });
-        flightLogger = flight.logger();
         flight.launch(args);
     }
 
@@ -65,6 +64,11 @@ abstract public class Plane extends KeelVerticleBase implements Flyable {
     }
 
     @Override
+    public KeelEventLogger getFlightLogger() {
+        return Flight.getFlightLogger();
+    }
+
+    @Override
     public final KeelEventLogger generateLogger(String topic, Handler<KeelEventLog> eventLogHandler) {
         return getLogCenter().createLogger(topic, eventLogHandler);
     }
@@ -75,8 +79,6 @@ abstract public class Plane extends KeelVerticleBase implements Flyable {
     @Override
     public final void start(Promise<Void> startPromise) throws Exception {
         start();
-
-        setLogger(flightLogger);
 
         // local config.properties had been loaded into this verticle's config.
         Future.succeededFuture()
@@ -92,7 +94,7 @@ abstract public class Plane extends KeelVerticleBase implements Flyable {
                 })
                 .andThen(ar -> {
                     if (ar.failed()) {
-                        flightLogger.exception(ar.cause(), "Failed to start flying");
+                        getFlightLogger().exception(ar.cause(), "Failed to start flying");
                         startPromise.fail(ar.cause());
                     } else {
                         startPromise.complete();

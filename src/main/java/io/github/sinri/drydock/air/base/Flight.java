@@ -18,7 +18,7 @@ import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 @TechnicalPreview
 public class Flight implements KeelLauncherAdapter {
     private final String mainVerticleClass;
-    private final KeelEventLogger flightLogger;
+    private static KeelEventLogger flightLogger = KeelOutputEventLogCenter.instantLogger();
     private final @Nullable Handler<VertxOptions> vertxOptionsHandler;
 
     public Flight(Class<? extends Plane> mainVerticleClass, @Nullable Handler<VertxOptions> vertxOptionsHandler) {
@@ -28,15 +28,20 @@ public class Flight implements KeelLauncherAdapter {
     public Flight(String mainVerticleClass, @Nullable Handler<VertxOptions> vertxOptionsHandler) {
         this.mainVerticleClass = mainVerticleClass;
         this.vertxOptionsHandler = vertxOptionsHandler;
-        this.flightLogger = KeelOutputEventLogCenter.getInstance()
+
+        flightLogger = KeelOutputEventLogCenter.getInstance()
                 .createLogger("DryDock::Flight", x -> x
                         .put("main", this.mainVerticleClass)
                         .put("local_address", KeelHelpers.netHelper().getLocalHostAddress()));
     }
 
+    public static KeelEventLogger getFlightLogger() {
+        return flightLogger;
+    }
+
     @Override
     public KeelEventLogger logger() {
-        return this.flightLogger;
+        return getFlightLogger();
     }
 
     @Override
