@@ -14,6 +14,9 @@ import io.vertx.core.VertxOptions;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Objects;
+
+import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
  * For fat-jar's Main Entrance!
@@ -22,24 +25,51 @@ import java.lang.reflect.Modifier;
 abstract public class Plane extends KeelVerticleBase implements Flyable {
     //private static KeelEventLogger flightLogger;
     private KeelEventLogCenter logCenter;
+    private static String calledClass;
+    private static Class<?> planeClass;
+    private static Method configVertxOptionsMethod;
 
     public static void main(String[] args) {
-        String calledClass = System.getProperty("sun.java.command");
-
-        Method configVertxOptionsMethod;
 
         try {
-            Class<?> planeClass = Class.forName(calledClass);
+            // 首先看运行时环境中的命令行参数，主要用于开发环境和直接用class调用的情况。
+            calledClass = System.getProperty("sun.java.command");
+            KeelOutputEventLogCenter.instantLogger().notice("calledClass from sun.java.command: " + calledClass);
+
+            // 正式环境中，一般使用JAR包来运行，需要从JAR包里的META-INF/MANIFEST.MF文件里取Main-Class的值。
+            if (calledClass.endsWith(".jar")) {
+                // Get the location of this class file
+                byte[] bytes = Keel.fileHelper().readFileAsByteArray("META-INF/MANIFEST.MF", true);
+                String s = new String(bytes);
+                KeelOutputEventLogCenter.instantLogger().info("META-INF/MANIFEST.MF content: " + s);
+                String[] lines = s.split("[\r\n]+");
+                for (var line : lines) {
+                    if (line.startsWith("Main-Class:")) {
+                        calledClass = line.substring(11).trim();
+                        break;
+                    }
+                }
+
+                KeelOutputEventLogCenter.instantLogger().notice("calledClass from MainClass: " + calledClass);
+                Objects.requireNonNull(calledClass);
+            }
+            planeClass = Class.forName(calledClass);
+        } catch (Throwable throwable) {
+            KeelOutputEventLogCenter.instantLogger().exception(throwable, "Cannot find Plane class");
+            throw new RuntimeException();
+        }
+
+        try {
             Method method = planeClass.getDeclaredMethod("configVertxOptions", VertxOptions.class);
             if (Modifier.isStatic(method.getModifiers()) && Modifier.isPublic(method.getModifiers())) {
                 configVertxOptionsMethod = method;
             } else {
-                KeelOutputEventLogCenter.instantLogger().warning(
-                        "Did not found the public static method `configVertxOptions(VertxOptions)` in class " + calledClass + ", will use default VertxOptions.");
-                configVertxOptionsMethod = null;
+                throw new RuntimeException();
             }
         } catch (Throwable throwable) {
-            throw new RuntimeException("Plane is not ready to fly", throwable);
+            KeelOutputEventLogCenter.instantLogger().warning(
+                    "Did not found the public static method `configVertxOptions(VertxOptions)` in class " + calledClass + ", will use default VertxOptions.");
+            configVertxOptionsMethod = null;
         }
 
         Flight flight = new Flight(calledClass, vertxOptions -> {

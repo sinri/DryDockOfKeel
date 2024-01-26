@@ -89,40 +89,50 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
         );
 
         var dir = getTablePackagePath() + "/" + dataSourceName + "/" + schemaPackageName;
-        return Keel.getVertx().fileSystem().readDir(dir)
-                .compose(files -> {
-                    return KeelAsyncKit.iterativelyCall(files, file -> {
-                        if (file.endsWith("/package-info.java")) {
-                            return Future.succeededFuture();
-                        } else {
-                            return Keel.getVertx().fileSystem().delete(file);
-                        }
-                    });
+        return Keel.getVertx().fileSystem().exists(dir)
+                .compose(existed -> {
+                    if (!existed) {
+                        return Keel.getVertx().fileSystem().mkdirs(dir);
+                    } else {
+                        return Future.succeededFuture();
+                    }
                 })
-                .compose(v -> {
-                    return mySQLDataSource.withConnection(sqlConnection -> {
-                        var x = new TableRowClassSourceCodeGenerator(sqlConnection)
-                                .forSchema(schemaName);
-                        if (tables != null) {
-                            x.forTables(tables);
-                        }
-                        String strictEnumPackage = getStrictEnumPackage();
-                        if (strictEnumPackage != null) {
-                            x.setStrictEnumPackage(strictEnumPackage);
-                        }
-                        String envelopePackage = getEnvelopePackage();
-                        if (envelopePackage != null) {
-                            x.setEnvelopePackage(envelopePackage);
-                        }
-                        return x
-                                .setProvideConstSchema(isProvideConstSchema())
-                                .setProvideConstTable(isProvideConstTable())
-                                .setProvideConstSchemaAndTable(isProvideConstSchemaAndTable())
-                                .generate(getTablePackage() + "." + dataSourceName + "." + schemaPackageName, dir);
-                    });
-                })
-                .compose(v -> {
-                    return Future.succeededFuture();
+                .compose(dirEnsured -> {
+                    return Keel.getVertx().fileSystem().readDir(dir)
+                            .compose(files -> {
+                                return KeelAsyncKit.iterativelyCall(files, file -> {
+                                    if (file.endsWith("/package-info.java")) {
+                                        return Future.succeededFuture();
+                                    } else {
+                                        return Keel.getVertx().fileSystem().delete(file);
+                                    }
+                                });
+                            })
+                            .compose(v -> {
+                                return mySQLDataSource.withConnection(sqlConnection -> {
+                                    var x = new TableRowClassSourceCodeGenerator(sqlConnection)
+                                            .forSchema(schemaName);
+                                    if (tables != null) {
+                                        x.forTables(tables);
+                                    }
+                                    String strictEnumPackage = getStrictEnumPackage();
+                                    if (strictEnumPackage != null) {
+                                        x.setStrictEnumPackage(strictEnumPackage);
+                                    }
+                                    String envelopePackage = getEnvelopePackage();
+                                    if (envelopePackage != null) {
+                                        x.setEnvelopePackage(envelopePackage);
+                                    }
+                                    return x
+                                            .setProvideConstSchema(isProvideConstSchema())
+                                            .setProvideConstTable(isProvideConstTable())
+                                            .setProvideConstSchemaAndTable(isProvideConstSchemaAndTable())
+                                            .generate(getTablePackage() + "." + dataSourceName + "." + schemaPackageName, dir);
+                                });
+                            })
+                            .compose(v -> {
+                                return Future.succeededFuture();
+                            });
                 });
     }
 }
