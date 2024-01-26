@@ -1,11 +1,11 @@
-package io.github.sinri.drydock.naval.base;
+package io.github.sinri.drydock.common;
 
 import io.github.sinri.keel.web.http.KeelHttpServer;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.ext.web.Router;
 
-public interface HttpServerMixin extends Boat {
+public interface HttpServerMixin extends CommonUnit {
 
     default Future<Void> loadHttpServer() {
         return Future.succeededFuture(buildHttpServer())
@@ -13,10 +13,10 @@ public interface HttpServerMixin extends Boat {
                     if (server == null) return Future.succeededFuture();
                     return server.deployMe(new DeploymentOptions())
                             .onFailure(ironcladFailure -> {
-                                getNavalLogger().exception(ironcladFailure, "Failed to ensure equipments as Ironclad to provide HTTP service.");
+                                getUnitLogger().exception(ironcladFailure, "Failed to ensure equipments as Ironclad to provide HTTP service.");
                             })
                             .compose(httpServerDeployed -> {
-                                getNavalLogger().info("Ironclad HTTP Service Started: " + httpServerDeployed);
+                                getUnitLogger().info("Ironclad HTTP Service Started: " + httpServerDeployed);
                                 return Future.succeededFuture();
                             });
                 });

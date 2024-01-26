@@ -1,17 +1,18 @@
-package io.github.sinri.drydock.naval.base;
+package io.github.sinri.drydock.common;
 
 import io.github.sinri.keel.servant.queue.KeelQueue;
 import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
 import io.github.sinri.keel.servant.queue.QueueWorkerPoolManager;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.ThreadingModel;
 
 import javax.annotation.Nonnull;
 
 /**
  * @since 1.1.0
  */
-public interface QueueMixin extends Boat {
+public interface QueueMixin extends CommonUnit {
     default KeelQueue buildQueue() {
         var queue = new KeelQueue() {
             @Override
@@ -50,12 +51,12 @@ public interface QueueMixin extends Boat {
         return Future.succeededFuture(this.buildQueue())
                 .compose(queue -> {
                     if (queue == null) return Future.succeededFuture();
-                    return queue.deployMe(new DeploymentOptions().setWorker(true))
+                    return queue.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER))
                             .onFailure(throwable -> {
-                                getNavalLogger().exception(throwable, "load queue failed");
+                                getUnitLogger().exception(throwable, "load queue failed");
                             })
                             .compose(deploymentId -> {
-                                getNavalLogger().info("load queue: " + deploymentId);
+                                getUnitLogger().info("load queue: " + deploymentId);
                                 return Future.succeededFuture();
                             });
                 });

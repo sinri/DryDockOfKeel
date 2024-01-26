@@ -1,6 +1,6 @@
 package io.github.sinri.drydock.naval.melee;
 
-import io.github.sinri.drydock.naval.base.HttpServerMixin;
+import io.github.sinri.drydock.common.HttpServerMixin;
 import io.vertx.core.Future;
 
 /**

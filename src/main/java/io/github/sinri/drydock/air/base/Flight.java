@@ -5,6 +5,7 @@ import io.github.sinri.keel.facade.launcher.KeelLauncherAdapter;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
@@ -18,13 +19,15 @@ import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 public class Flight implements KeelLauncherAdapter {
     private final String mainVerticleClass;
     private final KeelEventLogger flightLogger;
+    private final @Nullable Handler<VertxOptions> vertxOptionsHandler;
 
-    public Flight(Class<? extends Plane> mainVerticleClass) {
-        this(mainVerticleClass.getName());
+    public Flight(Class<? extends Plane> mainVerticleClass, @Nullable Handler<VertxOptions> vertxOptionsHandler) {
+        this(mainVerticleClass.getName(), vertxOptionsHandler);
     }
 
-    public Flight(String mainVerticleClass) {
+    public Flight(String mainVerticleClass, @Nullable Handler<VertxOptions> vertxOptionsHandler) {
         this.mainVerticleClass = mainVerticleClass;
+        this.vertxOptionsHandler = vertxOptionsHandler;
         this.flightLogger = KeelOutputEventLogCenter.getInstance()
                 .createLogger("DryDock::Flight", x -> x
                         .put("main", this.mainVerticleClass)
@@ -43,6 +46,7 @@ public class Flight implements KeelLauncherAdapter {
 
     @Override
     public void afterConfigParsed(JsonObject jsonObject) {
+        // load the local config file
         Keel.getConfiguration().reloadDataFromJsonObject(jsonObject);
         Keel.getConfiguration().loadPropertiesFile("config.properties");
         jsonObject.mergeIn(Keel.getConfiguration().toJsonObject());
@@ -51,6 +55,10 @@ public class Flight implements KeelLauncherAdapter {
     @Override
     public void beforeStartingVertx(VertxOptions vertxOptions) {
         logger().info("beforeStartingVertx");
+        // change vertx options
+        if (vertxOptionsHandler != null) {
+            vertxOptionsHandler.handle(vertxOptions);
+        }
     }
 
     @Override

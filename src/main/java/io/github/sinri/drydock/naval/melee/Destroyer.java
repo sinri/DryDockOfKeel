@@ -1,7 +1,7 @@
 package io.github.sinri.drydock.naval.melee;
 
-import io.github.sinri.drydock.naval.base.QueueMixin;
-import io.github.sinri.drydock.naval.base.SundialMixin;
+import io.github.sinri.drydock.common.QueueMixin;
+import io.github.sinri.drydock.common.SundialMixin;
 import io.vertx.core.Future;
 
 /**
@@ -24,10 +24,13 @@ abstract public class Destroyer extends Ironclad implements SundialMixin, QueueM
     final protected Future<Void> launchAsIronclad() {
         getNavalLogger().info("To deploy async services");
 
-        return Future.all(
-                        this.loadQueue(),
-                        this.loadSundial()
-                )
+        return Future.succeededFuture()
+                .compose(v -> {
+                    return this.loadSundial();
+                })
+                .compose(v -> {
+                    return this.loadQueue();
+                })
                 .compose(compositeFuture -> {
                     getNavalLogger().info("Async services loaded.");
 

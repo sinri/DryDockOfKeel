@@ -1,7 +1,7 @@
 package io.github.sinri.drydock.naval.melee;
 
-import io.github.sinri.drydock.naval.base.AliyunSLSAdapterImpl;
-import io.github.sinri.drydock.naval.base.HealthMonitorMixin;
+import io.github.sinri.drydock.common.AliyunSLSAdapterImpl;
+import io.github.sinri.drydock.common.HealthMonitorMixin;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.center.KeelAsyncEventLogCenter;
 import io.vertx.core.Future;

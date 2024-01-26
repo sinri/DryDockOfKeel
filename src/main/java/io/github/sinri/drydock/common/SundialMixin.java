@@ -1,16 +1,17 @@
-package io.github.sinri.drydock.naval.base;
+package io.github.sinri.drydock.common;
 
 import io.github.sinri.keel.servant.sundial.KeelSundial;
 import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.ThreadingModel;
 
 import java.util.Collection;
 
 /**
  * @since 1.1.0
  */
-public interface SundialMixin extends Boat {
+public interface SundialMixin extends CommonUnit {
     default KeelSundial buildSundial() {
         var sundial = new KeelSundial() {
             @Override
@@ -28,12 +29,12 @@ public interface SundialMixin extends Boat {
         return Future.succeededFuture(this.buildSundial())
                 .compose(sundial -> {
                     if (sundial == null) return Future.succeededFuture();
-                    return sundial.deployMe(new DeploymentOptions().setWorker(true))
+                    return sundial.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER))
                             .onFailure(throwable -> {
-                                getNavalLogger().exception(throwable, "load sundial failed");
+                                getUnitLogger().exception(throwable, "load sundial failed");
                             })
                             .compose(deploymentId -> {
-                                getNavalLogger().info("load sundial: " + deploymentId);
+                                getUnitLogger().info("load sundial: " + deploymentId);
                                 return Future.succeededFuture();
                             });
                 });

@@ -1,19 +1,18 @@
 package io.github.sinri.drydock.naval.base;
 
-import io.github.sinri.keel.logger.event.KeelEventLog;
-import io.github.sinri.keel.logger.event.KeelEventLogCenter;
+import io.github.sinri.drydock.common.CommonUnit;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
-import io.vertx.core.Handler;
 
 /**
  * @since 1.1.0
  */
-public interface Boat {
+public interface Boat extends CommonUnit {
+    @Override
+    default KeelEventLogger getUnitLogger() {
+        return getNavalLogger();
+    }
+
     KeelEventLogger getNavalLogger();
-
-    KeelEventLogCenter getLogCenter();
-
-    KeelEventLogger generateLogger(String topic, Handler<KeelEventLog> eventLogHandler);
 
     void launch();
 

@@ -1,5 +1,6 @@
 package io.github.sinri.drydock.naval.base;
 
+import io.github.sinri.drydock.common.AliyunSLSAdapterImpl;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
