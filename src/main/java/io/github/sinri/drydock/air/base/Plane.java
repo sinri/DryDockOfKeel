@@ -1,102 +1,33 @@
 package io.github.sinri.drydock.air.base;
 
 import io.github.sinri.keel.core.TechnicalPreview;
+import io.github.sinri.keel.facade.launcher.KeelLauncherAdapter;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
-import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.github.sinri.keel.verticles.KeelVerticleBase;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.core.VertxOptions;
+import io.vertx.core.*;
+import io.vertx.core.json.JsonObject;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Objects;
+import javax.annotation.Nullable;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
- * For fat-jar's Main Entrance!
+ * @since 1.3.0 Technical Preview
  */
-@TechnicalPreview
-@Deprecated(forRemoval = true)
-abstract public class Plane extends KeelVerticleBase implements Flyable {
-    //private static KeelEventLogger flightLogger;
-    private KeelEventLogCenter logCenter;
-    private static String calledClass;
-    private static Class<?> planeClass;
-    private static Method configVertxOptionsMethod;
+@TechnicalPreview(since = "1.3.0")
+abstract public class Plane extends KeelVerticleBase implements KeelLauncherAdapter, Flyable {
 
-    public static void main(String[] args) {
 
-        try {
-            // 首先看运行时环境中的命令行参数，主要用于开发环境和直接用class调用的情况。
-            calledClass = System.getProperty("sun.java.command");
-            KeelOutputEventLogCenter.instantLogger().notice("calledClass from sun.java.command: " + calledClass);
-
-            // 正式环境中，一般使用JAR包来运行，需要从JAR包里的META-INF/MANIFEST.MF文件里取Main-Class的值。
-            if (calledClass.endsWith(".jar")) {
-                // Get the location of this class file
-                byte[] bytes = Keel.fileHelper().readFileAsByteArray("META-INF/MANIFEST.MF", true);
-                String s = new String(bytes);
-                KeelOutputEventLogCenter.instantLogger().info("META-INF/MANIFEST.MF content: " + s);
-                String[] lines = s.split("[\r\n]+");
-                for (var line : lines) {
-                    if (line.startsWith("Main-Class:")) {
-                        calledClass = line.substring(11).trim();
-                        break;
-                    }
-                }
-
-                KeelOutputEventLogCenter.instantLogger().notice("calledClass from MainClass: " + calledClass);
-                Objects.requireNonNull(calledClass);
-            }
-            planeClass = Class.forName(calledClass);
-        } catch (Throwable throwable) {
-            KeelOutputEventLogCenter.instantLogger().exception(throwable, "Cannot find Plane class");
-            throw new RuntimeException();
-        }
-
-        try {
-            Method method = planeClass.getDeclaredMethod("configVertxOptions", VertxOptions.class);
-            if (Modifier.isStatic(method.getModifiers()) && Modifier.isPublic(method.getModifiers())) {
-                configVertxOptionsMethod = method;
-            } else {
-                throw new RuntimeException();
-            }
-        } catch (Throwable throwable) {
-            KeelOutputEventLogCenter.instantLogger().warning(
-                    "Did not found the public static method `configVertxOptions(VertxOptions)` in class " + calledClass + ", will use default VertxOptions.");
-            configVertxOptionsMethod = null;
-        }
-
-        Flight flight = new Flight(calledClass, vertxOptions -> {
-            if (configVertxOptionsMethod != null) {
-                try {
-                    configVertxOptionsMethod.invoke(null, vertxOptions);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    KeelOutputEventLogCenter.instantLogger().exception(e, "Failed to execute configVertxOptions");
-                }
-            }
-        });
-        flight.launch(args);
-    }
-
-    protected KeelEventLogCenter buildLogCenter() {
-        return KeelOutputEventLogCenter.getInstance();
+    @Override
+    public final KeelEventLogger getFlightLogger() {
+        return getLogger();
     }
 
     @Override
-    public final KeelEventLogCenter getLogCenter() {
-        return logCenter;
-    }
-
-    @Override
-    public KeelEventLogger getFlightLogger() {
-        return Flight.getFlightLogger();
+    public final KeelEventLogger logger() {
+        return getLogger();
     }
 
     @Override
@@ -104,47 +35,78 @@ abstract public class Plane extends KeelVerticleBase implements Flyable {
         return getLogCenter().createLogger(topic, eventLogHandler);
     }
 
-    abstract public Future<Void> flyAsPlane();
-
-
     @Override
-    public final void start(Promise<Void> startPromise) throws Exception {
-        start();
+    public void beforeStoppingVertx() {
 
-        setLogger(getFlightLogger());
-
-        // local config.properties had been loaded into this verticle's config.
-        Future.succeededFuture()
-                .compose(v -> {
-                    return loadRemoteConfiguration();
-                })
-                .compose(remoteConfigurationLoaded -> {
-                    logCenter = buildLogCenter();
-                    return Future.succeededFuture();
-                })
-                .compose(logCenterBuilt -> {
-                    return flyAsPlane();
-                })
-                .andThen(ar -> {
-                    if (ar.failed()) {
-                        getFlightLogger().exception(ar.cause(), "Failed to start flying");
-                        startPromise.fail(ar.cause());
-                    } else {
-                        startPromise.complete();
-                    }
-                });
     }
 
     @Override
-    public final void start() {
+    public final void afterConfigParsed(JsonObject jsonObject) {
+        Keel.getConfiguration().reloadDataFromJsonObject(jsonObject);
+        loadLocalConfiguration();
+        jsonObject.mergeIn(Keel.getConfiguration().toJsonObject());
     }
 
-    // public static void configVertxOptions(VertxOptions);
+    abstract protected void loadLocalConfiguration();
+
+    @Override
+    final public void beforeStartingVertx(VertxOptions vertxOptions) {
+        modifyVertxOptions(vertxOptions);
+    }
+
+    abstract protected void modifyVertxOptions(VertxOptions vertxOptions);
+
+    @Override
+    public void afterStartingVertx(Vertx vertx) {
+        logger().info("afterStartingVertx!");
+    }
+
+    @Override
+    final public void beforeDeployingVerticle(DeploymentOptions deploymentOptions) {
+        // override to modify vertx options
+        this.modifyDeploymentOptions(deploymentOptions);
+    }
+
+    protected void modifyDeploymentOptions(DeploymentOptions deploymentOptions) {
+
+    }
+
+    @Override
+    public void beforeStoppingVertx(Vertx vertx) {
+
+    }
+
+    @Override
+    public void afterStoppingVertx() {
+
+    }
+
+    @Override
+    public void handleDeployFailed(Vertx vertx, String mainVerticle, DeploymentOptions deploymentOptions, Throwable cause) {
+        logger().exception(cause, "handleDeployFailed");
+        vertx.close();
+    }
 
     /**
-     * 加载远程配置。
-     * 此时已加载本地配置，已初始化Keel(Vert.x)。
-     * 仅可以使用 flightLogger。
+     * Do not override only if you know what are you about to do.
      */
-    abstract protected Future<Void> loadRemoteConfiguration();
+    @Nullable
+    @Override
+    public String getDefaultCommand() {
+        return "run";
+    }
+
+    abstract protected KeelEventLogCenter buildLogCenter();
+
+    @Override
+    public final void start() throws Exception {
+    }
+
+    @Override
+    abstract public void start(Promise<Void> startPromise);
+
+    @Override
+    final public void launch(String[] args) {
+        this.launcher().dispatch(args);
+    }
 }

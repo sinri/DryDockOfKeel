@@ -154,7 +154,7 @@ abstract public class Warship implements Boat {
      * @param eventLogHandler 事件日志处理器
      */
     @Override
-    public KeelEventLogger generateLogger(String topic, Handler<KeelEventLog> eventLogHandler) {
-        return logCenter.createLogger(topic, eventLogHandler);
+    public final KeelEventLogger generateLogger(String topic, Handler<KeelEventLog> eventLogHandler) {
+        return getLogCenter().createLogger(topic, eventLogHandler);
     }
 }

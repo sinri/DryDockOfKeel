@@ -13,10 +13,10 @@ public interface HttpServerMixin extends CommonUnit {
                     if (server == null) return Future.succeededFuture();
                     return server.deployMe(new DeploymentOptions())
                             .onFailure(ironcladFailure -> {
-                                getUnitLogger().exception(ironcladFailure, "Failed to ensure equipments as Ironclad to provide HTTP service.");
+                                getUnitLogger().exception(ironcladFailure, "Failed to start HTTP service.");
                             })
                             .compose(httpServerDeployed -> {
-                                getUnitLogger().info("Ironclad HTTP Service Started: " + httpServerDeployed);
+                                getUnitLogger().info("HTTP Service Started: " + httpServerDeployed);
                                 return Future.succeededFuture();
                             });
                 });

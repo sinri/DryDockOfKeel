@@ -11,4 +11,5 @@ public interface CommonUnit {
     KeelEventLogCenter getLogCenter();
 
     KeelEventLogger generateLogger(String topic, Handler<KeelEventLog> eventLogHandler);
+
 }
