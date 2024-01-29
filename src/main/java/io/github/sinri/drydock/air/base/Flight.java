@@ -16,6 +16,7 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 @TechnicalPreview
+@Deprecated(forRemoval = true)
 public class Flight implements KeelLauncherAdapter {
     private final String mainVerticleClass;
     private static KeelEventLogger flightLogger = KeelOutputEventLogCenter.instantLogger();

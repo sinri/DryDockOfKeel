@@ -45,7 +45,7 @@
         <dependency>
             <groupId>io.github.sinri</groupId>
             <artifactId>Keel</artifactId>
-            <version>3.1.6</version>
+            <version>3.1.7</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.aliyun.openservices/aliyun-log-producer -->
         <dependency>

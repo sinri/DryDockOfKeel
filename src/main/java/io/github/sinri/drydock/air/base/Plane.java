@@ -22,6 +22,7 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * For fat-jar's Main Entrance!
  */
 @TechnicalPreview
+@Deprecated(forRemoval = true)
 abstract public class Plane extends KeelVerticleBase implements Flyable {
     //private static KeelEventLogger flightLogger;
     private KeelEventLogCenter logCenter;

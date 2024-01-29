@@ -1,4 +1,4 @@
-package io.github.sinri.drydock.air.plane;
+package io.github.sinri.drydock.air.frozenplane;
 
 import io.github.sinri.drydock.air.base.Plane;
 import io.github.sinri.drydock.common.AliyunSLSAdapterImpl;
@@ -14,6 +14,7 @@ import javax.annotation.Nonnull;
  * 对标 io.github.sinri.drydock.naval.melee.Caravel
  */
 @TechnicalPreview
+@Deprecated(forRemoval = true)
 public abstract class Biplane extends Plane implements HealthMonitorMixin {
 
     protected KeelEventLogCenter buildLogCenter() {
