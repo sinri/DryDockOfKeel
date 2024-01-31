@@ -1,29 +1,43 @@
 package io.github.sinri.drydock.air.base;
 
-import io.github.sinri.keel.core.TechnicalPreview;
-import io.github.sinri.keel.logger.event.KeelEventLogCenter;
-import io.github.sinri.keel.logger.event.KeelEventLogger;
-import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 
 import javax.annotation.Nonnull;
-import java.util.Objects;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
  * @since 1.3.0 Technical Preview
  */
-@TechnicalPreview(since = "1.3.0")
 public abstract class Biplane extends Plane {
-    private KeelEventLogCenter logCenter;
+    /**
+     * @since 1.3.1
+     */
+    private static Biplane plane;
 
     public Biplane() {
-        logCenter = KeelOutputEventLogCenter.getInstance();
-        getFlightLogger().info("Biplane logCenter built: " + logCenter);
-        KeelEventLogger logger = logCenter.createLogger("Biplane");
-        setLogger(logger);
+        setLogger(getLogCenter().createLogger(getClass().getSimpleName()));
+    }
+
+    /**
+     * @since 1.3.1
+     */
+
+    private static <T extends Biplane> void setPlane(T plane) {
+        Biplane.plane = plane;
+    }
+
+    /**
+     * @since 1.3.1
+     */
+
+    public static <T extends Biplane> T getPlane(Class<T> tClass) {
+        if (tClass.isInstance(plane)) {
+            return tClass.cast(plane);
+        } else {
+            throw new ClassCastException();
+        }
     }
 
     @Override
@@ -34,16 +48,6 @@ public abstract class Biplane extends Plane {
 
     abstract protected Future<Void> loadRemoteConfiguration();
 
-    @Override
-    protected KeelEventLogCenter buildLogCenter() {
-        return KeelOutputEventLogCenter.getInstance();
-    }
-
-    @Override
-    public final KeelEventLogCenter getLogCenter() {
-        return Objects.requireNonNull(logCenter, "log center of Biplane is not set yet.");
-    }
-
     abstract protected Future<Void> flyAsBiplane();
 
     @Nonnull
@@ -51,14 +55,16 @@ public abstract class Biplane extends Plane {
 
     @Override
     public final void start(Promise<Void> startPromise) {
+        // since 1.3.1 add this;
+        // todo If the verticle is running parallel, it may be overwritten.
+        setPlane(this);
         // now local config has been loaded
         Future.succeededFuture()
                 .compose(v -> {
                     return loadRemoteConfiguration();
                 })
                 .compose(remoteConfigurationLoaded -> {
-                    logCenter = buildLogCenter();
-                    getFlightLogger().info("Biplane logCenter built: " + logCenter);
+                    setLogCenter(buildLogCenter());
                     return Future.succeededFuture();
                 })
                 .compose(v -> {

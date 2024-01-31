@@ -4,7 +4,6 @@ import io.github.sinri.drydock.air.base.Biplane;
 import io.github.sinri.drydock.common.AliyunSLSAdapterImpl;
 import io.github.sinri.drydock.common.HealthMonitorMixin;
 import io.github.sinri.drydock.common.HttpServerMixin;
-import io.github.sinri.keel.core.TechnicalPreview;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.center.KeelAsyncEventLogCenter;
 import io.vertx.core.Future;
@@ -12,7 +11,6 @@ import io.vertx.core.Future;
 /**
  * @since 1.3.0 Technical Preview
  */
-@TechnicalPreview(since = "1.3.0")
 public abstract class Fighter extends Biplane implements HealthMonitorMixin, HttpServerMixin {
     @Override
     protected KeelEventLogCenter buildLogCenter() {

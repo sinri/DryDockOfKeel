@@ -5,7 +5,6 @@ import io.github.sinri.drydock.common.AliyunSLSAdapterImpl;
 import io.github.sinri.drydock.common.HealthMonitorMixin;
 import io.github.sinri.drydock.common.QueueMixin;
 import io.github.sinri.drydock.common.SundialMixin;
-import io.github.sinri.keel.core.TechnicalPreview;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.center.KeelAsyncEventLogCenter;
 import io.vertx.core.Future;
@@ -13,7 +12,6 @@ import io.vertx.core.Future;
 /**
  * @since 1.3.0 Technical Preview
  */
-@TechnicalPreview(since = "1.3.0")
 public abstract class Bomber extends Biplane implements HealthMonitorMixin, QueueMixin, SundialMixin {
     @Override
     protected Future<Void> loadRemoteConfiguration() {

@@ -1,10 +1,10 @@
 package io.github.sinri.drydock.air.base;
 
-import io.github.sinri.keel.core.TechnicalPreview;
 import io.github.sinri.keel.facade.launcher.KeelLauncherAdapter;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
+import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.github.sinri.keel.verticles.KeelVerticleBase;
 import io.vertx.core.*;
 import io.vertx.core.json.JsonObject;
@@ -16,9 +16,22 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 /**
  * @since 1.3.0 Technical Preview
  */
-@TechnicalPreview(since = "1.3.0")
-abstract public class Plane extends KeelVerticleBase implements KeelLauncherAdapter, Flyable {
+abstract class Plane extends KeelVerticleBase implements KeelLauncherAdapter, Flyable {
+    private KeelEventLogCenter logCenter;
 
+    public Plane() {
+        logCenter = KeelOutputEventLogCenter.getInstance();
+    }
+
+    @Override
+    public KeelEventLogCenter getLogCenter() {
+        return logCenter;
+    }
+
+    protected void setLogCenter(KeelEventLogCenter logCenter) {
+        this.logCenter = logCenter;
+        getFlightLogger().info("io.github.sinri.drydock.air.base.Plane.setLogCenter: " + getLogCenter().getClass().getName());
+    }
 
     @Override
     public final KeelEventLogger getFlightLogger() {
@@ -96,10 +109,14 @@ abstract public class Plane extends KeelVerticleBase implements KeelLauncherAdap
         return "run";
     }
 
-    abstract protected KeelEventLogCenter buildLogCenter();
+    protected KeelEventLogCenter buildLogCenter() {
+        var x = KeelOutputEventLogCenter.getInstance();
+        getFlightLogger().info("io.github.sinri.drydock.air.base.Plane.buildLogCenter: " + x);
+        return x;
+    }
 
     @Override
-    public final void start() throws Exception {
+    public final void start() {
     }
 
     @Override
