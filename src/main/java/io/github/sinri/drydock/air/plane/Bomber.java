@@ -35,7 +35,7 @@ public abstract class Bomber extends Biplane implements HealthMonitorMixin, Queu
                     // 飞行日志共享大计
                     var bypassLogger = generateLogger(
                             AliyunSLSAdapterImpl.TopicFlight,
-                            log -> log.put("plane", getClass().getName())
+                            log -> log.context(c -> c.put("plane", getClass().getName()))
                     );
                     this.getLogger().addBypassLogger(bypassLogger);
                     return Future.succeededFuture();

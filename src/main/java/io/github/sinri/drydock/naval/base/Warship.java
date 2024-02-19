@@ -38,8 +38,7 @@ abstract public class Warship implements Boat {
         this.logCenter = KeelOutputEventLogCenter.getInstance();
         this.navalLogger = this.logCenter.createLogger(
                 AliyunSLSAdapterImpl.TopicNaval,//"DryDock::Naval",
-                x -> x
-                        .put("local_address", KeelHelpers.netHelper().getLocalHostAddress()));
+                x -> x.context(c -> c.put("local_address", KeelHelpers.netHelper().getLocalHostAddress())));
     }
 
     /**

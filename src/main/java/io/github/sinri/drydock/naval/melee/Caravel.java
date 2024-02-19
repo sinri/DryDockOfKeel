@@ -42,7 +42,7 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
                     // 航海日志共享大计
                     var bypassLogger = generateLogger(
                             AliyunSLSAdapterImpl.TopicNaval,
-                            log -> log.put("warship", getClass().getName())
+                            log -> log.context(c -> c.put("warship", getClass().getName()))
                     );
                     this.getNavalLogger().addBypassLogger(bypassLogger);
                     // 加载数据源（例如MySQL等）
