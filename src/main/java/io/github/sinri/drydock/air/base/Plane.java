@@ -3,6 +3,7 @@ package io.github.sinri.drydock.air.base;
 import io.github.sinri.keel.facade.launcher.KeelLauncherAdapter;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
+import io.github.sinri.keel.logger.event.KeelEventLogToBeExtended;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.github.sinri.keel.verticles.KeelVerticleBase;
@@ -10,6 +11,7 @@ import io.vertx.core.*;
 import io.vertx.core.json.JsonObject;
 
 import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
@@ -44,8 +46,16 @@ abstract class Plane extends KeelVerticleBase implements KeelLauncherAdapter, Fl
     }
 
     @Override
-    public final KeelEventLogger generateLogger(String topic, Handler<KeelEventLog> eventLogHandler) {
+    public final KeelEventLogger generateLogger(String topic, Handler<KeelEventLogToBeExtended> eventLogHandler) {
         return getLogCenter().createLogger(topic, eventLogHandler);
+    }
+
+    /**
+     * @since 1.3.4
+     */
+    @Override
+    public <T extends KeelEventLog> KeelEventLogger generateLoggerForCertainEvent(String topic, @Nullable Supplier<T> baseLogBuilder) {
+        return getLogCenter().createLogger(topic, baseLogBuilder);
     }
 
     @Override

@@ -3,11 +3,15 @@ package io.github.sinri.drydock.naval.base;
 import io.github.sinri.drydock.common.AliyunSLSAdapterImpl;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogCenter;
+import io.github.sinri.keel.logger.event.KeelEventLogToBeExtended;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
+
+import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
@@ -37,8 +41,9 @@ abstract public class Warship implements Boat {
     public Warship() {
         this.logCenter = KeelOutputEventLogCenter.getInstance();
         this.navalLogger = this.logCenter.createLogger(
-                AliyunSLSAdapterImpl.TopicNaval,//"DryDock::Naval",
-                x -> x.context(c -> c.put("local_address", KeelHelpers.netHelper().getLocalHostAddress())));
+                AliyunSLSAdapterImpl.TopicNaval,
+                entries -> entries.context(c -> c.put("local_address", KeelHelpers.netHelper().getLocalHostAddress()))
+        );
     }
 
     /**
@@ -153,7 +158,15 @@ abstract public class Warship implements Boat {
      * @param eventLogHandler 事件日志处理器
      */
     @Override
-    public final KeelEventLogger generateLogger(String topic, Handler<KeelEventLog> eventLogHandler) {
+    public final KeelEventLogger generateLogger(String topic, Handler<KeelEventLogToBeExtended> eventLogHandler) {
         return getLogCenter().createLogger(topic, eventLogHandler);
+    }
+
+    /**
+     * @since 1.3.4
+     */
+    @Override
+    public <T extends KeelEventLog> KeelEventLogger generateLoggerForCertainEvent(String topic, @Nullable Supplier<T> baseLogBuilder) {
+        return getLogCenter().createLogger(topic, baseLogBuilder);
     }
 }
