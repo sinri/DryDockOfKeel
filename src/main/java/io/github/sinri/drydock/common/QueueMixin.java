@@ -32,7 +32,7 @@ public interface QueueMixin extends CommonUnit {
                 return new QueueWorkerPoolManager(x);
             }
         };
-        queue.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicQueue, null));
+        queue.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicQueue, entries -> entries.classification("Queue")));
         return queue;
     }
 

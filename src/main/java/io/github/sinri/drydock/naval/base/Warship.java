@@ -10,6 +10,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
@@ -158,7 +159,7 @@ abstract public class Warship implements Boat {
      * @param eventLogHandler 事件日志处理器
      */
     @Override
-    public final KeelEventLogger generateLogger(String topic, Handler<KeelEventLogToBeExtended> eventLogHandler) {
+    public final KeelEventLogger generateLogger(@Nonnull String topic, @Nonnull Handler<KeelEventLogToBeExtended> eventLogHandler) {
         return getLogCenter().createLogger(topic, eventLogHandler);
     }
 
@@ -166,7 +167,7 @@ abstract public class Warship implements Boat {
      * @since 1.3.4
      */
     @Override
-    public <T extends KeelEventLog> KeelEventLogger generateLoggerForCertainEvent(String topic, @Nullable Supplier<T> baseLogBuilder) {
+    public <T extends KeelEventLog> KeelEventLogger generateLoggerForCertainEvent(@Nonnull String topic, @Nullable Supplier<T> baseLogBuilder) {
         return getLogCenter().createLogger(topic, baseLogBuilder);
     }
 }

@@ -135,7 +135,7 @@ public class HealthMonitor extends KeelVerticleBase {
                                     .put("cpu_time", monitorSnapshot.getCPUTime().toJsonObject())
                                     .put("jvm_memory_stat", monitorSnapshot.getJvmMemoryResult().toJsonObject());
                             moreEvent.forEach(entry -> snapshot.put(entry.getKey(), entry.getValue()));
-                            eventLog.context(snapshot);
+                            eventLog.toJsonObject().put("snapshot", snapshot);
                         });
                     }
                 }

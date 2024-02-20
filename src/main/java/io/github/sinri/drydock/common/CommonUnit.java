@@ -6,6 +6,7 @@ import io.github.sinri.keel.logger.event.KeelEventLogToBeExtended;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.vertx.core.Handler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
@@ -17,11 +18,11 @@ public interface CommonUnit {
     /**
      * @since 1.3.4 the type in eventLogHandler KeelEventLog changed to KeelEventLogToBeExtended
      */
-    KeelEventLogger generateLogger(String topic, Handler<KeelEventLogToBeExtended> eventLogHandler);
+    KeelEventLogger generateLogger(@Nonnull String topic, @Nonnull Handler<KeelEventLogToBeExtended> eventLogHandler);
 
     /**
      * @since 1.3.4
      */
-    <T extends KeelEventLog> KeelEventLogger generateLoggerForCertainEvent(String topic, @Nullable Supplier<T> baseLogBuilder);
+    <T extends KeelEventLog> KeelEventLogger generateLoggerForCertainEvent(@Nonnull String topic, @Nullable Supplier<T> baseLogBuilder);
 
 }

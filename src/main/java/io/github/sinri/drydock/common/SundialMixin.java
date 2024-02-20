@@ -19,7 +19,7 @@ public interface SundialMixin extends CommonUnit {
                 return fetchSundialPlans();
             }
         };
-        sundial.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicSundial, null));
+        sundial.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicSundial, entries -> entries.classification("Sundial")));
         return sundial;
     }
 
