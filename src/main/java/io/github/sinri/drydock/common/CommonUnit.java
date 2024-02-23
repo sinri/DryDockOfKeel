@@ -1,28 +1,29 @@
 package io.github.sinri.drydock.common;
 
-import io.github.sinri.keel.logger.event.KeelEventLog;
-import io.github.sinri.keel.logger.event.KeelEventLogCenter;
-import io.github.sinri.keel.logger.event.KeelEventLogToBeExtended;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
-import io.vertx.core.Handler;
+import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
+import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
+import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
 public interface CommonUnit {
     KeelEventLogger getUnitLogger();
 
-    KeelEventLogCenter getLogCenter();
-
     /**
-     * @since 1.3.4 the type in eventLogHandler KeelEventLog changed to KeelEventLogToBeExtended
+     * @since 1.3.4
      */
-    KeelEventLogger generateLogger(@Nonnull String topic, @Nonnull Handler<KeelEventLogToBeExtended> eventLogHandler);
+    KeelIssueRecordCenter getIssueRecordCenter();
 
     /**
      * @since 1.3.4
      */
-    <T extends KeelEventLog> KeelEventLogger generateLoggerForCertainEvent(@Nonnull String topic, @Nullable Supplier<T> baseLogBuilder);
+    default <T extends KeelIssueRecord<?>> KeelIssueRecorder<T> generateIssueRecorder(@Nonnull String topic, @Nonnull Supplier<T> issueRecordBuilder) {
+        return getIssueRecordCenter().generateIssueRecorder(topic, issueRecordBuilder);
+    }
 
+    default KeelEventLogger generateEventLogger(@Nonnull String topic) {
+        return getIssueRecordCenter().generateEventLogger(topic);
+    }
 }

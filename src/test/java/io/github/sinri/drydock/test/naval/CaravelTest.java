@@ -21,7 +21,7 @@ public class CaravelTest extends Caravel {
 
     @Override
     protected Future<Void> launchAsCaravel() {
-        KeelEventLogger logger = generateLogger("CaravelTest", null);
+        KeelEventLogger logger = getIssueRecordCenter().generateEventLogger("CaravelTest");
         logger.info("launched");
         Keel.getVertx().setPeriodic(10_000L, timer -> {
             logger.info("trigger time here");

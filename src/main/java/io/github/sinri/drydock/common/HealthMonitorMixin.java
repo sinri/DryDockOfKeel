@@ -1,6 +1,7 @@
 package io.github.sinri.drydock.common;
 
-import io.github.sinri.keel.logger.event.KeelEventLogger;
+import io.github.sinri.drydock.common.logging.DryDockLogTopics;
+import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.ThreadingModel;
@@ -15,8 +16,9 @@ public interface HealthMonitorMixin
         return Future.succeededFuture(buildHealthMonitor())
                 .compose(healthMonitor -> {
                     if (healthMonitor == null) return Future.succeededFuture();
-                    KeelEventLogger keelEventLogger = generateLogger(AliyunSLSAdapterImpl.TopicHealthMonitor, entries -> entries.classification("HealthMonitor"));
-                    healthMonitor.setLogger(keelEventLogger);
+
+                    healthMonitor.setIssueRecorder(getIssueRecordCenter().generateIssueRecorder(DryDockLogTopics.TopicHealthMonitor, HealthMonitorIssueRecord::new));
+
                     return healthMonitor.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER));
                 })
                 .onFailure(throwable -> {

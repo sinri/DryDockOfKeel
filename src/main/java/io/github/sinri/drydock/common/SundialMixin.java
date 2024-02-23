@@ -1,5 +1,6 @@
 package io.github.sinri.drydock.common;
 
+import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.keel.servant.sundial.KeelSundial;
 import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
 import io.vertx.core.DeploymentOptions;
@@ -19,7 +20,7 @@ public interface SundialMixin extends CommonUnit {
                 return fetchSundialPlans();
             }
         };
-        sundial.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicSundial, entries -> entries.classification("Sundial")));
+        sundial.setLogger(getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicSundial));
         return sundial;
     }
 

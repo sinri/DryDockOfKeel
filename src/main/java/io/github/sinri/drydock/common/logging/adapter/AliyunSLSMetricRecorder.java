@@ -1,4 +1,4 @@
-package io.github.sinri.drydock.common;
+package io.github.sinri.drydock.common.logging.adapter;
 
 import com.aliyun.openservices.aliyun.log.producer.LogProducer;
 import com.aliyun.openservices.aliyun.log.producer.Producer;
@@ -6,7 +6,6 @@ import com.aliyun.openservices.aliyun.log.producer.ProducerConfig;
 import com.aliyun.openservices.aliyun.log.producer.ProjectConfig;
 import com.aliyun.openservices.log.common.LogItem;
 import io.github.sinri.keel.facade.KeelConfiguration;
-import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
 import io.github.sinri.keel.logger.metric.KeelMetricRecord;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
@@ -89,8 +88,9 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
 
         if (disabled) {
             list.forEach(item -> {
-                KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).log(log -> {
-                    log.reloadDataFromJsonObject(item.toJsonObject());
+                Keel.getLogger().getIssueRecorder().record(log -> {
+                    log.topic(item.topic());
+                    log.context(item.toJsonObject());
                 });
             });
             return Future.succeededFuture();
@@ -104,14 +104,18 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
             });
             producer.send(project, logstore, topic, source, logItems, result -> {
                 if (!result.isSuccessful()) {
-                    KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).error(eventLog -> {
-                        eventLog.topic(getClass().getName()).message("Producer Send Error: " + result);
-                    });
+                    Keel.getLogger().getIssueRecorder().error(eventLog -> eventLog
+                            .classification(getClass().getName())
+                            .message("Producer Send Error: " + result)
+                    );
                 }
                 promise.complete(null);
             });
         } catch (Throwable e) {
-            KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).exception(e, "Aliyun SLS Producer Exception");
+            Keel.getLogger().getIssueRecorder().exception(e, r -> r
+                    .classification(getClass().getName())
+                    .message("Aliyun SLS Producer Exception")
+            );
             promise.fail(e);
         }
 

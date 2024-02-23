@@ -17,7 +17,7 @@ public abstract class Biplane extends Plane {
     private static Biplane plane;
 
     public Biplane() {
-        setLogger(getLogCenter().createLogger(getClass().getSimpleName()));
+
     }
 
     /**
@@ -64,7 +64,7 @@ public abstract class Biplane extends Plane {
                     return loadRemoteConfiguration();
                 })
                 .compose(remoteConfigurationLoaded -> {
-                    setLogCenter(buildLogCenter());
+                    setIssueRecordCenter(buildIssueRecordCenter());
                     return Future.succeededFuture();
                 })
                 .compose(v -> {
@@ -75,7 +75,7 @@ public abstract class Biplane extends Plane {
                 })
                 .andThen(ar -> {
                     if (ar.failed()) {
-                        getFlightLogger().exception(ar.cause(), "Failed to start flying");
+                        getUnitLogger().exception(ar.cause(), "Failed to start flying");
                         startPromise.fail(ar.cause());
                     } else {
                         startPromise.complete();

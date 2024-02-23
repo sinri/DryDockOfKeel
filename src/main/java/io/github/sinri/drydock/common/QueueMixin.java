@@ -1,7 +1,9 @@
 package io.github.sinri.drydock.common;
 
+import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.keel.servant.queue.KeelQueue;
 import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
+import io.github.sinri.keel.servant.queue.QueueManageIssueRecord;
 import io.github.sinri.keel.servant.queue.QueueWorkerPoolManager;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -32,7 +34,7 @@ public interface QueueMixin extends CommonUnit {
                 return new QueueWorkerPoolManager(x);
             }
         };
-        queue.setLogger(generateLogger(AliyunSLSAdapterImpl.TopicQueue, entries -> entries.classification("Queue")));
+        queue.setIssueRecorder(generateIssueRecorder(DryDockLogTopics.TopicQueue, QueueManageIssueRecord::new));
         return queue;
     }
 

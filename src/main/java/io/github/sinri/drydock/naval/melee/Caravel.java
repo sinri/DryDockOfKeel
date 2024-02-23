@@ -1,9 +1,10 @@
 package io.github.sinri.drydock.naval.melee;
 
-import io.github.sinri.drydock.common.AliyunSLSAdapterImpl;
 import io.github.sinri.drydock.common.HealthMonitorMixin;
-import io.github.sinri.keel.logger.event.KeelEventLogCenter;
-import io.github.sinri.keel.logger.event.center.KeelAsyncEventLogCenter;
+import io.github.sinri.drydock.common.logging.DryDockLogTopics;
+import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
+import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
+import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenterAsAsync;
 import io.vertx.core.Future;
 
 import javax.annotation.Nonnull;
@@ -40,11 +41,8 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
         return Future.succeededFuture()
                 .compose(v -> {
                     // 航海日志共享大计
-                    var bypassLogger = generateLogger(
-                            AliyunSLSAdapterImpl.TopicNaval,
-                            log -> log.context(c -> c.put("warship", getClass().getName()))
-                    );
-                    this.getNavalLogger().addBypassLogger(bypassLogger);
+                    var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicNaval);
+                    this.getUnitLogger().getIssueRecorder().addBypassIssueRecorder(bypassLogger.getIssueRecorder());
                     // 加载数据源（例如MySQL等）
                     return prepareDataSources();
                 })
@@ -71,11 +69,11 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
      * @since 1.0.6 Add a Naval Log when create Aliyun SLS Log Center failed.
      */
     @Override
-    protected KeelEventLogCenter buildLogCenter() {
+    protected KeelIssueRecordCenter buildIssueRecordCenter() {
         try {
-            return new KeelAsyncEventLogCenter(new AliyunSLSAdapterImpl());
+            return new KeelIssueRecordCenterAsAsync(new AliyunSLSIssueAdapterImpl());
         } catch (Throwable e) {
-            getNavalLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildLogCenter");
+            getUnitLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
             throw e;
         }
     }

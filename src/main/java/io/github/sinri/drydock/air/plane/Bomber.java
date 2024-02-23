@@ -1,12 +1,15 @@
 package io.github.sinri.drydock.air.plane;
 
 import io.github.sinri.drydock.air.base.Biplane;
-import io.github.sinri.drydock.common.AliyunSLSAdapterImpl;
 import io.github.sinri.drydock.common.HealthMonitorMixin;
 import io.github.sinri.drydock.common.QueueMixin;
 import io.github.sinri.drydock.common.SundialMixin;
-import io.github.sinri.keel.logger.event.KeelEventLogCenter;
-import io.github.sinri.keel.logger.event.center.KeelAsyncEventLogCenter;
+import io.github.sinri.drydock.common.logging.DryDockLogTopics;
+import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
+import io.github.sinri.keel.logger.event.KeelEventLog;
+import io.github.sinri.keel.logger.event.KeelEventLogger;
+import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
+import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenterAsAsync;
 import io.vertx.core.Future;
 
 /**
@@ -18,12 +21,15 @@ public abstract class Bomber extends Biplane implements HealthMonitorMixin, Queu
         return Future.succeededFuture();
     }
 
+    /**
+     * @since 1.3.4
+     */
     @Override
-    protected KeelEventLogCenter buildLogCenter() {
+    protected KeelIssueRecordCenter buildIssueRecordCenter() {
         try {
-            return new KeelAsyncEventLogCenter(new AliyunSLSAdapterImpl());
+            return new KeelIssueRecordCenterAsAsync(new AliyunSLSIssueAdapterImpl());
         } catch (Throwable e) {
-            getLogger().exception(e, "Failed in io.github.sinri.drydock.air.plane.Fighter.buildLogCenter");
+            getLogger().exception(e, "Failed in io.github.sinri.drydock.air.plane.Bomber.buildIssueRecordCenter");
             throw e;
         }
     }
@@ -33,11 +39,9 @@ public abstract class Bomber extends Biplane implements HealthMonitorMixin, Queu
         return Future.succeededFuture()
                 .compose(v -> {
                     // 飞行日志共享大计
-                    var bypassLogger = generateLogger(
-                            AliyunSLSAdapterImpl.TopicFlight,
-                            log -> log.context(c -> c.put("plane", getClass().getName()))
-                    );
-                    this.getLogger().addBypassLogger(bypassLogger);
+                    var bypassLogger = KeelEventLogger.from(generateIssueRecorder(DryDockLogTopics.TopicDryDock, () -> new KeelEventLog(DryDockLogTopics.TopicDryDock)));
+                    this.getUnitLogger().getIssueRecorder().addBypassIssueRecorder(bypassLogger.getIssueRecorder());
+
                     return Future.succeededFuture();
                 })
                 .compose(v -> {

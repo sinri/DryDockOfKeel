@@ -1,46 +1,41 @@
-package io.github.sinri.drydock.common;
+package io.github.sinri.drydock.common.logging.adapter;
 
 import com.aliyun.openservices.aliyun.log.producer.LogProducer;
 import com.aliyun.openservices.aliyun.log.producer.Producer;
 import com.aliyun.openservices.aliyun.log.producer.ProducerConfig;
 import com.aliyun.openservices.aliyun.log.producer.ProjectConfig;
-import com.aliyun.openservices.aliyun.log.producer.errors.ProducerException;
 import com.aliyun.openservices.log.common.LogItem;
 import io.github.sinri.keel.facade.KeelConfiguration;
-import io.github.sinri.keel.logger.event.KeelEventLog;
-import io.github.sinri.keel.logger.event.adapter.AliyunSLSAdapter;
-import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
+import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
+import io.github.sinri.keel.logger.issue.recorder.adapter.AliyunSLSIssueAdapter;
+import io.github.sinri.keel.logger.issue.recorder.adapter.SyncStdoutAdapter;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 /**
- * @since 1.0.0
+ * @since 1.3.4
  */
-public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
-    public static final String TopicNaval = "DryDock::Naval";
-    public static final String TopicFlight = "DryDock::Flight";
-    public static final String TopicHealthMonitor = "HealthMonitor";
-    public static final String TopicSundial = "Sundial";
-    public static final String TopicFunnel = "Funnel";
-    public static final String TopicQueue = "Queue";
-    public static final String TopicReceptionist = "Receptionist";
-
-    public static final String RESERVED_KEY_LEVEL = "level";
-    private static boolean disabled;
+public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
+    private final boolean disabled;
     private final String project;
     private final String logstore;
     private final String source;
     private final Producer producer;
     private final String endpoint;
+    private volatile boolean stopped = false;
+    private volatile boolean closed = true;
 
-    public AliyunSLSAdapterImpl() {
+    public AliyunSLSIssueAdapterImpl() {
         KeelConfiguration aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
         Objects.requireNonNull(aliyunSlsConfig);
 
@@ -64,6 +59,9 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
             producer.putProjectConfig(new ProjectConfig(project, endpoint, accessKeyId, accessKeySecret));
 
             //KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).info("Aliyun SLS Producer relied aliyunSlsConfig: " + aliyunSlsConfig.toJsonObject());
+
+            start();
+            closed = false;
         } else {
             producer = null;
         }
@@ -75,8 +73,6 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
      * - EMPTY/BLANK STRING or NULL: use SLS default source generation;
      * - A TEMPLATED STRING
      * --- Rule 1: Replace [IP] to local address;
-     *
-     * @since 1.2.7 add source template and rule 1.
      */
     private static String buildSource(@Nullable String configuredSourceExpression) {
         if (configuredSourceExpression == null || configuredSourceExpression.isBlank()) {
@@ -91,40 +87,13 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
         return configuredSourceExpression.replaceAll("\\[IP]", localHostAddress);
     }
 
-    public static final Set<String> ignorableStackPackageSet = new HashSet<>();
-
     @Override
-    public void close(@Nonnull Promise<Void> promise) {
-        if (!disabled) {
-            try {
-                this.producer.close();
-                promise.complete();
-            } catch (InterruptedException | ProducerException e) {
-                promise.fail(e);
-            }
-        } else {
-            promise.complete();
-        }
-    }
-
-    static {
-        ignorableStackPackageSet.add("io.vertx.");
-        ignorableStackPackageSet.add("io.netty.");
-        ignorableStackPackageSet.add("java.lang.");
-    }
-
-    @Override
-    @Nonnull
-    public Future<Void> dealWithLogsForOneTopic(@Nonnull String topic, @Nonnull List<KeelEventLog> list) {
-        if (list.isEmpty()) return Future.succeededFuture();
-
-//        System.out.println("dealWithLogsForOneTopic<"+topic+"> handling "+list.size()+" logs");
+    protected Future<Void> handleIssueRecordsForTopic(@Nonnull String topic, @Nonnull List<KeelIssueRecord<?>> buffer) {
+        if (buffer.isEmpty()) return Future.succeededFuture();
 
         if (disabled) {
-            list.forEach(item -> {
-                KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).log(log -> {
-                    log.reloadDataFromJsonObject(item.toJsonObject());
-                });
+            buffer.forEach(item -> {
+                SyncStdoutAdapter.getInstance().record(topic, item);
             });
             return Future.succeededFuture();
         }
@@ -134,39 +103,71 @@ public class AliyunSLSAdapterImpl implements AliyunSLSAdapter {
         try {
             List<LogItem> logItems = new ArrayList<>();
 
-            list.forEach(eventLog -> {
+            buffer.forEach(eventLog -> {
                 LogItem logItem = new LogItem(Math.toIntExact(eventLog.timestamp() / 1000));
-                //logItem.PushBack("_timestamp_in_ms", eventLog.timestampExpression());
-                logItem.PushBack(RESERVED_KEY_LEVEL, eventLog.level().name());
-                eventLog.forEach(entry -> {
+                logItem.PushBack(KeelIssueRecord.AttributeLevel, eventLog.level().name());
+                List<String> classification = eventLog.classification();
+                if (!classification.isEmpty()) {
+                    logItem.PushBack(KeelIssueRecord.AttributeClassification, String.valueOf(new JsonArray()));
+                }
+                eventLog.attributes().forEach(entry -> {
                     if (entry.getValue() == null) {
                         logItem.PushBack(entry.getKey(), null);
                     } else {
                         logItem.PushBack(entry.getKey(), String.valueOf(entry.getValue()));
                     }
                 });
+                Throwable exception = eventLog.exception();
+                if (exception != null) {
+                    logItem.PushBack(KeelIssueRecord.AttributeException, String.valueOf(issueRecordRender().renderThrowable(exception)));
+                }
                 logItems.add(logItem);
             });
 
             producer.send(project, logstore, topic, source, logItems, result -> {
                 if (!result.isSuccessful()) {
-                    KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).error(eventLog -> {
-                        eventLog.topic(getClass().getName()).message("Producer Send Error: " + result);
-                    });
+                    Keel.getLogger().getIssueRecorder().error(r -> r
+                            .classification(getClass().getName())
+                            .message("Producer Send Error: " + result)
+                    );
                 }
                 promise.complete(null);
             });
         } catch (Throwable e) {
-            KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).exception(e, "Aliyun SLS Producer Exception");
+            Keel.getLogger().getIssueRecorder().exception(e, r -> r
+                    .classification(getClass().getName())
+                    .message("Aliyun SLS Producer Exception")
+            );
             promise.fail(e);
         }
 
         return promise.future();
     }
 
-    @Nullable
     @Override
-    public Object processThrowable(@Nullable Throwable throwable) {
-        return KeelHelpers.jsonHelper().renderThrowableChain(throwable, ignorableStackPackageSet);
+    public boolean isStopped() {
+        return stopped;
+    }
+
+    @Override
+    public boolean isClosed() {
+        return closed;
+    }
+
+    @Override
+    public void close(@Nonnull Promise<Void> promise) {
+        stopped = true;
+        if (this.disabled || this.producer == null || closed) {
+            closed = true;
+            promise.complete();
+        } else {
+            try {
+                this.producer.close();
+                closed = true;
+                promise.complete();
+            } catch (Throwable e) {
+                promise.fail(e);
+            }
+        }
     }
 }

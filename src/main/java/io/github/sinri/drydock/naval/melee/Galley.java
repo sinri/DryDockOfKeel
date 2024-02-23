@@ -1,8 +1,7 @@
 package io.github.sinri.drydock.naval.melee;
 
 import io.github.sinri.drydock.naval.base.Warship;
-import io.github.sinri.keel.logger.event.KeelEventLogCenter;
-import io.github.sinri.keel.logger.event.center.KeelOutputEventLogCenter;
+import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
 
@@ -22,8 +21,12 @@ public abstract class Galley extends Warship {
                 .setWorkerPoolSize(32);
     }
 
-    protected KeelEventLogCenter buildLogCenter() {
-        return KeelOutputEventLogCenter.getInstance();
+    /**
+     * @since 1.3.4
+     */
+    @Override
+    protected KeelIssueRecordCenter buildIssueRecordCenter() {
+        return KeelIssueRecordCenter.outputCenter();
     }
 
     @Override
