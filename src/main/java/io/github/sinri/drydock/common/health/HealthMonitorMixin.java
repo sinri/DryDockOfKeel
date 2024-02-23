@@ -1,7 +1,6 @@
 package io.github.sinri.drydock.common.health;
 
 import io.github.sinri.drydock.common.CommonUnit;
-import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -9,7 +8,7 @@ import io.vertx.core.ThreadingModel;
 
 public interface HealthMonitorMixin extends CommonUnit {
     default HealthMonitor<?> buildHealthMonitor() {
-        return new HealthMonitorWithIssueRecorder(generateIssueRecorder(DryDockLogTopics.TopicHealthMonitor, HealthMonitorIssueRecord::new));
+        return new HealthMonitorWithIssueRecorder(generateIssueRecorder(HealthMonitorIssueRecord.TopicHealthMonitor, HealthMonitorIssueRecord::new));
     }
 
     default Future<Void> loadHealthMonitor() {

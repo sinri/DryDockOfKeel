@@ -37,7 +37,7 @@ abstract public class Warship implements Boat {
 
     public Warship() {
         this.issueRecordCenter = KeelIssueRecordCenter.outputCenter();
-        this.unitLogger = this.issueRecordCenter.generateEventLogger(DryDockLogTopics.TopicNaval);
+        this.unitLogger = this.issueRecordCenter.generateEventLogger(DryDockLogTopics.TopicDryDock);
         //this.navalLogger.getIssueRecorder().setRecordFormatter(r -> r.context("local_address", KeelHelpers.netHelper().getLocalHostAddress()));
     }
 

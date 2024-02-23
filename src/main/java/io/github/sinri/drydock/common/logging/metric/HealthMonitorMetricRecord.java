@@ -1,12 +1,12 @@
 package io.github.sinri.drydock.common.logging.metric;
 
-import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.keel.logger.metric.KeelMetricRecord;
 
 public class HealthMonitorMetricRecord extends KeelMetricRecord {
+    public static final String TopicHealthMonitor = "HealthMonitor";
 
     public HealthMonitorMetricRecord(String metricName, double value) {
-        super(DryDockLogTopics.TopicHealthMonitor, metricName, value);
+        super(TopicHealthMonitor, metricName, value);
     }
 
     public static HealthMonitorMetricRecord asSurvived(long value) {

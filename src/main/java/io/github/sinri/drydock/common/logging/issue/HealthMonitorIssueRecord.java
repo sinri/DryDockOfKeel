@@ -1,18 +1,18 @@
 package io.github.sinri.drydock.common.logging.issue;
 
-import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.keel.logger.issue.record.BaseIssueRecord;
 import io.vertx.core.json.JsonObject;
 
 import javax.annotation.Nonnull;
 
 public class HealthMonitorIssueRecord extends BaseIssueRecord<HealthMonitorIssueRecord> {
+    public static final String TopicHealthMonitor = "HealthMonitor";
     public static final String AttributeSnapshot = "snapshot";
 
     @Nonnull
     @Override
     public String topic() {
-        return DryDockLogTopics.TopicHealthMonitor;
+        return TopicHealthMonitor;
     }
 
     @Nonnull

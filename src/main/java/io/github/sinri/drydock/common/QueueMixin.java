@@ -1,6 +1,5 @@
 package io.github.sinri.drydock.common;
 
-import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.keel.servant.queue.KeelQueue;
 import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
 import io.github.sinri.keel.servant.queue.QueueManageIssueRecord;
@@ -34,7 +33,7 @@ public interface QueueMixin extends CommonUnit {
                 return new QueueWorkerPoolManager(x);
             }
         };
-        queue.setIssueRecorder(generateIssueRecorder(DryDockLogTopics.TopicQueue, QueueManageIssueRecord::new));
+        queue.setIssueRecorder(generateIssueRecorder(QueueManageIssueRecord.TopicQueue, QueueManageIssueRecord::new));
         return queue;
     }
 
