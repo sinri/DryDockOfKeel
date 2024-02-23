@@ -1,13 +1,12 @@
 package io.github.sinri.drydock.common.logging.metric;
 
-import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
+import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.keel.logger.metric.KeelMetricRecord;
 
 public class HealthMonitorMetricRecord extends KeelMetricRecord {
 
     public HealthMonitorMetricRecord(String metricName, double value) {
-        super(metricName, value);
-        this.topic(AliyunSLSMetricRecorder.TopicHealthMonitorMetric);
+        super(DryDockLogTopics.TopicHealthMonitor, metricName, value);
     }
 
     public static HealthMonitorMetricRecord asSurvived(long value) {

@@ -11,6 +11,7 @@ import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -18,7 +19,6 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
-    public static final String TopicHealthMonitorMetric = "HealthMonitorMetric";
 
     private static boolean disabled;
     private final String project;
@@ -81,7 +81,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
     }
 
     @Override
-    protected Future<Void> handleForTopic(String topic, List<KeelMetricRecord> list) {
+    protected Future<Void> handleForTopic(@Nonnull String topic, @Nonnull List<KeelMetricRecord> list) {
         if (list.isEmpty()) return Future.succeededFuture();
 
 //        System.out.println("dealWithLogsForOneTopic<"+topic+"> handling "+list.size()+" logs");
@@ -129,10 +129,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
      *
      * @return LogItem
      */
-    private LogItem buildLogItem(
-            KeelMetricRecord metricRecord
-            //        String metricName, Map<String, String> labels, double value
-    ) {
+    private LogItem buildLogItem(@Nonnull KeelMetricRecord metricRecord) {
         String labelsKey = "__labels__";
         String timeKey = "__time_nano__";
         String valueKey = "__value__";

@@ -1,6 +1,6 @@
 package io.github.sinri.drydock.naval.melee;
 
-import io.github.sinri.drydock.common.HealthMonitorMixin;
+import io.github.sinri.drydock.common.health.HealthMonitorMixin;
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
