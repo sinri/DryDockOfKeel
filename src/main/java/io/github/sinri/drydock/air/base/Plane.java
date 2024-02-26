@@ -27,13 +27,12 @@ abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable 
 
     public Plane() {
         issueRecordCenter = KeelIssueRecordCenter.outputCenter();
-//        unitLogger = issueRecordCenter.generateEventLogger(DryDockLogTopics.TopicDryDock);
     }
 
     @Nonnull
     @Override
     public final KeelEventLogger buildEventLoggerForLauncher() {
-        return KeelIssueRecordCenter.outputCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
+        return buildEventLogger();
     }
 
     @Override
@@ -145,7 +144,7 @@ abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable 
 
     @Override
     protected KeelEventLogger buildEventLogger() {
-        return getUnitLogger();
+        return KeelIssueRecordCenter.outputCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
     }
 
     @Override
