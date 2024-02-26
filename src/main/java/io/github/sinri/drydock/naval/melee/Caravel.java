@@ -42,7 +42,7 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
                 .compose(v -> {
                     // 航海日志共享大计
                     var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
-                    this.getUnitLogger().addBypassLogger(bypassLogger);
+                    this.getLogger().addBypassLogger(bypassLogger);
                     // 加载数据源（例如MySQL等）
                     return prepareDataSources();
                 })
@@ -73,7 +73,7 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
         try {
             return new KeelIssueRecordCenterAsAsync(new AliyunSLSIssueAdapterImpl());
         } catch (Throwable e) {
-            getUnitLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
+            getLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
             throw e;
         }
     }

@@ -15,10 +15,10 @@ public interface HttpServerMixin extends CommonUnit {
                     if (server == null) return Future.succeededFuture();
                     return server.deployMe(new DeploymentOptions())
                             .onFailure(ironcladFailure -> {
-                                getUnitLogger().exception(ironcladFailure, "Failed to start HTTP service.");
+                                getLogger().exception(ironcladFailure, "Failed to start HTTP service.");
                             })
                             .compose(httpServerDeployed -> {
-                                getUnitLogger().info("HTTP Service Started: " + httpServerDeployed);
+                                getLogger().info("HTTP Service Started: " + httpServerDeployed);
                                 return Future.succeededFuture();
                             });
                 });

@@ -24,7 +24,7 @@ public abstract class Ironclad extends Caravel implements HttpServerMixin {
     final protected Future<Void> launchAsCaravel() {
         return launchAsIronclad()
                 .compose(coalLoaded -> {
-                    getUnitLogger().info("Coal Loaded. Ensured equipments as Ironclad.");
+                    getLogger().info("Coal Loaded. Ensured equipments as Ironclad.");
                     return loadHttpServer();
                 });
     }

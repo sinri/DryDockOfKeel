@@ -75,22 +75,22 @@ abstract public class Warship implements Boat {
     @Override
     public final void launch() {
         loadLocalConfiguration();
-        getUnitLogger().info("LOCAL CONFIG LOADED (if any)");
+        getLogger().info("LOCAL CONFIG LOADED (if any)");
 
         VertxOptions vertxOptions = buildVertxOptions();
 
         // todo 此处未考虑舰队模式，如果需要要新增 cluster master 的设定
         Keel.initializeVertx(vertxOptions)
                 .compose(initialized -> {
-                    getUnitLogger().info("KEEL INITIALIZED");
+                    getLogger().info("KEEL INITIALIZED");
 
                     // since 1.2.5
-                    Keel.setLogger(getUnitLogger());
+                    Keel.setLogger(getLogger());
 
                     return loadRemoteConfiguration();
                 })
                 .compose(done -> {
-                    getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
+                    getLogger().info("REMOTE CONFIG LOADED (if any)");
                     issueRecordCenter = buildIssueRecordCenter();
                     return launchAsWarship();
                 })
@@ -124,7 +124,7 @@ abstract public class Warship implements Boat {
      */
     @Override
     public void shipwreck(Throwable throwable) {
-        getUnitLogger().exception(throwable, "Failed to launch, shipwreck");
+        getLogger().exception(throwable, "Failed to launch, shipwreck");
         System.exit(EXIT_CODE_FOR_KEEL_INIT_FAILED);
     }
 
@@ -135,19 +135,19 @@ abstract public class Warship implements Boat {
      */
     @Override
     public void sink() {
-        getUnitLogger().fatal("SINK");
+        getLogger().fatal("SINK");
         Keel.close()
                 .onComplete(ar -> {
                     if (ar.failed()) {
-                        getUnitLogger().exception(ar.cause(), "Failure in closing Keel.");
+                        getLogger().exception(ar.cause(), "Failure in closing Keel.");
                     }
-                    getUnitLogger().fatal("Keel Sank.");
+                    getLogger().fatal("Keel Sank.");
                     System.exit(EXIT_CODE_FOR_SELF_SINK);
                 });
     }
 
     @Override
-    public KeelEventLogger getUnitLogger() {
+    public KeelEventLogger getLogger() {
         return unitLogger;
     }
 }

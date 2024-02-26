@@ -35,11 +35,6 @@ abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable 
         return buildEventLogger();
     }
 
-    @Override
-    public final KeelEventLogger getUnitLogger() {
-        return getLogger();
-    }
-
     @Nonnull
     @Override
     public final KeelEventLogger getLogger() {
@@ -48,7 +43,7 @@ abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable 
 
     @Override
     public void afterStartingVertx(Vertx vertx) {
-        getUnitLogger().info("afterStartingVertx!");
+        getLogger().info("afterStartingVertx!");
     }
 
     @Override
@@ -74,7 +69,7 @@ abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable 
 
     @Override
     public void handleDeployFailed(Vertx vertx, String mainVerticle, DeploymentOptions deploymentOptions, Throwable cause) {
-        getUnitLogger().exception(cause, "handleDeployFailed");
+        getLogger().exception(cause, "handleDeployFailed");
         vertx.close();
     }
 
@@ -103,7 +98,7 @@ abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable 
      */
     protected KeelIssueRecordCenter buildIssueRecordCenter() {
         KeelIssueRecordCenter x = KeelIssueRecordCenter.outputCenter();
-        getUnitLogger().info("io.github.sinri.drydock.air.base.Plane.buildIssueRecordCenter: " + x);
+        getLogger().info("io.github.sinri.drydock.air.base.Plane.buildIssueRecordCenter: " + x);
         return x;
     }
 
@@ -129,7 +124,7 @@ abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable 
      */
     public void setIssueRecordCenter(@Nonnull KeelIssueRecordCenter issueRecordCenter) {
         this.issueRecordCenter = issueRecordCenter;
-        getUnitLogger().info("io.github.sinri.drydock.air.base.Plane.setIssueRecordCenter: " + getIssueRecordCenter().getClass().getName());
+        getLogger().info("io.github.sinri.drydock.air.base.Plane.setIssueRecordCenter: " + getIssueRecordCenter().getClass().getName());
     }
 
     /**

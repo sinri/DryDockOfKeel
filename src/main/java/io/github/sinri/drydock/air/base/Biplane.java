@@ -75,7 +75,7 @@ public abstract class Biplane extends Plane {
                 })
                 .andThen(ar -> {
                     if (ar.failed()) {
-                        getUnitLogger().exception(ar.cause(), "Failed to start flying");
+                        getLogger().exception(ar.cause(), "Failed to start flying");
                         startPromise.fail(ar.cause());
                     } else {
                         startPromise.complete();

@@ -18,9 +18,9 @@ public class GalleyTest extends Galley {
 
     @Override
     protected Future<Void> launchAsGalley() {
-        getUnitLogger().info("launched");
+        getLogger().info("launched");
         Keel.getVertx().setTimer(2000L, timer -> {
-            getUnitLogger().info("time up");
+            getLogger().info("time up");
             Keel.getVertx().close();
         });
         return Future.succeededFuture();

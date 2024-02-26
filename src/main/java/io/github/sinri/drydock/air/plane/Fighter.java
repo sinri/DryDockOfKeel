@@ -32,7 +32,7 @@ public abstract class Fighter extends Biplane implements HealthMonitorMixin, Htt
         return Future.succeededFuture()
                 .compose(v -> {
                     // 飞行日志共享大计
-                    this.getUnitLogger().addBypassLogger(generateEventLogger(DryDockLogTopics.TopicDryDock));
+                    this.getLogger().addBypassLogger(generateEventLogger(DryDockLogTopics.TopicDryDock));
 
                     return Future.succeededFuture();
                 })

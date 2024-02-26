@@ -18,10 +18,10 @@ public interface HealthMonitorMixin extends CommonUnit {
                     return healthMonitor.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER));
                 })
                 .onFailure(throwable -> {
-                    getUnitLogger().exception(throwable, "Failed to deploy HealthMonitor");
+                    getLogger().exception(throwable, "Failed to deploy HealthMonitor");
                 })
                 .compose(deploymentId -> {
-                    getUnitLogger().info("Deployed HealthMonitor: " + deploymentId);
+                    getLogger().info("Deployed HealthMonitor: " + deploymentId);
                     return Future.succeededFuture();
                 });
     }

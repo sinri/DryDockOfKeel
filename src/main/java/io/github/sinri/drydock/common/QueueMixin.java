@@ -60,10 +60,10 @@ public interface QueueMixin extends CommonUnit {
                     if (queue == null) return Future.succeededFuture();
                     return queue.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER))
                             .onFailure(throwable -> {
-                                getUnitLogger().exception(throwable, "Failed to load queue");
+                                getLogger().exception(throwable, "Failed to load queue");
                             })
                             .compose(deploymentId -> {
-                                getUnitLogger().info("Loaded queue: " + deploymentId);
+                                getLogger().info("Loaded queue: " + deploymentId);
                                 return Future.succeededFuture();
                             });
                 });

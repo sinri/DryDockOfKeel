@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 import java.util.function.Supplier;
 
 public interface CommonUnit {
-    KeelEventLogger getUnitLogger();
+    KeelEventLogger getLogger();
 
     /**
      * @since 1.3.4

@@ -37,7 +37,7 @@ public abstract class Bomber extends Biplane implements HealthMonitorMixin, Queu
         return Future.succeededFuture()
                 .compose(v -> {
                     // 飞行日志共享大计
-                    this.getUnitLogger().addBypassLogger(generateEventLogger(DryDockLogTopics.TopicDryDock));
+                    this.getLogger().addBypassLogger(generateEventLogger(DryDockLogTopics.TopicDryDock));
 
                     return Future.succeededFuture();
                 })
