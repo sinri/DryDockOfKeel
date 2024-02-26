@@ -1,5 +1,7 @@
 package io.github.sinri.drydock.common;
 
+import io.github.sinri.drydock.common.logging.DryDockLogTopics;
+import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.web.http.KeelHttpServer;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -23,6 +25,7 @@ public interface HttpServerMixin extends CommonUnit {
     }
 
     default KeelHttpServer buildHttpServer() {
+        KeelEventLogger eventLogger = this.generateEventLogger(DryDockLogTopics.TopicHttpServer);
         return new KeelHttpServer() {
 
             @Override
@@ -33,6 +36,11 @@ public interface HttpServerMixin extends CommonUnit {
             @Override
             protected void configureRoutes(Router router) {
                 configureHttpServerRoutes(router);
+            }
+
+            @Override
+            protected KeelEventLogger buildEventLogger() {
+                return eventLogger;
             }
         };
     }

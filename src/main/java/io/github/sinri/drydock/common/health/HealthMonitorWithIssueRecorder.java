@@ -52,5 +52,4 @@ public class HealthMonitorWithIssueRecorder extends HealthMonitor<JsonObject> {
             }
         });
     }
-
 }

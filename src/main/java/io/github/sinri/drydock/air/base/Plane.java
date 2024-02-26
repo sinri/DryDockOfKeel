@@ -1,13 +1,11 @@
 package io.github.sinri.drydock.air.base;
 
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
-import io.github.sinri.keel.facade.launcher.KeelLauncherAdapter;
-import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
-import io.github.sinri.keel.verticles.KeelVerticleImplWithEventLog;
+import io.github.sinri.keel.verticles.KeelVerticleImplWithEventLogger;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -23,18 +21,30 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 /**
  * @since 1.3.0 Technical Preview
  */
-abstract class Plane extends KeelVerticleImplWithEventLog implements KeelLauncherAdapter, Flyable {
-    private final KeelEventLogger unitLogger;
+abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable {
+    //    private final KeelEventLogger unitLogger;
     private KeelIssueRecordCenter issueRecordCenter;
 
     public Plane() {
         issueRecordCenter = KeelIssueRecordCenter.outputCenter();
-        unitLogger = issueRecordCenter.generateEventLogger(DryDockLogTopics.TopicDryDock);
+//        unitLogger = issueRecordCenter.generateEventLogger(DryDockLogTopics.TopicDryDock);
+    }
+
+    @Nonnull
+    @Override
+    public final KeelEventLogger buildEventLoggerForLauncher() {
+        return KeelIssueRecordCenter.outputCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
     }
 
     @Override
-    public KeelEventLogger getUnitLogger() {
-        return unitLogger;
+    public final KeelEventLogger getUnitLogger() {
+        return getLogger();
+    }
+
+    @Nonnull
+    @Override
+    public final KeelEventLogger getLogger() {
+        return super.getLogger();
     }
 
     @Override
@@ -133,10 +143,9 @@ abstract class Plane extends KeelVerticleImplWithEventLog implements KeelLaunche
         return getIssueRecordCenter().generateIssueRecorder(topic, issueRecordBuilder);
     }
 
-    @Nonnull
     @Override
-    public final KeelIssueRecorder<KeelEventLog> getIssueRecorder() {
-        return getUnitLogger().getIssueRecorder();
+    protected KeelEventLogger buildEventLogger() {
+        return getUnitLogger();
     }
 
     @Override

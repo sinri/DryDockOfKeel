@@ -6,8 +6,6 @@ import io.github.sinri.drydock.common.SundialMixin;
 import io.github.sinri.drydock.common.health.HealthMonitorMixin;
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
-import io.github.sinri.keel.logger.event.KeelEventLog;
-import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenterAsAsync;
 import io.vertx.core.Future;
@@ -39,8 +37,7 @@ public abstract class Bomber extends Biplane implements HealthMonitorMixin, Queu
         return Future.succeededFuture()
                 .compose(v -> {
                     // 飞行日志共享大计
-                    var bypassLogger = KeelEventLogger.from(generateIssueRecorder(DryDockLogTopics.TopicDryDock, () -> new KeelEventLog(DryDockLogTopics.TopicDryDock)));
-                    this.getUnitLogger().getIssueRecorder().addBypassIssueRecorder(bypassLogger.getIssueRecorder());
+                    this.getUnitLogger().addBypassLogger(generateEventLogger(DryDockLogTopics.TopicDryDock));
 
                     return Future.succeededFuture();
                 })

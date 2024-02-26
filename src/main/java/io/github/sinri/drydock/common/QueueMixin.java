@@ -1,5 +1,6 @@
 package io.github.sinri.drydock.common;
 
+import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.github.sinri.keel.servant.queue.KeelQueue;
 import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
 import io.github.sinri.keel.servant.queue.QueueManageIssueRecord;
@@ -15,7 +16,14 @@ import javax.annotation.Nonnull;
  */
 public interface QueueMixin extends CommonUnit {
     default KeelQueue buildQueue() {
-        var queue = new KeelQueue() {
+        KeelIssueRecorder<QueueManageIssueRecord> issueRecorder = this.generateIssueRecorder(QueueManageIssueRecord.TopicQueue, QueueManageIssueRecord::new);
+        return new KeelQueue() {
+            @Nonnull
+            @Override
+            protected KeelIssueRecorder<QueueManageIssueRecord> buildIssueRecorder() {
+                return issueRecorder;
+            }
+
             @Override
             protected @Nonnull KeelQueueNextTaskSeeker getNextTaskSeeker() {
                 return buildQueueNextTaskSeeker();
@@ -33,8 +41,6 @@ public interface QueueMixin extends CommonUnit {
                 return new QueueWorkerPoolManager(x);
             }
         };
-        queue.setIssueRecorder(generateIssueRecorder(QueueManageIssueRecord.TopicQueue, QueueManageIssueRecord::new));
-        return queue;
     }
 
     /**

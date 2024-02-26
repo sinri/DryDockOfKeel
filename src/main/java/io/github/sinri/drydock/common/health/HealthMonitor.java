@@ -2,7 +2,7 @@ package io.github.sinri.drydock.common.health;
 
 import io.github.sinri.keel.helper.runtime.KeelRuntimeMonitor;
 import io.github.sinri.keel.helper.runtime.MonitorSnapshot;
-import io.github.sinri.keel.verticles.KeelVerticleImplWithEventLog;
+import io.github.sinri.keel.verticles.KeelVerticleImplPure;
 
 import javax.annotation.Nonnull;
 
@@ -10,16 +10,8 @@ import javax.annotation.Nonnull;
  * @since 1.0.0
  * @since 1.4.0 be abstract for two implementations.
  */
-public abstract class HealthMonitor<X> extends KeelVerticleImplWithEventLog {
+public abstract class HealthMonitor<X> extends KeelVerticleImplPure {
     protected final long startTimestamp;
-
-    protected boolean recordWithMetric() {
-        return false;
-    }
-
-    protected boolean recordWithIssue() {
-        return true;
-    }
 
     public HealthMonitor() {
         startTimestamp = System.currentTimeMillis();
@@ -38,6 +30,7 @@ public abstract class HealthMonitor<X> extends KeelVerticleImplWithEventLog {
 
     abstract protected void handleRecord(@Nonnull MonitorSnapshot monitorSnapshot, @Nonnull X moreDraft);
 
+
     @Override
     public void start() {
         prepare();
@@ -51,6 +44,5 @@ public abstract class HealthMonitor<X> extends KeelVerticleImplWithEventLog {
                 }
         );
     }
-
 
 }

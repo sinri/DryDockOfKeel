@@ -88,7 +88,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
 
         if (disabled) {
             list.forEach(item -> {
-                Keel.getLogger().getIssueRecorder().record(log -> {
+                Keel.getLogger().log(log -> {
                     log.topic(item.topic());
                     log.context(item.toJsonObject());
                 });
@@ -104,7 +104,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
             });
             producer.send(project, logstore, topic, source, logItems, result -> {
                 if (!result.isSuccessful()) {
-                    Keel.getLogger().getIssueRecorder().error(eventLog -> eventLog
+                    Keel.getLogger().error(eventLog -> eventLog
                             .classification(getClass().getName())
                             .message("Producer Send Error: " + result)
                     );
@@ -112,7 +112,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
                 promise.complete(null);
             });
         } catch (Throwable e) {
-            Keel.getLogger().getIssueRecorder().exception(e, r -> r
+            Keel.getLogger().exception(e, r -> r
                     .classification(getClass().getName())
                     .message("Aliyun SLS Producer Exception")
             );

@@ -1,6 +1,7 @@
 package io.github.sinri.drydock.common;
 
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
+import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.servant.sundial.KeelSundial;
 import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
 import io.vertx.core.DeploymentOptions;
@@ -14,14 +15,18 @@ import java.util.Collection;
  */
 public interface SundialMixin extends CommonUnit {
     default KeelSundial buildSundial() {
-        var sundial = new KeelSundial() {
+        KeelEventLogger eventLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicSundial);
+        return new KeelSundial() {
             @Override
             protected Future<Collection<KeelSundialPlan>> fetchPlans() {
                 return fetchSundialPlans();
             }
+
+            @Override
+            protected KeelEventLogger buildEventLogger() {
+                return eventLogger;
+            }
         };
-        sundial.setLogger(getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicSundial));
-        return sundial;
     }
 
     Future<Collection<KeelSundialPlan>> fetchSundialPlans();

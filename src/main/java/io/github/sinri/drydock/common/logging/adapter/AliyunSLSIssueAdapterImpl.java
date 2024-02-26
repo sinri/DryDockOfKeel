@@ -126,7 +126,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
             producer.send(project, logstore, topic, source, logItems, result -> {
                 if (!result.isSuccessful()) {
-                    Keel.getLogger().getIssueRecorder().error(r -> r
+                    Keel.getLogger().error(r -> r
                             .classification(getClass().getName())
                             .message("Producer Send Error: " + result)
                     );
@@ -134,7 +134,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                 promise.complete(null);
             });
         } catch (Throwable e) {
-            Keel.getLogger().getIssueRecorder().exception(e, r -> r
+            Keel.getLogger().exception(e, r -> r
                     .classification(getClass().getName())
                     .message("Aliyun SLS Producer Exception")
             );
