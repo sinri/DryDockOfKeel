@@ -88,10 +88,11 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     }
 
     @Override
-    protected Future<Void> handleIssueRecordsForTopic(@Nonnull String topic, @Nonnull List<KeelIssueRecord<?>> buffer) {
+    protected Future<Void> handleIssueRecordsForTopic(@Nonnull final String topic, @Nonnull final List<KeelIssueRecord<?>> buffer) {
         if (buffer.isEmpty()) return Future.succeededFuture();
 
         if (disabled) {
+            //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" disabled");
             buffer.forEach(item -> {
                 SyncStdoutAdapter.getInstance().record(topic, item);
             });
@@ -103,6 +104,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         try {
             List<LogItem> logItems = new ArrayList<>();
 
+            //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" for each in buffer...");
             buffer.forEach(eventLog -> {
                 LogItem logItem = new LogItem(Math.toIntExact(eventLog.timestamp() / 1000));
                 logItem.PushBack(KeelIssueRecord.AttributeLevel, eventLog.level().name());
@@ -123,7 +125,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                 }
                 logItems.add(logItem);
             });
-
+            //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" buffer to send with producer");
             producer.send(project, logstore, topic, source, logItems, result -> {
                 if (!result.isSuccessful()) {
                     Keel.getLogger().error(r -> r
@@ -131,6 +133,8 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                             .message("Producer Send Error: " + result)
                     );
                 }
+
+                //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" promise to complete");
                 promise.complete(null);
             });
         } catch (Throwable e) {
