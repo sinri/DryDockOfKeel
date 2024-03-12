@@ -3,8 +3,10 @@ package io.github.sinri.drydock.naval.melee;
 import io.github.sinri.drydock.common.health.HealthMonitorMixin;
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
+import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenterAsAsync;
+import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 
 import javax.annotation.Nonnull;
@@ -21,6 +23,7 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * @since 1.0.0
  */
 public abstract class Caravel extends Galley implements HealthMonitorMixin {
+    protected KeelMetricRecorder metricRecorder;
 
 
     @Override
@@ -43,6 +46,8 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
                     // 航海日志共享大计
                     var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
                     this.getLogger().addBypassLogger(bypassLogger);
+                    // Metric Recorder
+                    this.metricRecorder = new AliyunSLSMetricRecorder();
                     // 加载数据源（例如MySQL等）
                     return prepareDataSources();
                 })
@@ -76,5 +81,11 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
             getLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
             throw e;
         }
+    }
+
+    @Nonnull
+    @Override
+    public KeelMetricRecorder getMetricRecorder() {
+        return this.metricRecorder;
     }
 }

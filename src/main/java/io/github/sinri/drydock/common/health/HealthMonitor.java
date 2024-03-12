@@ -35,7 +35,7 @@ public abstract class HealthMonitor<X> extends KeelVerticleImplPure {
     public void start() {
         prepare();
         new KeelRuntimeMonitor().startRuntimeMonitor(
-                60_000L,
+                interval(),
                 monitorSnapshot -> {
                     X draft = createDraft();
                     moreMonitorItems(draft);
@@ -45,4 +45,10 @@ public abstract class HealthMonitor<X> extends KeelVerticleImplPure {
         );
     }
 
+    /**
+     * @since 1.4.2
+     */
+    protected long interval() {
+        return 60_000L;
+    }
 }

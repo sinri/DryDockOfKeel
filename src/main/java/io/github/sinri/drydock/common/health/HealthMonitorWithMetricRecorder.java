@@ -1,8 +1,8 @@
 package io.github.sinri.drydock.common.health;
 
-import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
 import io.github.sinri.drydock.common.logging.metric.HealthMonitorMetricRecord;
 import io.github.sinri.keel.helper.runtime.MonitorSnapshot;
+import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -12,9 +12,10 @@ import java.util.List;
  * @since 1.4.0
  */
 public class HealthMonitorWithMetricRecorder extends HealthMonitor<List<HealthMonitorMetricRecord>> {
-    protected AliyunSLSMetricRecorder metricRecorder;
+    //protected AliyunSLSMetricRecorder metricRecorder;
+    protected KeelMetricRecorder metricRecorder;
 
-    public HealthMonitorWithMetricRecorder(@Nonnull AliyunSLSMetricRecorder metricRecorder) {
+    public HealthMonitorWithMetricRecorder(@Nonnull KeelMetricRecorder metricRecorder) {
         this.metricRecorder = metricRecorder;
     }
 
@@ -104,4 +105,11 @@ public class HealthMonitorWithMetricRecorder extends HealthMonitor<List<HealthMo
         });
     }
 
+    /**
+     * @since 1.4.2
+     */
+    @Override
+    protected long interval() {
+        return 10_000L;
+    }
 }

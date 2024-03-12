@@ -4,6 +4,8 @@ import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
+import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
+import org.apache.poi.ss.formula.eval.NotImplementedException;
 
 import javax.annotation.Nonnull;
 import java.util.function.Supplier;
@@ -25,5 +27,14 @@ public interface CommonUnit {
 
     default KeelEventLogger generateEventLogger(@Nonnull String topic) {
         return getIssueRecordCenter().generateEventLogger(topic);
+    }
+
+    /**
+     * @return The instance of KeelMetricRecorder.
+     * @since 1.4.2
+     */
+    @Nonnull
+    default KeelMetricRecorder getMetricRecorder() {
+        throw new NotImplementedException("By default, Metric Recorder is not provided.");
     }
 }

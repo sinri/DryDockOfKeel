@@ -31,10 +31,13 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
         super();
 
         KeelConfiguration aliyunSlsMetricConfig = Keel.getConfiguration().extract("aliyun", "sls_metric");
-        Objects.requireNonNull(aliyunSlsMetricConfig);
 
-        String disabledString = aliyunSlsMetricConfig.readString("disabled");
-        disabled = ("YES".equals(disabledString));
+        if (!aliyunSlsMetricConfig.isEmpty()) {
+            String disabledString = aliyunSlsMetricConfig.readString("disabled");
+            disabled = ("YES".equals(disabledString));
+        } else {
+            disabled = true;
+        }
 
         this.project = aliyunSlsMetricConfig.readString("project");
         this.logstore = aliyunSlsMetricConfig.readString("logstore");
@@ -56,6 +59,11 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
         } else {
             producer = null;
         }
+
+    }
+
+    public static boolean isDisabled() {
+        return disabled;
     }
 
     /**
@@ -88,7 +96,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
 
         if (disabled) {
             list.forEach(item -> {
-                Keel.getLogger().log(log -> {
+                Keel.getLogger().debug(log -> {
                     log.topic(item.topic());
                     log.context(item.toJsonObject());
                 });
