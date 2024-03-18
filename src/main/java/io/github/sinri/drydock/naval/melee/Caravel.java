@@ -46,8 +46,15 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
                     // 航海日志共享大计
                     var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
                     this.getLogger().addBypassLogger(bypassLogger);
+                    return Future.succeededFuture();
+                })
+                .compose(v -> {
                     // Metric Recorder
                     this.metricRecorder = new AliyunSLSMetricRecorder();
+                    this.metricRecorder.start();
+                    return Future.succeededFuture();
+                })
+                .compose(v -> {
                     // 加载数据源（例如MySQL等）
                     return prepareDataSources();
                 })

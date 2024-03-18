@@ -30,7 +30,7 @@ public interface CommonUnit {
     }
 
     /**
-     * @return The instance of KeelMetricRecorder.
+     * @return The instance of KeelMetricRecorder, already started.
      * @since 1.4.2
      */
     @Nonnull

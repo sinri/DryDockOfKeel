@@ -64,6 +64,8 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             closed = false;
         } else {
             producer = null;
+            // a bug in 1.4.2, to stdout not means closed.
+            closed = false;
         }
     }
 
