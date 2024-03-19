@@ -40,6 +40,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         Objects.requireNonNull(aliyunSlsConfig);
 
         String disabledString = aliyunSlsConfig.readString("disabled");
+        // System.out.println("disabledString: "+disabledString);
         disabled = ("YES".equals(disabledString));
 
         this.project = aliyunSlsConfig.readString("project");
@@ -59,14 +60,13 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             producer.putProjectConfig(new ProjectConfig(project, endpoint, accessKeyId, accessKeySecret));
 
             //KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).info("Aliyun SLS Producer relied aliyunSlsConfig: " + aliyunSlsConfig.toJsonObject());
-
-            start();
             closed = false;
         } else {
             producer = null;
             // a bug in 1.4.2, to stdout not means closed.
             closed = false;
         }
+        start();
     }
 
     /**
@@ -91,6 +91,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
     @Override
     protected Future<Void> handleIssueRecordsForTopic(@Nonnull final String topic, @Nonnull final List<KeelIssueRecord<?>> buffer) {
+        // Keel.getLogger().info("handleIssueRecordsForTopic["+topic+"] "+ buffer.size());
         if (buffer.isEmpty()) return Future.succeededFuture();
 
         if (disabled) {
