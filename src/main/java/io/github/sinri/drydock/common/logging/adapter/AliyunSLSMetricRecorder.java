@@ -5,7 +5,7 @@ import com.aliyun.openservices.aliyun.log.producer.Producer;
 import com.aliyun.openservices.aliyun.log.producer.ProducerConfig;
 import com.aliyun.openservices.aliyun.log.producer.ProjectConfig;
 import com.aliyun.openservices.log.common.LogItem;
-import io.github.sinri.keel.facade.KeelConfiguration;
+import io.github.sinri.keel.facade.configuration.KeelConfigElement;
 import io.github.sinri.keel.logger.metric.KeelMetricRecord;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
@@ -30,23 +30,23 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
     public AliyunSLSMetricRecorder() {
         super();
 
-        KeelConfiguration aliyunSlsMetricConfig = Keel.getConfiguration().extract("aliyun", "sls_metric");
+        KeelConfigElement aliyunSlsMetricConfig = Keel.getConfiguration().extract("aliyun", "sls_metric");
 
-        if (!aliyunSlsMetricConfig.isEmpty()) {
-            String disabledString = aliyunSlsMetricConfig.readString("disabled");
+        if (aliyunSlsMetricConfig != null) {
+            String disabledString = aliyunSlsMetricConfig.getValueAsString("disabled", null);
             disabled = ("YES".equals(disabledString));
         } else {
             disabled = true;
         }
 
-        this.project = aliyunSlsMetricConfig.readString("project");
-        this.logstore = aliyunSlsMetricConfig.readString("logstore");
-        this.endpoint = aliyunSlsMetricConfig.readString("endpoint");
-        this.source = buildSource(aliyunSlsMetricConfig.readString("source"));
+        this.project = Objects.requireNonNull(aliyunSlsMetricConfig).getValueAsString("project", null);
+        this.logstore = aliyunSlsMetricConfig.getValueAsString("logstore", null);
+        this.endpoint = aliyunSlsMetricConfig.getValueAsString("endpoint", null);
+        this.source = buildSource(aliyunSlsMetricConfig.getValueAsString("source", null));
 
         if (!disabled) {
-            String accessKeyId = aliyunSlsMetricConfig.readString("accessKeyId");
-            String accessKeySecret = aliyunSlsMetricConfig.readString("accessKeySecret");
+            String accessKeyId = aliyunSlsMetricConfig.getValueAsString("accessKeyId", null);
+            String accessKeySecret = aliyunSlsMetricConfig.getValueAsString("accessKeySecret", null);
 
             producer = new LogProducer(new ProducerConfig());
             Objects.requireNonNull(project);

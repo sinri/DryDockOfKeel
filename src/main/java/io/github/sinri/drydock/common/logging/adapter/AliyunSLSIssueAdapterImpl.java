@@ -5,7 +5,7 @@ import com.aliyun.openservices.aliyun.log.producer.Producer;
 import com.aliyun.openservices.aliyun.log.producer.ProducerConfig;
 import com.aliyun.openservices.aliyun.log.producer.ProjectConfig;
 import com.aliyun.openservices.log.common.LogItem;
-import io.github.sinri.keel.facade.KeelConfiguration;
+import io.github.sinri.keel.facade.configuration.KeelConfigElement;
 import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.github.sinri.keel.logger.issue.recorder.adapter.AliyunSLSIssueAdapter;
 import io.github.sinri.keel.logger.issue.recorder.adapter.SyncStdoutAdapter;
@@ -36,21 +36,21 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     private volatile boolean closed = true;
 
     public AliyunSLSIssueAdapterImpl() {
-        KeelConfiguration aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
+        KeelConfigElement aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
         Objects.requireNonNull(aliyunSlsConfig);
 
-        String disabledString = aliyunSlsConfig.readString("disabled");
+        String disabledString = aliyunSlsConfig.getValueAsString("disabled", null);
         // System.out.println("disabledString: "+disabledString);
         disabled = ("YES".equals(disabledString));
 
-        this.project = aliyunSlsConfig.readString("project");
-        this.logstore = aliyunSlsConfig.readString("logstore");
-        this.endpoint = aliyunSlsConfig.readString("endpoint");
-        this.source = buildSource(aliyunSlsConfig.readString("source"));
+        this.project = aliyunSlsConfig.getValueAsString("project", null);
+        this.logstore = aliyunSlsConfig.getValueAsString("logstore", null);
+        this.endpoint = aliyunSlsConfig.getValueAsString("endpoint", null);
+        this.source = buildSource(aliyunSlsConfig.getValueAsString("source", null));
 
         if (!disabled) {
-            String accessKeyId = aliyunSlsConfig.readString("accessKeyId");
-            String accessKeySecret = aliyunSlsConfig.readString("accessKeySecret");
+            String accessKeyId = aliyunSlsConfig.getValueAsString("accessKeyId", null);
+            String accessKeySecret = aliyunSlsConfig.getValueAsString("accessKeySecret", null);
 
             producer = new LogProducer(new ProducerConfig());
             Objects.requireNonNull(project);

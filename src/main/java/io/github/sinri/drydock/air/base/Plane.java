@@ -53,7 +53,6 @@ abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable 
 
     @Override
     public final void afterConfigParsed(JsonObject jsonObject) {
-        Keel.getConfiguration().reloadDataFromJsonObject(jsonObject);
         loadLocalConfiguration();
         jsonObject.mergeIn(Keel.getConfiguration().toJsonObject());
     }
