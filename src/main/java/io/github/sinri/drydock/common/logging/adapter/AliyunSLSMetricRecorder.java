@@ -33,20 +33,20 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
         KeelConfigElement aliyunSlsMetricConfig = Keel.getConfiguration().extract("aliyun", "sls_metric");
 
         if (aliyunSlsMetricConfig != null) {
-            String disabledString = aliyunSlsMetricConfig.getValueAsString("disabled", null);
+            String disabledString = aliyunSlsMetricConfig.readString("disabled", null);
             disabled = ("YES".equals(disabledString));
         } else {
             disabled = true;
         }
 
-        this.project = Objects.requireNonNull(aliyunSlsMetricConfig).getValueAsString("project", null);
-        this.logstore = aliyunSlsMetricConfig.getValueAsString("logstore", null);
-        this.endpoint = aliyunSlsMetricConfig.getValueAsString("endpoint", null);
-        this.source = buildSource(aliyunSlsMetricConfig.getValueAsString("source", null));
+        this.project = Objects.requireNonNull(aliyunSlsMetricConfig).readString("project", null);
+        this.logstore = aliyunSlsMetricConfig.readString("logstore", null);
+        this.endpoint = aliyunSlsMetricConfig.readString("endpoint", null);
+        this.source = buildSource(aliyunSlsMetricConfig.readString("source", null));
 
         if (!disabled) {
-            String accessKeyId = aliyunSlsMetricConfig.getValueAsString("accessKeyId", null);
-            String accessKeySecret = aliyunSlsMetricConfig.getValueAsString("accessKeySecret", null);
+            String accessKeyId = aliyunSlsMetricConfig.readString("accessKeyId", null);
+            String accessKeySecret = aliyunSlsMetricConfig.readString("accessKeySecret", null);
 
             producer = new LogProducer(new ProducerConfig());
             Objects.requireNonNull(project);

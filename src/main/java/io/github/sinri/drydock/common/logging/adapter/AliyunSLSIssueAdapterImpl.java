@@ -39,18 +39,18 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         KeelConfigElement aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
         Objects.requireNonNull(aliyunSlsConfig);
 
-        String disabledString = aliyunSlsConfig.getValueAsString("disabled", null);
+        String disabledString = aliyunSlsConfig.readString("disabled", null);
         // System.out.println("disabledString: "+disabledString);
         disabled = ("YES".equals(disabledString));
 
-        this.project = aliyunSlsConfig.getValueAsString("project", null);
-        this.logstore = aliyunSlsConfig.getValueAsString("logstore", null);
-        this.endpoint = aliyunSlsConfig.getValueAsString("endpoint", null);
-        this.source = buildSource(aliyunSlsConfig.getValueAsString("source", null));
+        this.project = aliyunSlsConfig.readString("project", null);
+        this.logstore = aliyunSlsConfig.readString("logstore", null);
+        this.endpoint = aliyunSlsConfig.readString("endpoint", null);
+        this.source = buildSource(aliyunSlsConfig.readString("source", null));
 
         if (!disabled) {
-            String accessKeyId = aliyunSlsConfig.getValueAsString("accessKeyId", null);
-            String accessKeySecret = aliyunSlsConfig.getValueAsString("accessKeySecret", null);
+            String accessKeyId = aliyunSlsConfig.readString("accessKeyId", null);
+            String accessKeySecret = aliyunSlsConfig.readString("accessKeySecret", null);
 
             producer = new LogProducer(new ProducerConfig());
             Objects.requireNonNull(project);
