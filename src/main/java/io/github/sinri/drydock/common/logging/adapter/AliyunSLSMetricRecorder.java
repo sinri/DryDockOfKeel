@@ -21,45 +21,44 @@ import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
 
     private static boolean disabled;
-    private final String project;
-    private final String logstore;
-    private final String source;
-    private final Producer producer;
-    private final String endpoint;
+    private String project;
+    private String logstore;
+    private String source;
+    private Producer producer;
+    private String endpoint;
 
     public AliyunSLSMetricRecorder() {
         super();
+        try {
+            KeelConfigElement aliyunSlsMetricConfig = Keel.getConfiguration().extract("aliyun", "sls_metric");
+            if (aliyunSlsMetricConfig != null) {
+                String disabledString = aliyunSlsMetricConfig.readString("disabled", null);
+                disabled = ("YES".equals(disabledString));
+            } else {
+                disabled = true;
+            }
+            if (!disabled) {
+                this.project = aliyunSlsMetricConfig.readString("project", null);
+                this.logstore = aliyunSlsMetricConfig.readString("logstore", null);
+                this.endpoint = aliyunSlsMetricConfig.readString("endpoint", null);
+                this.source = buildSource(aliyunSlsMetricConfig.readString("source", null));
 
-        KeelConfigElement aliyunSlsMetricConfig = Keel.getConfiguration().extract("aliyun", "sls_metric");
+                String accessKeyId = aliyunSlsMetricConfig.readString("accessKeyId", null);
+                String accessKeySecret = aliyunSlsMetricConfig.readString("accessKeySecret", null);
 
-        if (aliyunSlsMetricConfig != null) {
-            String disabledString = aliyunSlsMetricConfig.readString("disabled", null);
-            disabled = ("YES".equals(disabledString));
-        } else {
+                producer = new LogProducer(new ProducerConfig());
+                Objects.requireNonNull(project);
+                Objects.requireNonNull(endpoint);
+                Objects.requireNonNull(accessKeyId);
+                Objects.requireNonNull(accessKeySecret);
+                producer.putProjectConfig(new ProjectConfig(project, endpoint, accessKeyId, accessKeySecret));
+            } else {
+                producer = null;
+            }
+        } catch (Throwable throwable) {
             disabled = true;
-        }
-
-        this.project = Objects.requireNonNull(aliyunSlsMetricConfig).readString("project", null);
-        this.logstore = aliyunSlsMetricConfig.readString("logstore", null);
-        this.endpoint = aliyunSlsMetricConfig.readString("endpoint", null);
-        this.source = buildSource(aliyunSlsMetricConfig.readString("source", null));
-
-        if (!disabled) {
-            String accessKeyId = aliyunSlsMetricConfig.readString("accessKeyId", null);
-            String accessKeySecret = aliyunSlsMetricConfig.readString("accessKeySecret", null);
-
-            producer = new LogProducer(new ProducerConfig());
-            Objects.requireNonNull(project);
-            Objects.requireNonNull(endpoint);
-            Objects.requireNonNull(accessKeyId);
-            Objects.requireNonNull(accessKeySecret);
-            producer.putProjectConfig(new ProjectConfig(project, endpoint, accessKeyId, accessKeySecret));
-
-            //KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).info("Aliyun SLS Producer relied aliyunSlsConfig: " + aliyunSlsConfig.toJsonObject());
-        } else {
             producer = null;
         }
-
     }
 
     public static boolean isDisabled() {
