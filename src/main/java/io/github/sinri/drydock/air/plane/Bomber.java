@@ -17,6 +17,7 @@ import javax.annotation.Nonnull;
 /**
  * @since 1.3.0 Technical Preview
  */
+@Deprecated(since = "1.4.7")
 public abstract class Bomber extends Biplane implements HealthMonitorMixin, QueueMixin, SundialMixin {
     private KeelMetricRecorder metricRecorder;
 

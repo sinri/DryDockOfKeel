@@ -21,6 +21,7 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 /**
  * @since 1.3.0 Technical Preview
  */
+@Deprecated(since = "1.4.7")
 abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable {
     //    private final KeelEventLogger unitLogger;
     private KeelIssueRecordCenter issueRecordCenter;

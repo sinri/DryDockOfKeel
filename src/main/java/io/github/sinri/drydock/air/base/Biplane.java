@@ -10,6 +10,7 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 /**
  * @since 1.3.0 Technical Preview
  */
+@Deprecated(since = "1.4.7")
 public abstract class Biplane extends Plane {
     /**
      * @since 1.3.1

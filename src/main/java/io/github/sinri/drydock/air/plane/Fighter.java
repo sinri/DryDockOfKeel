@@ -16,6 +16,7 @@ import javax.annotation.Nonnull;
 /**
  * @since 1.3.0 Technical Preview
  */
+@Deprecated(since = "1.4.7")
 public abstract class Fighter extends Biplane implements HealthMonitorMixin, HttpServerMixin {
 
     private KeelMetricRecorder metricRecorder;
