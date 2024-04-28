@@ -4,8 +4,10 @@ import io.github.sinri.drydock.common.QueueMixin;
 import io.github.sinri.drydock.common.SundialMixin;
 import io.github.sinri.drydock.common.health.HealthMonitorMixin;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
+import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenterAsAsync;
+import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 
 import javax.annotation.Nonnull;
@@ -18,6 +20,8 @@ import javax.annotation.Nonnull;
  * @since 1.1.0
  */
 public abstract class Frigate extends Quadrireme implements QueueMixin, SundialMixin, HealthMonitorMixin {
+    protected KeelMetricRecorder metricRecorder;
+
     /**
      * 在本地和远端配置加载完毕、航海和应用日志记录完备之后，准备数据源，如MySQL等。
      *
@@ -38,7 +42,13 @@ public abstract class Frigate extends Quadrireme implements QueueMixin, SundialM
 
     @Override
     final protected Future<Void> launchAsQuadrireme() {
-        return prepareDataSources()
+        return Future.succeededFuture()
+                .compose(v -> {
+                    // Metric Recorder since 3.2.5
+                    this.metricRecorder = new AliyunSLSMetricRecorder();
+                    this.metricRecorder.start();
+                    return prepareDataSources();
+                })
                 .compose(v -> {
                     return Future.all(
                             loadHealthMonitor(),
@@ -52,4 +62,13 @@ public abstract class Frigate extends Quadrireme implements QueueMixin, SundialM
     }
 
     abstract protected Future<Void> launchAsFrigate();
+
+    /**
+     * @since 3.2.5
+     */
+    @Nonnull
+    @Override
+    public KeelMetricRecorder getMetricRecorder() {
+        return metricRecorder;
+    }
 }
