@@ -7,7 +7,6 @@ import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Handler;
-import org.apache.poi.ss.formula.eval.NotImplementedException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -45,6 +44,6 @@ public interface CommonUnit {
      */
     @Nonnull
     default KeelMetricRecorder getMetricRecorder() {
-        throw new NotImplementedException("By default, Metric Recorder is not provided.");
+        throw new RuntimeException("By default, Metric Recorder is not provided.");
     }
 }
