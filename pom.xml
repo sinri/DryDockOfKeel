@@ -6,7 +6,7 @@
 
     <groupId>io.github.sinri</groupId>
     <artifactId>DryDock</artifactId>
-    <version>1.4.7</version>
+    <version>1.4.8</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>io.github.sinri</groupId>
             <artifactId>Keel</artifactId>
-            <version>3.2.5</version>
+            <version>3.2.6</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.aliyun.openservices/aliyun-log-producer -->
         <dependency>
