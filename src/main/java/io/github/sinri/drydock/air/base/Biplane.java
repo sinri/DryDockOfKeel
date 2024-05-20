@@ -55,7 +55,7 @@ public abstract class Biplane extends Plane {
     abstract protected Future<Void> prepareDataSources();
 
     @Override
-    public final void start(Promise<Void> startPromise) {
+    protected void startAsKeelVerticle(Promise<Void> startPromise) {
         // since 1.3.1 add this;
         // todo If the verticle is running parallel, it may be overwritten.
         setPlane(this);

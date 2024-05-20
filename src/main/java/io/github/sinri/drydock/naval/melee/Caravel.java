@@ -11,6 +11,8 @@ import io.vertx.core.Future;
 
 import javax.annotation.Nonnull;
 
+import java.util.Objects;
+
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
@@ -44,8 +46,12 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
         return Future.succeededFuture()
                 .compose(v -> {
                     // 航海日志共享大计
-                    var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
-                    this.getLogger().addBypassLogger(bypassLogger);
+                    if (getIssueRecordCenter() != KeelIssueRecordCenter.outputCenter()) {
+                        var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
+                        this.getLogger().addBypassLogger(bypassLogger);
+                    } else {
+                        this.getLogger().info("Bypass logging is ignored.");
+                    }
                     return Future.succeededFuture();
                 })
                 .compose(v -> {
@@ -79,14 +85,20 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
      * 轻快帆船默认采用Aliyun SLS提供应用日志服务。
      *
      * @since 1.0.6 Add a Naval Log when create Aliyun SLS Log Center failed.
+     * @since 1.4.9 Check Aliyun SLS disabled or not first.
      */
     @Override
     protected KeelIssueRecordCenter buildIssueRecordCenter() {
-        try {
-            return new KeelIssueRecordCenterAsAsync(new AliyunSLSIssueAdapterImpl());
-        } catch (Throwable e) {
-            getLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
-            throw e;
+        boolean disabled = AliyunSLSIssueAdapterImpl.isDisabled();
+        if (disabled) {
+            return KeelIssueRecordCenter.outputCenter();
+        } else {
+            try {
+                return new KeelIssueRecordCenterAsAsync(new AliyunSLSIssueAdapterImpl());
+            } catch (Throwable e) {
+                getLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
+                throw e;
+            }
         }
     }
 

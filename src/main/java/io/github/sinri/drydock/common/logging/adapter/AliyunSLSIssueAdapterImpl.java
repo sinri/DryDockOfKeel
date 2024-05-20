@@ -35,13 +35,22 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     private volatile boolean stopped = false;
     private volatile boolean closed = true;
 
+    /**
+     * @return the configured switch to decide whether the Aliyun SLS should be disabled.
+     * @since 1.4.9
+     */
+    public static boolean isDisabled() {
+        String x = Keel.config("aliyun.sls.disabled");
+        return "YES".equalsIgnoreCase(x);
+    }
+
     public AliyunSLSIssueAdapterImpl() {
         KeelConfigElement aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
         Objects.requireNonNull(aliyunSlsConfig);
 
         String disabledString = aliyunSlsConfig.readString("disabled", null);
         // System.out.println("disabledString: "+disabledString);
-        disabled = ("YES".equals(disabledString));
+        disabled = ("YES".equalsIgnoreCase(disabledString));
 
         this.project = aliyunSlsConfig.readString("project", null);
         this.logstore = aliyunSlsConfig.readString("logstore", null);

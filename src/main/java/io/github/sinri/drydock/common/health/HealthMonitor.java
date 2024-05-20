@@ -32,7 +32,7 @@ public abstract class HealthMonitor<X> extends KeelVerticleImplPure {
 
 
     @Override
-    public void start() {
+    protected void startAsPureKeelVerticle() {
         prepare();
         new KeelRuntimeMonitor().startRuntimeMonitor(
                 interval(),

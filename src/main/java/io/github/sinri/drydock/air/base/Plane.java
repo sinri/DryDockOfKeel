@@ -143,11 +143,8 @@ abstract class Plane extends KeelVerticleImplWithEventLogger implements Flyable 
     }
 
     @Override
-    public final void start() {
+    protected void startAsKeelVerticle() {
     }
-
-    @Override
-    abstract public void start(Promise<Void> startPromise);
 
     @Override
     final public void launch(String[] args) {
