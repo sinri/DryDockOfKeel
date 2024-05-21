@@ -122,7 +122,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                 logItem.PushBack(KeelIssueRecord.AttributeLevel, eventLog.level().name());
                 List<String> classification = eventLog.classification();
                 if (!classification.isEmpty()) {
-                    logItem.PushBack(KeelIssueRecord.AttributeClassification, String.valueOf(new JsonArray()));
+                    logItem.PushBack(KeelIssueRecord.AttributeClassification, String.valueOf(new JsonArray(classification)));
                 }
                 eventLog.attributes().forEach(entry -> {
                     if (entry.getValue() == null) {
