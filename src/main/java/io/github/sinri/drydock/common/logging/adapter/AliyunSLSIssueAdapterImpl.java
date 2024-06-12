@@ -46,17 +46,22 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
     public AliyunSLSIssueAdapterImpl() {
         KeelConfigElement aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
-        Objects.requireNonNull(aliyunSlsConfig);
+        if (aliyunSlsConfig == null) {
+            disabled = true;
+            this.project = null;
+            this.logstore = null;
+            this.endpoint = null;
+            this.source = null;
+        } else {
+            String disabledString = aliyunSlsConfig.readString("disabled", null);
+            // System.out.println("disabledString: "+disabledString);
+            disabled = ("YES".equalsIgnoreCase(disabledString));
 
-        String disabledString = aliyunSlsConfig.readString("disabled", null);
-        // System.out.println("disabledString: "+disabledString);
-        disabled = ("YES".equalsIgnoreCase(disabledString));
-
-        this.project = aliyunSlsConfig.readString("project", null);
-        this.logstore = aliyunSlsConfig.readString("logstore", null);
-        this.endpoint = aliyunSlsConfig.readString("endpoint", null);
-        this.source = buildSource(aliyunSlsConfig.readString("source", null));
-
+            this.project = aliyunSlsConfig.readString("project", null);
+            this.logstore = aliyunSlsConfig.readString("logstore", null);
+            this.endpoint = aliyunSlsConfig.readString("endpoint", null);
+            this.source = buildSource(aliyunSlsConfig.readString("source", null));
+        }
         if (!disabled) {
             String accessKeyId = aliyunSlsConfig.readString("accessKeyId", null);
             String accessKeySecret = aliyunSlsConfig.readString("accessKeySecret", null);
@@ -69,12 +74,12 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             producer.putProjectConfig(new ProjectConfig(project, endpoint, accessKeyId, accessKeySecret));
 
             //KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).info("Aliyun SLS Producer relied aliyunSlsConfig: " + aliyunSlsConfig.toJsonObject());
-            closed = false;
         } else {
             producer = null;
             // a bug in 1.4.2, to stdout not means closed.
-            closed = false;
         }
+        closed = false;
+
         start();
     }
 
