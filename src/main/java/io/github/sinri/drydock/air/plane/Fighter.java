@@ -12,6 +12,7 @@ import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @since 1.3.0 Technical Preview
@@ -66,5 +67,20 @@ public abstract class Fighter extends Biplane implements HealthMonitorMixin, Htt
     @Override
     public KeelMetricRecorder getMetricRecorder() {
         return metricRecorder;
+    }
+
+    /**
+     * @since 1.4.17
+     */
+    private final AtomicBoolean stopServerSwitch = new AtomicBoolean(false);
+
+    @Override
+    public void stopServer() {
+        this.stopServerSwitch.set(true);
+    }
+
+    @Override
+    public boolean isToStopServer() {
+        return stopServerSwitch.get();
     }
 }

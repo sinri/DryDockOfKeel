@@ -57,4 +57,14 @@ public interface HttpServerMixin extends CommonUnit {
      * 其实就是设定 Vertx Web Server 的路由啦。
      */
     void configureHttpServerRoutes(Router router);
+
+    /**
+     * @since 1.4.17
+     */
+    void stopServer();
+
+    /**
+     * @since 1.4.17
+     */
+    boolean isToStopServer();
 }

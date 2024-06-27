@@ -74,6 +74,8 @@ abstract public class Warship implements Boat {
      */
     @Override
     public final void launch() {
+        long startTime = System.currentTimeMillis();
+
         loadLocalConfiguration();
         getLogger().info("LOCAL CONFIG LOADED (if any)");
 
@@ -94,7 +96,18 @@ abstract public class Warship implements Boat {
                     issueRecordCenter = buildIssueRecordCenter();
                     return launchAsWarship();
                 })
+                .onSuccess(done -> {
+                    whenWarshipSetOff(startTime);
+                })
                 .onFailure(this::shipwreck);
+    }
+
+    /**
+     * @since 1.4.18
+     */
+    protected void whenWarshipSetOff(long startTime) {
+        long endTime = System.currentTimeMillis();
+        getLogger().notice("Warship set off, spent " + (endTime - startTime) + " ms");
     }
 
     /**
