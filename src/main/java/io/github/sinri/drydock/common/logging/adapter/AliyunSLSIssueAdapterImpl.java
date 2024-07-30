@@ -30,7 +30,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     private final String project;
     private final String logstore;
     private final String source;
-    private final Producer producer;
+    private Producer producer;
     private final String endpoint;
     private volatile boolean stopped = false;
     private volatile boolean closed = true;
@@ -62,7 +62,34 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             this.endpoint = aliyunSlsConfig.readString("endpoint", null);
             this.source = buildSource(aliyunSlsConfig.readString("source", null));
         }
+        buildProducer();
+        start();
+    }
+
+    /**
+     * @since 1.4.20
+     */
+    private Future<Void> rebuildProducer() {
+        Promise<Void> promise = Promise.promise();
+        if (producer != null) {
+            Keel.getLogger().info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.rebuildProducer to close producer");
+            this.close(promise);
+        }
+
+        return promise.future()
+                .compose(v -> {
+                    buildProducer();
+                    return Future.succeededFuture();
+                });
+    }
+
+    /**
+     * @since 1.4.20
+     */
+    private void buildProducer() {
         if (!disabled) {
+            KeelConfigElement aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
+
             String accessKeyId = aliyunSlsConfig.readString("accessKeyId", null);
             String accessKeySecret = aliyunSlsConfig.readString("accessKeySecret", null);
 
@@ -73,14 +100,13 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             Objects.requireNonNull(accessKeySecret);
             producer.putProjectConfig(new ProjectConfig(project, endpoint, accessKeyId, accessKeySecret));
 
+            Keel.getLogger().info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.buildProducer built producer.");
             //KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).info("Aliyun SLS Producer relied aliyunSlsConfig: " + aliyunSlsConfig.toJsonObject());
         } else {
             producer = null;
             // a bug in 1.4.2, to stdout not means closed.
         }
         closed = false;
-
-        start();
     }
 
     /**
@@ -159,9 +185,10 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                     .classification(getClass().getName())
                     .message("Aliyun SLS Producer Exception")
             );
-            promise.fail(e);
+            rebuildProducer().andThen(ar -> {
+                promise.fail(e);
+            });
         }
-
         return promise.future();
     }
 
