@@ -129,6 +129,18 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         return configuredSourceExpression.replaceAll("\\[IP]", localHostAddress);
     }
 
+    /**
+     * @since 1.4.21
+     */
+    private static int bufferSize = 1000;
+
+    /**
+     * @since 1.4.21
+     */
+    public static void setBufferSize(int bufferSize) {
+        AliyunSLSIssueAdapterImpl.bufferSize = bufferSize;
+    }
+
     @Override
     protected Future<Void> handleIssueRecordsForTopic(@Nonnull final String topic, @Nonnull final List<KeelIssueRecord<?>> buffer) {
         // Keel.getLogger().info("handleIssueRecordsForTopic["+topic+"] "+ buffer.size());
@@ -186,10 +198,18 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                     .message("Aliyun SLS Producer Exception")
             );
             rebuildProducer().andThen(ar -> {
-                promise.fail(e);
+                promise.complete(null);
             });
         }
         return promise.future();
+    }
+
+    /**
+     * @since 1.4.21
+     */
+    @Override
+    protected int bufferSize() {
+        return bufferSize;
     }
 
     @Override
