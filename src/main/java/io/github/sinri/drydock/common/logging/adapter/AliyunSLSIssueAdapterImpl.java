@@ -30,7 +30,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     private final String project;
     private final String logstore;
     private final String source;
-    private final Producer producer;
+    private Producer producer;
     private final String endpoint;
     private volatile boolean stopped = false;
     private volatile boolean closed = true;
@@ -46,18 +46,50 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
     public AliyunSLSIssueAdapterImpl() {
         KeelConfigElement aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
-        Objects.requireNonNull(aliyunSlsConfig);
+        if (aliyunSlsConfig == null) {
+            disabled = true;
+            this.project = null;
+            this.logstore = null;
+            this.endpoint = null;
+            this.source = null;
+        } else {
+            String disabledString = aliyunSlsConfig.readString("disabled", null);
+            // System.out.println("disabledString: "+disabledString);
+            disabled = ("YES".equalsIgnoreCase(disabledString));
 
-        String disabledString = aliyunSlsConfig.readString("disabled", null);
-        // System.out.println("disabledString: "+disabledString);
-        disabled = ("YES".equalsIgnoreCase(disabledString));
+            this.project = aliyunSlsConfig.readString("project", null);
+            this.logstore = aliyunSlsConfig.readString("logstore", null);
+            this.endpoint = aliyunSlsConfig.readString("endpoint", null);
+            this.source = buildSource(aliyunSlsConfig.readString("source", null));
+        }
+        buildProducer();
+        start();
+    }
 
-        this.project = aliyunSlsConfig.readString("project", null);
-        this.logstore = aliyunSlsConfig.readString("logstore", null);
-        this.endpoint = aliyunSlsConfig.readString("endpoint", null);
-        this.source = buildSource(aliyunSlsConfig.readString("source", null));
+    /**
+     * @since 1.4.20
+     */
+    private Future<Void> rebuildProducer() {
+        Promise<Void> promise = Promise.promise();
+        if (producer != null) {
+            Keel.getLogger().info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.rebuildProducer to close producer");
+            this.close(promise);
+        }
 
+        return promise.future()
+                .compose(v -> {
+                    buildProducer();
+                    return Future.succeededFuture();
+                });
+    }
+
+    /**
+     * @since 1.4.20
+     */
+    private void buildProducer() {
         if (!disabled) {
+            KeelConfigElement aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
+
             String accessKeyId = aliyunSlsConfig.readString("accessKeyId", null);
             String accessKeySecret = aliyunSlsConfig.readString("accessKeySecret", null);
 
@@ -68,14 +100,13 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             Objects.requireNonNull(accessKeySecret);
             producer.putProjectConfig(new ProjectConfig(project, endpoint, accessKeyId, accessKeySecret));
 
+            Keel.getLogger().info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.buildProducer built producer.");
             //KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).info("Aliyun SLS Producer relied aliyunSlsConfig: " + aliyunSlsConfig.toJsonObject());
-            closed = false;
         } else {
             producer = null;
             // a bug in 1.4.2, to stdout not means closed.
-            closed = false;
         }
-        start();
+        closed = false;
     }
 
     /**
@@ -96,6 +127,18 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             return "";
         }
         return configuredSourceExpression.replaceAll("\\[IP]", localHostAddress);
+    }
+
+    /**
+     * @since 1.4.21
+     */
+    private static int bufferSize = 1000;
+
+    /**
+     * @since 1.4.21
+     */
+    public static void setBufferSize(int bufferSize) {
+        AliyunSLSIssueAdapterImpl.bufferSize = bufferSize;
     }
 
     @Override
@@ -154,10 +197,19 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                     .classification(getClass().getName())
                     .message("Aliyun SLS Producer Exception")
             );
-            promise.fail(e);
+            rebuildProducer().andThen(ar -> {
+                promise.complete(null);
+            });
         }
-
         return promise.future();
+    }
+
+    /**
+     * @since 1.4.21
+     */
+    @Override
+    protected int bufferSize() {
+        return bufferSize;
     }
 
     @Override

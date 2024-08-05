@@ -3,6 +3,8 @@ package io.github.sinri.drydock.naval.melee;
 import io.github.sinri.drydock.common.HttpServerMixin;
 import io.vertx.core.Future;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * 铁甲舰。
  * 用于实现 SAE APP 环境下支持横向弹性扩展的HTTP服务应用，核心能力是一门主炮（HTTP服务器）。
@@ -35,4 +37,18 @@ public abstract class Ironclad extends Caravel implements HttpServerMixin {
      */
     abstract protected Future<Void> launchAsIronclad();
 
+    /**
+     * @since 1.4.17
+     */
+    private final AtomicBoolean stopServerSwitch = new AtomicBoolean(false);
+
+    @Override
+    public void stopServer() {
+        this.stopServerSwitch.set(true);
+    }
+
+    @Override
+    public boolean isToStopServer() {
+        return stopServerSwitch.get();
+    }
 }
