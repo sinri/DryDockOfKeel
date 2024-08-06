@@ -57,7 +57,9 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      * 加载本地配置。
      * 仅可以使用航海日志记录器。
      */
-    abstract protected void loadLocalConfiguration(@Nonnull CommandLine commandLine);
+    protected void loadLocalConfiguration(@Nonnull CommandLine commandLine) {
+        Keel.getConfiguration().loadPropertiesFile("config.properties");
+    }
 
     @Override
     protected final void runWithCommandLine(@Nonnull CommandLine commandLine) {
@@ -101,25 +103,27 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                     boolean disableQueue = commandLine.isFlagEnabled("disableQueue");
                     if (!disableQueue) {
                         drone = constructDrone();
+                    }
+                    if (drone != null) {
                         return drone.loadQueue()
                                 .onSuccess(done -> {
                                     getLogger().info("Loaded Queue");
                                 });
-                    } else {
-                        return Future.succeededFuture();
                     }
+                    return Future.succeededFuture();
                 })
                 .compose(v -> {
                     boolean disableSundial = commandLine.isFlagEnabled("disableSundial");
                     if (!disableSundial) {
                         bomber = constructBomber();
+                    }
+                    if (bomber != null) {
                         return bomber.loadSundial()
                                 .onSuccess(done -> {
                                     getLogger().info("Loaded Sundial");
                                 });
-                    } else {
-                        return Future.succeededFuture();
                     }
+                    return Future.succeededFuture();
                 })
                 .compose(v -> {
                     boolean disableReceptionist = commandLine.isFlagEnabled("disableReceptionist");
@@ -127,13 +131,14 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                         String receptionistPortStr = commandLine.getOptionValue("receptionistPort");
                         Integer receptionistPort = receptionistPortStr == null ? null : Integer.parseInt(receptionistPortStr);
                         fighter = constructFighter(receptionistPort);
-                        return fighter.loadHttpServer()
-                                .onSuccess(done -> {
-                                    getLogger().info("Loaded Http Server on port: " + receptionistPort);
-                                });
-                    } else {
-                        return Future.succeededFuture();
+                        if (fighter != null) {
+                            return fighter.loadHttpServer()
+                                    .onSuccess(done -> {
+                                        getLogger().info("Loaded Http Server on port: " + receptionistPort);
+                                    });
+                        }
                     }
+                    return Future.succeededFuture();
                 })
                 .compose(v -> {
                     return ready(commandLine)
@@ -141,6 +146,10 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                                 long endTime = System.currentTimeMillis();
                                 getLogger().info("Ready, spent " + (endTime - startTime) + " ms");
                             });
+                })
+                .onFailure(throwable -> {
+                    getLogger().exception(throwable, "SINK");
+                    System.exit(1);
                 });
     }
 
