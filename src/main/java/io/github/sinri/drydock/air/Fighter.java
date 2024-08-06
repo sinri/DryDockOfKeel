@@ -1,8 +1,10 @@
 package io.github.sinri.drydock.air;
 
 import io.github.sinri.drydock.common.HttpServerMixin;
+import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.naval.carrier.AircraftCarrierDeck;
 import io.github.sinri.keel.core.TechnicalPreview;
+import io.github.sinri.keel.logger.event.KeelEventLogger;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,5 +39,10 @@ public abstract class Fighter extends Biplane implements HttpServerMixin {
     @Override
     public final boolean isToStopServer() {
         return stopServerSwitch.get();
+    }
+
+    @Override
+    public KeelEventLogger getLogger() {
+        return generateEventLogger(DryDockLogTopics.TopicHttpServer);
     }
 }

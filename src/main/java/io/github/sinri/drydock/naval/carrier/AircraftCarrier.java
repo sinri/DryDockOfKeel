@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
+
 /**
  * @since 1.5.0 Technical Preview
  */
@@ -39,7 +40,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
 
     protected abstract Drone constructDrone();
 
-    protected abstract Fighter constructFighter(int port);
+    protected abstract Fighter constructFighter(@Nullable Integer port);
 
     @Nullable
     @Override
@@ -48,7 +49,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                 new Option().setLongName("disableQueue").setFlag(true),
                 new Option().setLongName("disableSundial").setFlag(true),
                 new Option().setLongName("disableReceptionist").setFlag(true),
-                new Option().setLongName("receptionistPort").setRequired(false).setDefaultValue("8080")
+                new Option().setLongName("receptionistPort").setRequired(false)
         );
     }
 
@@ -124,7 +125,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                     boolean disableReceptionist = commandLine.isFlagEnabled("disableReceptionist");
                     if (!disableReceptionist) {
                         String receptionistPortStr = commandLine.getOptionValue("receptionistPort");
-                        int receptionistPort = Integer.parseInt(receptionistPortStr);
+                        Integer receptionistPort = receptionistPortStr == null ? null : Integer.parseInt(receptionistPortStr);
                         fighter = constructFighter(receptionistPort);
                         return fighter.loadHttpServer()
                                 .onSuccess(done -> {

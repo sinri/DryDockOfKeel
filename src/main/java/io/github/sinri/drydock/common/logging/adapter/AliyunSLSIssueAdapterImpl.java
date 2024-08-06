@@ -9,6 +9,7 @@ import io.github.sinri.keel.facade.configuration.KeelConfigElement;
 import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.github.sinri.keel.logger.issue.recorder.adapter.AliyunSLSIssueAdapter;
 import io.github.sinri.keel.logger.issue.recorder.adapter.SyncStdoutAdapter;
+import io.github.sinri.keel.logger.issue.recorder.render.KeelIssueRecordStringRender;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
@@ -18,6 +19,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
@@ -30,10 +32,12 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     private final String project;
     private final String logstore;
     private final String source;
-    private Producer producer;
     private final String endpoint;
     private volatile boolean stopped = false;
     private volatile boolean closed = true;
+
+    //private Producer producer;
+    private final AtomicReference<Producer> producerRef = new AtomicReference<>();
 
     /**
      * @return the configured switch to decide whether the Aliyun SLS should be disabled.
@@ -71,9 +75,11 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
      */
     private Future<Void> rebuildProducer() {
         Promise<Void> promise = Promise.promise();
+        var producer = producerRef.get();
         if (producer != null) {
             Keel.getLogger().info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.rebuildProducer to close producer");
             this.close(promise);
+            producerRef.set(null);
         }
 
         return promise.future()
@@ -93,20 +99,23 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             String accessKeyId = aliyunSlsConfig.readString("accessKeyId", null);
             String accessKeySecret = aliyunSlsConfig.readString("accessKeySecret", null);
 
-            producer = new LogProducer(new ProducerConfig());
+            var producer = new LogProducer(new ProducerConfig());
             Objects.requireNonNull(project);
             Objects.requireNonNull(endpoint);
             Objects.requireNonNull(accessKeyId);
             Objects.requireNonNull(accessKeySecret);
             producer.putProjectConfig(new ProjectConfig(project, endpoint, accessKeyId, accessKeySecret));
 
+            producerRef.set(producer);
+
             Keel.getLogger().info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.buildProducer built producer.");
             //KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).info("Aliyun SLS Producer relied aliyunSlsConfig: " + aliyunSlsConfig.toJsonObject());
         } else {
-            producer = null;
+            producerRef.set(null);
             // a bug in 1.4.2, to stdout not means closed.
         }
         closed = false;
+        stopped = false;
     }
 
     /**
@@ -156,9 +165,9 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
         Promise<Void> promise = Promise.promise();
 
-        try {
-            List<LogItem> logItems = new ArrayList<>();
+        List<LogItem> logItems = new ArrayList<>();
 
+        try {
             //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" for each in buffer...");
             buffer.forEach(eventLog -> {
                 LogItem logItem = new LogItem(Math.toIntExact(eventLog.timestamp() / 1000));
@@ -180,8 +189,19 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                 }
                 logItems.add(logItem);
             });
+        } catch (Throwable throwable) {
+            Keel.getLogger().exception(throwable, "Pack Logs into Aliyun SLS Log Items Failed");
+            buffer.forEach(item -> {
+                String s = KeelIssueRecordStringRender.getInstance().renderIssueRecord(item);
+                System.out.println(s);
+            });
+            promise.fail(throwable);
+            return promise.future();
+        }
+
+        try {
             //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" buffer to send with producer");
-            producer.send(project, logstore, topic, source, logItems, result -> {
+            producerRef.get().send(project, logstore, topic, source, logItems, result -> {
                 if (!result.isSuccessful()) {
                     Keel.getLogger().error(r -> r
                             .classification(getClass().getName())
@@ -225,12 +245,16 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     @Override
     public void close(@Nonnull Promise<Void> promise) {
         stopped = true;
-        if (this.disabled || this.producer == null || closed) {
+        if (this.disabled || this.producerRef.get() == null || closed) {
             closed = true;
             promise.complete();
         } else {
             try {
-                this.producer.close();
+                var producer = this.producerRef.get();
+                if (producer != null) {
+                    producer.close();
+                }
+                producerRef.set(null);
                 closed = true;
                 promise.complete();
             } catch (Throwable e) {

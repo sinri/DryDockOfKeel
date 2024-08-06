@@ -20,7 +20,7 @@ public abstract class Biplane implements CommonUnit {
     }
 
     @Override
-    public final KeelEventLogger getLogger() {
+    public KeelEventLogger getLogger() {
         return deck.getLogger();
     }
 
