@@ -7,13 +7,21 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.ext.web.Router;
 
+import javax.annotation.Nonnull;
+
 public interface HttpServerMixin extends CommonUnit {
 
     default Future<Void> loadHttpServer() {
         return Future.succeededFuture(buildHttpServer())
                 .compose(server -> {
                     if (server == null) return Future.succeededFuture();
-                    return server.deployMe(new DeploymentOptions())
+                    return Future.succeededFuture()
+                            .compose(v -> {
+                                return beforeStartHttpServer();
+                            })
+                            .compose(v -> {
+                                return server.deployMe(new DeploymentOptions());
+                            })
                             .onFailure(ironcladFailure -> {
                                 getLogger().exception(ironcladFailure, "Failed to start HTTP service.");
                             })
@@ -57,6 +65,12 @@ public interface HttpServerMixin extends CommonUnit {
      * 其实就是设定 Vertx Web Server 的路由啦。
      */
     void configureHttpServerRoutes(Router router);
+
+    /**
+     * @since 1.5.2
+     */
+    @Nonnull
+    Future<Void> beforeStartHttpServer();
 
     /**
      * @since 1.4.17

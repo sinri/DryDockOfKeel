@@ -38,9 +38,30 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
 
     protected abstract Bomber constructBomber();
 
+    /**
+     * @since 1.5.2
+     */
+    public Bomber getBomber() {
+        return bomber;
+    }
+
     protected abstract Drone constructDrone();
 
+    /**
+     * @since 1.5.2
+     */
+    public Drone getDrone() {
+        return drone;
+    }
+
     protected abstract Fighter constructFighter(@Nullable Integer port);
+
+    /**
+     * @since 1.5.2
+     */
+    public Fighter getFighter() {
+        return this.fighter;
+    }
 
     @Nullable
     @Override
@@ -54,12 +75,37 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     }
 
     /**
+     * @since 1.5.2
+     */
+    protected boolean isQueueDisabled(@Nonnull CommandLine commandLine) {
+        return commandLine.isFlagEnabled("disableQueue");
+    }
+
+    /**
+     * @since 1.5.2
+     */
+    protected boolean isSundialDisabled(@Nonnull CommandLine commandLine) {
+        return commandLine.isFlagEnabled("disableSundial");
+    }
+
+    /**
+     * @since 1.5.2
+     */
+    protected boolean isReceptionistDisabled(@Nonnull CommandLine commandLine) {
+        return commandLine.isFlagEnabled("disableReceptionist");
+    }
+
+    /**
      * 加载本地配置。
      * 仅可以使用航海日志记录器。
      */
     protected void loadLocalConfiguration(@Nonnull CommandLine commandLine) {
         Keel.getConfiguration().loadPropertiesFile("config.properties");
     }
+
+    protected abstract VertxOptions buildVertxOptions(@Nonnull CommandLine commandLine);
+
+    protected abstract Future<Void> loadRemoteConfiguration(@Nonnull CommandLine commandLine);
 
     @Override
     protected final void runWithCommandLine(@Nonnull CommandLine commandLine) {
@@ -134,7 +180,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                         if (fighter != null) {
                             return fighter.loadHttpServer()
                                     .onSuccess(done -> {
-                                        getLogger().info("Loaded Http Server on port: " + receptionistPort);
+                                        getLogger().info("Loaded Http Server on port: " + fighter.configuredHttpServerPort());
                                     });
                         }
                     }
@@ -166,10 +212,6 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
             }
         }
     }
-
-    protected abstract Future<Object> loadRemoteConfiguration(@Nonnull CommandLine commandLine);
-
-    protected abstract VertxOptions buildVertxOptions(@Nonnull CommandLine commandLine);
 
     /**
      * 如果不需要 HealthMonitor，重写方法使之返回null。

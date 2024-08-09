@@ -29,6 +29,15 @@ public class IroncladTest extends Ironclad {
         });
     }
 
+    /**
+     * @since 1.5.2
+     */
+    @Nonnull
+    @Override
+    public Future<Void> beforeStartHttpServer() {
+        return Future.succeededFuture();
+    }
+
     @Nonnull
     @Override
     protected Future<Void> prepareDataSources() {
