@@ -17,10 +17,27 @@ public class BaiyatanConfigurationLoader {
     private final String kumoriClientCode;
     private final String kumoriClientSecret;
 
+    private final JsonArray scope = new JsonArray();
+    private String file = "config.properties";
+
     public BaiyatanConfigurationLoader() {
         this.kumoriUrl = Keel.config("kumori.url");
         this.kumoriClientCode = Keel.config("kumori.clientCode");
         this.kumoriClientSecret = Keel.config("kumori.clientSecret");
+    }
+
+    public BaiyatanConfigurationLoader setFile(String file) {
+        this.file = file;
+        return this;
+    }
+
+    public BaiyatanConfigurationLoader setScope(String scope) {
+        this.scope.clear();
+        String[] split = scope.split("/");
+        for (var s : split) {
+            this.scope.add(s);
+        }
+        return this;
     }
 
     protected Future<JsonObject> callOpenApi(String api, JsonObject body) {
@@ -53,6 +70,7 @@ public class BaiyatanConfigurationLoader {
                 });
     }
 
+
     public Future<Void> baiyatan() {
         var baiyatanProject = Keel.config("baiyatan.project");
         if (baiyatanProject == null) {
@@ -60,10 +78,12 @@ public class BaiyatanConfigurationLoader {
             return Future.succeededFuture();
         }
         System.out.println("baiyatan.project: " + baiyatanProject);
+        System.out.println("scope: " + scope);
+
         return callOpenApi("/kumori/tianwen/baiyatan/reader", new JsonObject()
-                .put("scope", new JsonArray().add("oc"))
+                .put("scope", scope)
                 .put("project", new JsonArray().add(baiyatanProject))
-                .put("file", "config.properties")
+                .put("file", file)
         )
                 .onFailure(throwable -> {
                     System.out.println("baiyatan error " + throwable.getMessage());
