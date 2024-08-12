@@ -17,27 +17,10 @@ public class BaiyatanConfigurationLoader {
     private final String kumoriClientCode;
     private final String kumoriClientSecret;
 
-    private final JsonArray scope = new JsonArray();
-    private String file = "config.properties";
-
     public BaiyatanConfigurationLoader() {
         this.kumoriUrl = Keel.config("kumori.url");
         this.kumoriClientCode = Keel.config("kumori.clientCode");
         this.kumoriClientSecret = Keel.config("kumori.clientSecret");
-    }
-
-    public BaiyatanConfigurationLoader setFile(String file) {
-        this.file = file;
-        return this;
-    }
-
-    public BaiyatanConfigurationLoader setScope(String scope) {
-        this.scope.clear();
-        String[] split = scope.split("/");
-        for (var s : split) {
-            this.scope.add(s);
-        }
-        return this;
     }
 
     protected Future<JsonObject> callOpenApi(String api, JsonObject body) {
@@ -70,27 +53,45 @@ public class BaiyatanConfigurationLoader {
                 });
     }
 
+    /**
+     * @param scope such as "oc"
+     * @since 1.5.4
+     */
+    public Future<Void> baiyatan(String scope) {
+        return baiyatan(scope, "config.properties");
+    }
 
-    public Future<Void> baiyatan() {
+    /**
+     * @param scope such as "oc" or "Customer/Project"
+     * @param file  such as "config.properties" or "runtime/config.py"
+     * @since 1.5.4
+     */
+    public Future<Void> baiyatan(String scope, String file) {
+        JsonArray scopeArray = new JsonArray();
+        String[] split = scope.split("/");
+        for (var s : split) {
+            scopeArray.add(s);
+        }
+
         var baiyatanProject = Keel.config("baiyatan.project");
         if (baiyatanProject == null) {
             System.out.println("baiyatan.project is missing, passover");
             return Future.succeededFuture();
         }
-        System.out.println("baiyatan.project: " + baiyatanProject);
-        System.out.println("scope: " + scope);
+        Keel.getLogger().info("baiyatan.project: " + baiyatanProject);
+        Keel.getLogger().info("scope: " + scopeArray);
 
         return callOpenApi("/kumori/tianwen/baiyatan/reader", new JsonObject()
-                .put("scope", scope)
+                .put("scope", scopeArray)
                 .put("project", new JsonArray().add(baiyatanProject))
                 .put("file", file)
         )
                 .onFailure(throwable -> {
-                    System.out.println("baiyatan error " + throwable.getMessage());
+                    Keel.getLogger().exception(throwable, "baiyatan error");
                 })
                 .compose(resp -> {
                     Keel.getConfiguration().loadPropertiesFileContent(resp.getString("data"));
-                    System.out.println("LOADED CONFIG FROM BAIYATAN");
+                    Keel.getLogger().info("LOADED CONFIG FROM BAIYATAN");
                     //System.out.println("LOADED CONFIG FROM BAIYATAN:\n" + resp.getString("data"));
                     //System.out.println(Keel.getConfiguration().toJsonObject());
                     return Future.succeededFuture();
