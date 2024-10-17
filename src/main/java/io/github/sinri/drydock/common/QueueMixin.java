@@ -58,14 +58,27 @@ public interface QueueMixin extends CommonUnit {
         return Future.succeededFuture(this.buildQueue())
                 .compose(queue -> {
                     if (queue == null) return Future.succeededFuture();
-                    return queue.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER))
-                            .onFailure(throwable -> {
-                                getLogger().exception(throwable, "Failed to load queue");
-                            })
-                            .compose(deploymentId -> {
-                                getLogger().info("Loaded queue: " + deploymentId);
-                                return Future.succeededFuture();
+                    return this.beforeLoadingQueue()
+                            .compose(v -> {
+                                return queue.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER))
+                                        .onFailure(throwable -> {
+                                            getLogger().exception(throwable, "Failed to load queue");
+                                        })
+                                        .compose(deploymentId -> {
+                                            getLogger().info("Loaded queue: " + deploymentId);
+                                            return Future.succeededFuture();
+                                        });
                             });
                 });
+    }
+
+    /**
+     * Execute before `io.github.sinri.drydock.common.QueueMixin#loadQueue()`,
+     * to clean up the left RUNNING tasks (let them ERROR).
+     *
+     * @since 1.5.8
+     */
+    default Future<Void> beforeLoadingQueue() {
+        return Future.succeededFuture();
     }
 }
