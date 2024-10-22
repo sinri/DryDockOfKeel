@@ -220,6 +220,10 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             rebuildProducer().andThen(ar -> {
                 promise.complete(null);
             });
+            buffer.forEach(item -> {
+                String s = KeelIssueRecordStringRender.getInstance().renderIssueRecord(item);
+                System.out.println(s);
+            });
         }
         return promise.future();
     }
