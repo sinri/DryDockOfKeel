@@ -207,6 +207,10 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                             .classification(getClass().getName())
                             .message("Producer Send Error: " + result)
                     );
+                    buffer.forEach(item -> {
+                        String s = KeelIssueRecordStringRender.getInstance().renderIssueRecord(item);
+                        System.out.println(s);
+                    });
                 }
 
                 //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" promise to complete");
