@@ -9,8 +9,17 @@ import io.vertx.ext.web.Router;
 
 import javax.annotation.Nonnull;
 
+/**
+ * The mixin interface for a unit for HTTP Server.
+ */
 public interface HttpServerMixin extends CommonUnit {
 
+    /**
+     * Try to build a KeelHttpServer instance and start it up.
+     * Do nothing if this ability is not required.
+     *
+     * @return a future as all work scheduled.
+     */
     default Future<Void> loadHttpServer() {
         return Future.succeededFuture(buildHttpServer())
                 .compose(server -> {
@@ -32,6 +41,11 @@ public interface HttpServerMixin extends CommonUnit {
                 });
     }
 
+    /**
+     * To generate a KeelHttpServer instance
+     *
+     * @return A built KeelHttpServer instance.
+     */
     default KeelHttpServer buildHttpServer() {
         KeelEventLogger eventLogger = this.generateEventLogger(DryDockLogTopics.TopicHttpServer);
         return new KeelHttpServer() {
@@ -54,30 +68,39 @@ public interface HttpServerMixin extends CommonUnit {
     }
 
     /**
-     * @return HTTP 服务的监听端口。
+     * @return The port which HTTP Server listens to.
      */
     default int configuredHttpServerPort() {
         return 8080;
     }
 
     /**
+     * Provide the Router instance of HTTP Server, configure it.
+     * <p>
      * 最简单的情况下，铁甲舰仅需提供一份战术指南即可自动部署武器接敌。
      * 其实就是设定 Vertx Web Server 的路由啦。
      */
     void configureHttpServerRoutes(Router router);
 
     /**
+     * An asynchronous routine to be handled before starting HTTP Service.
+     *
      * @since 1.5.2
      */
     @Nonnull
     Future<Void> beforeStartHttpServer();
 
     /**
+     * Declare the HTTP Server should be stopped.
+     * Note that, the HTTP Server is not ought to be actually stopped, but a declaration to be ready to close it.
+     *
      * @since 1.4.17
      */
     void stopServer();
 
     /**
+     * Check whether the HTTP Server has been declared to be stopped.
+     *
      * @since 1.4.17
      */
     boolean isToStopServer();

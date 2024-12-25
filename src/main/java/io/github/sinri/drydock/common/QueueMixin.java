@@ -12,9 +12,17 @@ import io.vertx.core.ThreadingModel;
 import javax.annotation.Nonnull;
 
 /**
+ * The mixin interface for a unit for Queue.
+ *
  * @since 1.1.0
  */
 public interface QueueMixin extends CommonUnit {
+    /**
+     * Build a KeelQueue instance.
+     * A default implementation is provided.
+     *
+     * @return The built KeelQueue instance.
+     */
     default KeelQueue buildQueue() {
         KeelIssueRecorder<QueueManageIssueRecord> issueRecorder = this.generateIssueRecorder(QueueManageIssueRecord.TopicQueue, QueueManageIssueRecord::new);
         return new KeelQueue() {
@@ -44,16 +52,28 @@ public interface QueueMixin extends CommonUnit {
     }
 
     /**
-     * @return zero for unlimited.
+     * @return The worker pool size; return zero for an unlimited pool.
      */
     default int configuredQueueWorkerPoolSize() {
         return 0;
     }
 
+    /**
+     * @return The built signal reader.
+     */
     KeelQueue.SignalReader buildSignalReader();
 
+    /**
+     * @return The built next task seeker.
+     */
     KeelQueueNextTaskSeeker buildQueueNextTaskSeeker();
 
+    /**
+     * Try to build a KeelQueue instance and start it up.
+     * Do nothing if this ability is not required.
+     *
+     * @return a future as all work scheduled.
+     */
     default Future<Void> loadQueue() {
         return Future.succeededFuture(this.buildQueue())
                 .compose(queue -> {

@@ -11,9 +11,17 @@ import io.vertx.core.ThreadingModel;
 import java.util.Collection;
 
 /**
+ * The mixin interface for a unit for Sundial.
+ *
  * @since 1.1.0
  */
 public interface SundialMixin extends CommonUnit {
+    /**
+     * Build a KeelSundial instance.
+     * A default implementation is provided.
+     *
+     * @return The built KeelSundial instance.
+     */
     default KeelSundial buildSundial() {
         KeelEventLogger eventLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicSundial);
         return new KeelSundial() {
@@ -29,8 +37,17 @@ public interface SundialMixin extends CommonUnit {
         };
     }
 
+    /**
+     * @return the asynchronously fetched sundial plans to completely overwrite; return null to modify none of the existed plans.
+     */
     Future<Collection<KeelSundialPlan>> fetchSundialPlans();
 
+    /**
+     * Try to build a KeelSundial instance and start it up.
+     * Do nothing if this ability is not required.
+     *
+     * @return a future as all work scheduled.
+     */
     default Future<Void> loadSundial() {
         return Future.succeededFuture(this.buildSundial())
                 .compose(sundial -> {

@@ -27,10 +27,22 @@ import java.util.List;
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
+ * An implementation of AircraftCarrierDeck.
+ * By default, support Health Monitor, Queue, Sundial, HTTP Server.
+ * <p>
+ * The start-up command line is
+ * {@code java -jar X.jar [--disableQueue] [--disableSundial] [--disableReceptionist] [--receptionistPort=8080]}
+ * </p>
+ *
  * @since 1.5.0 Technical Preview
  */
 @TechnicalPreview(since = "1.5.0")
 public abstract class AircraftCarrier extends AircraftCarrierDeck implements HealthMonitorMixin {
+    public static final String optionDisableQueue = "disableQueue";
+    public static final String optionDisableSundial = "disableSundial";
+    public static final String optionDisableReceptionist = "disableReceptionist";
+    public static final String optionReceptionistPort = "receptionistPort";
+
     private Bomber bomber;
     private Drone drone;
     private Fighter fighter;
@@ -39,6 +51,8 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     protected abstract Bomber constructBomber();
 
     /**
+     * The component for the ability to execute time-relate scheduled tasks, through Sundial.
+     *
      * @since 1.5.2
      */
     public Bomber getBomber() {
@@ -48,6 +62,8 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     protected abstract Drone constructDrone();
 
     /**
+     * The component for the ability to execute queued tasks, through Queue.
+     *
      * @since 1.5.2
      */
     public Drone getDrone() {
@@ -57,6 +73,8 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     protected abstract Fighter constructFighter(@Nullable Integer port);
 
     /**
+     * The component for the ability to provide HTTP Service.
+     *
      * @since 1.5.2
      */
     public Fighter getFighter() {
@@ -67,10 +85,10 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     @Override
     protected List<Option> buildCliOptions() {
         return List.of(
-                new Option().setLongName("disableQueue").setFlag(true),
-                new Option().setLongName("disableSundial").setFlag(true),
-                new Option().setLongName("disableReceptionist").setFlag(true),
-                new Option().setLongName("receptionistPort").setRequired(false)
+                new Option().setLongName(optionDisableQueue).setFlag(true),
+                new Option().setLongName(optionDisableSundial).setFlag(true),
+                new Option().setLongName(optionDisableReceptionist).setFlag(true),
+                new Option().setLongName(optionReceptionistPort).setRequired(false)
         );
     }
 
@@ -78,33 +96,45 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      * @since 1.5.2
      */
     protected boolean isQueueDisabled(@Nonnull CommandLine commandLine) {
-        return commandLine.isFlagEnabled("disableQueue");
+        return commandLine.isFlagEnabled(optionDisableQueue);
     }
 
     /**
      * @since 1.5.2
      */
     protected boolean isSundialDisabled(@Nonnull CommandLine commandLine) {
-        return commandLine.isFlagEnabled("disableSundial");
+        return commandLine.isFlagEnabled(optionDisableSundial);
     }
 
     /**
      * @since 1.5.2
      */
     protected boolean isReceptionistDisabled(@Nonnull CommandLine commandLine) {
-        return commandLine.isFlagEnabled("disableReceptionist");
+        return commandLine.isFlagEnabled(optionDisableReceptionist);
     }
 
     /**
-     * 加载本地配置。
-     * 仅可以使用航海日志记录器。
+     * Load the local configuration synchronously into `Keel.getConfiguration()`.
+     * By default, it reads local file "config.properties" to fetch config.
+     *
+     * @param commandLine the parsed command line parameters.
      */
     protected void loadLocalConfiguration(@Nonnull CommandLine commandLine) {
         Keel.getConfiguration().loadPropertiesFile("config.properties");
     }
 
+    /**
+     * @param commandLine the parsed command line parameters.
+     * @return the built VertxOptions instance.
+     */
     protected abstract VertxOptions buildVertxOptions(@Nonnull CommandLine commandLine);
 
+    /**
+     * Load the remote configuration asynchronously into `Keel.getConfiguration()`.
+     *
+     * @param commandLine the parsed command line parameters.
+     * @return a future after done
+     */
     protected abstract Future<Void> loadRemoteConfiguration(@Nonnull CommandLine commandLine);
 
     @Override
@@ -146,7 +176,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                 })
                 .compose(v -> {
                     getLogger().info("Prepared For Biz");
-                    boolean disableQueue = commandLine.isFlagEnabled("disableQueue");
+                    boolean disableQueue = commandLine.isFlagEnabled(optionDisableQueue);
                     if (!disableQueue) {
                         drone = constructDrone();
                     }
@@ -159,7 +189,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                     return Future.succeededFuture();
                 })
                 .compose(v -> {
-                    boolean disableSundial = commandLine.isFlagEnabled("disableSundial");
+                    boolean disableSundial = commandLine.isFlagEnabled(optionDisableSundial);
                     if (!disableSundial) {
                         bomber = constructBomber();
                     }
@@ -172,9 +202,9 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                     return Future.succeededFuture();
                 })
                 .compose(v -> {
-                    boolean disableReceptionist = commandLine.isFlagEnabled("disableReceptionist");
+                    boolean disableReceptionist = commandLine.isFlagEnabled(optionDisableReceptionist);
                     if (!disableReceptionist) {
-                        String receptionistPortStr = commandLine.getOptionValue("receptionistPort");
+                        String receptionistPortStr = commandLine.getOptionValue(optionReceptionistPort);
                         Integer receptionistPort = receptionistPortStr == null ? null : Integer.parseInt(receptionistPortStr);
                         fighter = constructFighter(receptionistPort);
                         if (fighter != null) {
@@ -225,9 +255,19 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
         }
     }
 
+    /**
+     * Prepare for business, after logger and health monitor initialized.
+     *
+     * @param commandLine the parsed command line parameters.
+     */
     @Nonnull
     protected abstract Future<Void> prepare(@Nonnull CommandLine commandLine);
 
+    /**
+     * An asynchronous code block after the business of this program is initialized.
+     *
+     * @param commandLine the parsed command line parameters.
+     */
     @Nonnull
     protected abstract Future<Void> ready(@Nonnull CommandLine commandLine);
 

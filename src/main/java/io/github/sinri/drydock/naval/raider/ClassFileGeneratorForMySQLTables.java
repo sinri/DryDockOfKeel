@@ -98,16 +98,7 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
                     }
                 })
                 .compose(dirEnsured -> {
-                    return Keel.getVertx().fileSystem().readDir(dir)
-                            .compose(files -> {
-                                return KeelAsyncKit.iterativelyCall(files, file -> {
-                                    if (file.endsWith("/package-info.java")) {
-                                        return Future.succeededFuture();
-                                    } else {
-                                        return Keel.getVertx().fileSystem().delete(file);
-                                    }
-                                });
-                            })
+                    return this.stashOldClassFiles(dir)
                             .compose(v -> {
                                 return mySQLDataSource.withConnection(sqlConnection -> {
                                     var x = new TableRowClassSourceCodeGenerator(sqlConnection)
@@ -131,8 +122,64 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
                                 });
                             })
                             .compose(v -> {
-                                return Future.succeededFuture();
+                                return this.removeOldClassFiles(dir);
+                            }, failure -> {
+                                return this.callbackOldClassFiles(dir)
+                                        .compose(v -> {
+                                            return Future.failedFuture(failure);
+                                        });
                             });
+                });
+    }
+
+    /**
+     * @since 1.5.11
+     */
+    private Future<Void> stashOldClassFiles(String dir) {
+        getLogger().notice("stashOldClassFiles");
+        return Keel.getVertx().fileSystem().readDir(dir)
+                .compose(files -> {
+                    return KeelAsyncKit.iterativelyCall(files, file -> {
+                        if (file.endsWith("/package-info.java")) {
+                            return Future.succeededFuture();
+                        } else {
+                            //return Keel.getVertx().fileSystem().delete(file);
+                            return Keel.getVertx().fileSystem().move(file, file + ".stash");
+                        }
+                    });
+                });
+    }
+
+    /**
+     * @since 1.5.11
+     */
+    private Future<Void> callbackOldClassFiles(String dir) {
+        getLogger().warning("callbackOldClassFiles");
+        return Keel.getVertx().fileSystem().readDir(dir)
+                .compose(files -> {
+                    return KeelAsyncKit.iterativelyCall(files, file -> {
+                        if (file.endsWith(".stash")) {
+                            String x = file.substring(0, file.length() - ".stash".length());
+                            return Keel.getVertx().fileSystem().move(file, x);
+                        }
+                        return Future.succeededFuture();
+                    });
+                });
+    }
+
+    /**
+     * @since 1.5.11
+     */
+    private Future<Void> removeOldClassFiles(String dir) {
+        getLogger().notice("removeOldClassFiles");
+        return Keel.getVertx().fileSystem().readDir(dir)
+                .compose(files -> {
+                    return KeelAsyncKit.iterativelyCall(files, file -> {
+                        if (file.endsWith(".stash")) {
+                            return Keel.getVertx().fileSystem().delete(file);
+                        }
+                        return Future.succeededFuture();
+                    });
                 });
     }
 }
