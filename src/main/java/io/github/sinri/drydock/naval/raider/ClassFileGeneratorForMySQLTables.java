@@ -1,10 +1,9 @@
 package io.github.sinri.drydock.naval.raider;
 
-import io.github.sinri.keel.facade.async.KeelAsyncKit;
-import io.github.sinri.keel.mysql.KeelMySQLDataSourceProvider;
-import io.github.sinri.keel.mysql.NamedMySQLConnection;
-import io.github.sinri.keel.mysql.NamedMySQLDataSource;
-import io.github.sinri.keel.mysql.dev.TableRowClassSourceCodeGenerator;
+import io.github.sinri.keel.integration.mysql.KeelMySQLDataSourceProvider;
+import io.github.sinri.keel.integration.mysql.NamedMySQLConnection;
+import io.github.sinri.keel.integration.mysql.NamedMySQLDataSource;
+import io.github.sinri.keel.integration.mysql.dev.TableRowClassSourceCodeGenerator;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.SqlConnection;
 
@@ -139,7 +138,7 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
         getLogger().notice("stashOldClassFiles");
         return Keel.getVertx().fileSystem().readDir(dir)
                 .compose(files -> {
-                    return KeelAsyncKit.iterativelyCall(files, file -> {
+                    return Keel.asyncCallIteratively(files, file -> {
                         if (file.endsWith("/package-info.java")) {
                             return Future.succeededFuture();
                         } else {
@@ -157,7 +156,7 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
         getLogger().warning("callbackOldClassFiles");
         return Keel.getVertx().fileSystem().readDir(dir)
                 .compose(files -> {
-                    return KeelAsyncKit.iterativelyCall(files, file -> {
+                    return Keel.asyncCallIteratively(files, file -> {
                         if (file.endsWith(".stash")) {
                             String x = file.substring(0, file.length() - ".stash".length());
                             return Keel.getVertx().fileSystem().move(file, x);
@@ -174,7 +173,7 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
         getLogger().notice("removeOldClassFiles");
         return Keel.getVertx().fileSystem().readDir(dir)
                 .compose(files -> {
-                    return KeelAsyncKit.iterativelyCall(files, file -> {
+                    return Keel.asyncCallIteratively(files, file -> {
                         if (file.endsWith(".stash")) {
                             return Keel.getVertx().fileSystem().delete(file);
                         }

@@ -1,8 +1,9 @@
 package io.github.sinri.drydock.common.health;
 
-import io.github.sinri.keel.helper.runtime.KeelRuntimeMonitor;
-import io.github.sinri.keel.helper.runtime.MonitorSnapshot;
-import io.github.sinri.keel.verticles.KeelVerticleImplPure;
+
+import io.github.sinri.keel.core.helper.runtime.KeelRuntimeMonitor;
+import io.github.sinri.keel.core.helper.runtime.MonitorSnapshot;
+import io.github.sinri.keel.core.verticles.KeelVerticleImplPure;
 
 import javax.annotation.Nonnull;
 

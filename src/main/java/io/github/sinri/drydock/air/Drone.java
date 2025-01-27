@@ -3,8 +3,8 @@ package io.github.sinri.drydock.air;
 import io.github.sinri.drydock.common.QueueMixin;
 import io.github.sinri.drydock.naval.carrier.AircraftCarrierDeck;
 import io.github.sinri.keel.core.TechnicalPreview;
-import io.github.sinri.keel.servant.queue.KeelQueue;
-import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
+import io.github.sinri.keel.core.servant.queue.KeelQueue;
+import io.github.sinri.keel.core.servant.queue.KeelQueueNextTaskSeeker;
 
 import javax.annotation.Nonnull;
 

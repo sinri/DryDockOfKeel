@@ -1,7 +1,7 @@
 package io.github.sinri.drydock.common.health;
 
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
-import io.github.sinri.keel.helper.runtime.MonitorSnapshot;
+import io.github.sinri.keel.core.helper.runtime.MonitorSnapshot;
 import io.github.sinri.keel.logger.KeelLogLevel;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.vertx.core.json.JsonObject;

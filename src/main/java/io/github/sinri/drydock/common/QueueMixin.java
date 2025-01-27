@@ -1,10 +1,10 @@
 package io.github.sinri.drydock.common;
 
+import io.github.sinri.keel.core.servant.queue.KeelQueue;
+import io.github.sinri.keel.core.servant.queue.KeelQueueNextTaskSeeker;
+import io.github.sinri.keel.core.servant.queue.QueueManageIssueRecord;
+import io.github.sinri.keel.core.servant.queue.QueueWorkerPoolManager;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
-import io.github.sinri.keel.servant.queue.KeelQueue;
-import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
-import io.github.sinri.keel.servant.queue.QueueManageIssueRecord;
-import io.github.sinri.keel.servant.queue.QueueWorkerPoolManager;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.ThreadingModel;

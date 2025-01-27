@@ -5,7 +5,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
-import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 /**
  * A remote configuration loader based on Kumori-Baiyatan Protocol.
@@ -28,7 +27,7 @@ public final class BaiyatanConfigurationLoader {
         long timestamp = System.currentTimeMillis();
         body.put("client_code", kumoriClientCode);
         body.put("timestamp", timestamp);
-        body.put("checksum", KeelHelpers.digestHelper().md5(kumoriClientCode + "@" + timestamp + "@" + kumoriClientSecret));
+        body.put("checksum", Keel.digestHelper().md5(kumoriClientCode + "@" + timestamp + "@" + kumoriClientSecret));
         return Keel.useWebClient(webClient -> webClient
                         .postAbs(kumoriUrl + api)
                         .sendJsonObject(body)

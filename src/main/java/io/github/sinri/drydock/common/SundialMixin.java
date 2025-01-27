@@ -1,9 +1,9 @@
 package io.github.sinri.drydock.common;
 
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
+import io.github.sinri.keel.core.servant.sundial.KeelSundial;
+import io.github.sinri.keel.core.servant.sundial.KeelSundialPlan;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
-import io.github.sinri.keel.servant.sundial.KeelSundial;
-import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.ThreadingModel;

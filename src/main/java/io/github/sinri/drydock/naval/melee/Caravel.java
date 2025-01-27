@@ -5,13 +5,10 @@ import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
-import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenterAsAsync;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 
 import javax.annotation.Nonnull;
-
-import java.util.Objects;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
@@ -94,7 +91,7 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
             return KeelIssueRecordCenter.outputCenter();
         } else {
             try {
-                return new KeelIssueRecordCenterAsAsync(new AliyunSLSIssueAdapterImpl());
+                return KeelIssueRecordCenter.build(new AliyunSLSIssueAdapterImpl());
             } catch (Throwable e) {
                 getLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
                 throw e;

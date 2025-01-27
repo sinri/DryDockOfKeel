@@ -1,7 +1,7 @@
 package io.github.sinri.drydock.common.health;
 
 import io.github.sinri.drydock.common.logging.metric.HealthMonitorMetricRecord;
-import io.github.sinri.keel.helper.runtime.MonitorSnapshot;
+import io.github.sinri.keel.core.helper.runtime.MonitorSnapshot;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 
 import javax.annotation.Nonnull;

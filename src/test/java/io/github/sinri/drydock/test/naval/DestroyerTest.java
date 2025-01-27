@@ -1,9 +1,9 @@
 package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.melee.Destroyer;
-import io.github.sinri.keel.servant.queue.KeelQueue;
-import io.github.sinri.keel.servant.queue.KeelQueueNextTaskSeeker;
-import io.github.sinri.keel.servant.sundial.KeelSundialPlan;
+import io.github.sinri.keel.core.servant.queue.KeelQueue;
+import io.github.sinri.keel.core.servant.queue.KeelQueueNextTaskSeeker;
+import io.github.sinri.keel.core.servant.sundial.KeelSundialPlan;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;

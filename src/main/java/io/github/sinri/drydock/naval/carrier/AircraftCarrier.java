@@ -13,7 +13,6 @@ import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
 import io.github.sinri.keel.core.TechnicalPreview;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
-import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenterAsAsync;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
@@ -23,6 +22,7 @@ import io.vertx.core.cli.Option;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
@@ -157,7 +157,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                     getLogger().info("REMOTE CONFIG LOADED (if any)");
                     issueRecordCenter = buildIssueRecordCenter();
                     // 航海日志共享大计
-                    if (getIssueRecordCenter() != KeelIssueRecordCenter.outputCenter()) {
+                    if (!Objects.equals(getIssueRecordCenter(), KeelIssueRecordCenter.outputCenter())) {
                         var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
                         this.getLogger().addBypassLogger(bypassLogger);
                     } else {
@@ -235,7 +235,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
             return KeelIssueRecordCenter.outputCenter();
         } else {
             try {
-                return new KeelIssueRecordCenterAsAsync(new AliyunSLSIssueAdapterImpl());
+                return KeelIssueRecordCenter.build(new AliyunSLSIssueAdapterImpl());
             } catch (Throwable e) {
                 getLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
                 throw e;

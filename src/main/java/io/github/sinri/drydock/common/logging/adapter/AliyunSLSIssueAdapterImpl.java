@@ -22,7 +22,6 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
-import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 /**
  * @since 1.3.4
@@ -130,7 +129,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             return "";
         }
         // Rule 1: Replace [IP] to local address
-        String localHostAddress = KeelHelpers.netHelper().getLocalHostAddress();
+        String localHostAddress = Keel.netHelper().getLocalHostAddress();
         if (localHostAddress == null) {
             Keel.getLogger().warning("Could not get local host address for SLS source!");
             return "";

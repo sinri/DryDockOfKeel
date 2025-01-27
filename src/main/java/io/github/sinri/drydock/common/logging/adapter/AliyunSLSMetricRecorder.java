@@ -16,7 +16,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
-import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
 
@@ -79,7 +78,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
             return "";
         }
         // Rule 1: Replace [IP] to local address
-        String localHostAddress = KeelHelpers.netHelper().getLocalHostAddress();
+        String localHostAddress = Keel.netHelper().getLocalHostAddress();
         if (localHostAddress == null) {
             Keel.getLogger().warning("Could not get local host address for SLS source!");
             return "";
