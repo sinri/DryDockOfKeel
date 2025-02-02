@@ -1,18 +1,16 @@
 package io.github.sinri.drydock.common.logging.issue;
 
-import io.github.sinri.keel.logger.issue.record.BaseIssueRecord;
+import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.vertx.core.json.JsonObject;
 
 import javax.annotation.Nonnull;
 
-public class HealthMonitorIssueRecord extends BaseIssueRecord<HealthMonitorIssueRecord> {
+public class HealthMonitorIssueRecord extends KeelIssueRecord<HealthMonitorIssueRecord> {
     public static final String TopicHealthMonitor = "HealthMonitor";
     public static final String AttributeSnapshot = "snapshot";
 
-    @Nonnull
-    @Override
-    public String topic() {
-        return TopicHealthMonitor;
+    public HealthMonitorIssueRecord() {
+        super(TopicHealthMonitor);
     }
 
     @Nonnull

@@ -45,7 +45,7 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
                     // 航海日志共享大计
                     if (getIssueRecordCenter() != KeelIssueRecordCenter.outputCenter()) {
                         var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
-                        this.getLogger().addBypassLogger(bypassLogger);
+                        this.getLogger().addBypassIssueRecorder(bypassLogger);
                     } else {
                         this.getLogger().info("Bypass logging is ignored.");
                     }
