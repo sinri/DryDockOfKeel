@@ -10,7 +10,7 @@ public class HealthMonitorIssueRecord extends KeelIssueRecord<HealthMonitorIssue
     public static final String AttributeSnapshot = "snapshot";
 
     public HealthMonitorIssueRecord() {
-        super(TopicHealthMonitor);
+        super();
     }
 
     @Nonnull

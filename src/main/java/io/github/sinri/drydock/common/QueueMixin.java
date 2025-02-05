@@ -2,9 +2,9 @@ package io.github.sinri.drydock.common;
 
 import io.github.sinri.keel.core.servant.queue.KeelQueue;
 import io.github.sinri.keel.core.servant.queue.KeelQueueNextTaskSeeker;
-import io.github.sinri.keel.core.servant.queue.QueueManageIssueRecord;
+import io.github.sinri.keel.core.servant.queue.KeelQueueSignalReader;
 import io.github.sinri.keel.core.servant.queue.QueueWorkerPoolManager;
-import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
+import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.ThreadingModel;
@@ -24,12 +24,12 @@ public interface QueueMixin extends CommonUnit {
      * @return The built KeelQueue instance.
      */
     default KeelQueue buildQueue() {
-        KeelIssueRecorder<QueueManageIssueRecord> issueRecorder = this.generateIssueRecorder(QueueManageIssueRecord.TopicQueue, QueueManageIssueRecord::new);
+        KeelIssueRecordCenter issueRecordCenter = this.getIssueRecordCenter();
         return new KeelQueue() {
-            @Nonnull
+
             @Override
-            protected KeelIssueRecorder<QueueManageIssueRecord> buildIssueRecorder() {
-                return issueRecorder;
+            protected KeelIssueRecordCenter getIssueRecordCenter() {
+                return issueRecordCenter;
             }
 
             @Override
@@ -38,7 +38,7 @@ public interface QueueMixin extends CommonUnit {
             }
 
             @Override
-            protected @Nonnull SignalReader getSignalReader() {
+            protected @Nonnull KeelQueueSignalReader getSignalReader() {
                 return buildSignalReader();
             }
 
@@ -61,7 +61,7 @@ public interface QueueMixin extends CommonUnit {
     /**
      * @return The built signal reader.
      */
-    KeelQueue.SignalReader buildSignalReader();
+    KeelQueueSignalReader buildSignalReader();
 
     /**
      * @return The built next task seeker.

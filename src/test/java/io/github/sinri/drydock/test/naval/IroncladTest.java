@@ -2,6 +2,7 @@ package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.melee.Ironclad;
 import io.vertx.core.Future;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
@@ -10,6 +11,11 @@ import javax.annotation.Nonnull;
 public class IroncladTest extends Ironclad {
     public static void main(String[] args) {
         new IroncladTest().launch();
+    }
+
+    @Override
+    public VertxOptions buildVertxOptions() {
+        return new VertxOptions();
     }
 
     @Override

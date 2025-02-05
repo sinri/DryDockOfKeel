@@ -3,7 +3,6 @@ package io.github.sinri.drydock.naval.melee;
 import io.github.sinri.drydock.naval.base.Warship;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.vertx.core.Future;
-import io.vertx.core.VertxOptions;
 
 /**
  * 桨帆船。
@@ -16,10 +15,6 @@ import io.vertx.core.VertxOptions;
  * @since 1.1.0 extends Warship
  */
 public abstract class Galley extends Warship {
-    public VertxOptions buildVertxOptions() {
-        return new VertxOptions()
-                .setWorkerPoolSize(32);
-    }
 
     /**
      * @since 1.3.4

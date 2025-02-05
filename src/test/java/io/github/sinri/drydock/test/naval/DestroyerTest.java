@@ -1,10 +1,11 @@
 package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.melee.Destroyer;
-import io.github.sinri.keel.core.servant.queue.KeelQueue;
 import io.github.sinri.keel.core.servant.queue.KeelQueueNextTaskSeeker;
+import io.github.sinri.keel.core.servant.queue.KeelQueueSignalReader;
 import io.github.sinri.keel.core.servant.sundial.KeelSundialPlan;
 import io.vertx.core.Future;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
@@ -19,7 +20,7 @@ public class DestroyerTest extends Destroyer {
 
 
     @Override
-    public KeelQueue.SignalReader buildSignalReader() {
+    public KeelQueueSignalReader buildSignalReader() {
         return null;
     }
 
@@ -31,6 +32,11 @@ public class DestroyerTest extends Destroyer {
     @Override
     public Future<Collection<KeelSundialPlan>> fetchSundialPlans() {
         return Future.succeededFuture();
+    }
+
+    @Override
+    public VertxOptions buildVertxOptions() {
+        return new VertxOptions();
     }
 
     @Override

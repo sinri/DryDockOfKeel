@@ -27,25 +27,19 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * @since 1.3.4
  */
 public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
+    /**
+     * @since 1.4.21
+     */
+    private static int bufferSize = 1000;
     private final boolean disabled;
     private final String project;
     private final String logstore;
     private final String source;
     private final String endpoint;
-    private volatile boolean stopped = false;
-    private volatile boolean closed = true;
-
     //private Producer producer;
     private final AtomicReference<Producer> producerRef = new AtomicReference<>();
-
-    /**
-     * @return the configured switch to decide whether the Aliyun SLS should be disabled.
-     * @since 1.4.9
-     */
-    public static boolean isDisabled() {
-        String x = Keel.config("aliyun.sls.disabled");
-        return "YES".equalsIgnoreCase(x);
-    }
+    private volatile boolean stopped = false;
+    private volatile boolean closed = true;
 
     public AliyunSLSIssueAdapterImpl() {
         KeelConfigElement aliyunSlsConfig = Keel.getConfiguration().extract("aliyun", "sls");
@@ -67,6 +61,42 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         }
         buildProducer();
         start();
+    }
+
+    /**
+     * @return the configured switch to decide whether the Aliyun SLS should be disabled.
+     * @since 1.4.9
+     */
+    public static boolean isDisabled() {
+        String x = Keel.config("aliyun.sls.disabled");
+        return "YES".equalsIgnoreCase(x);
+    }
+
+    /**
+     * Build source from configuration.
+     * Source Expression should be:
+     * - EMPTY/BLANK STRING or NULL: use SLS default source generation;
+     * - A TEMPLATED STRING
+     * --- Rule 1: Replace [IP] to local address;
+     */
+    private static String buildSource(@Nullable String configuredSourceExpression) {
+        if (configuredSourceExpression == null || configuredSourceExpression.isBlank()) {
+            return "";
+        }
+        // Rule 1: Replace [IP] to local address
+        String localHostAddress = Keel.netHelper().getLocalHostAddress();
+        if (localHostAddress == null) {
+            Keel.getLogger().warning("Could not get local host address for SLS source!");
+            return "";
+        }
+        return configuredSourceExpression.replaceAll("\\[IP]", localHostAddress);
+    }
+
+    /**
+     * @since 1.4.21
+     */
+    public static void setBufferSize(int bufferSize) {
+        AliyunSLSIssueAdapterImpl.bufferSize = bufferSize;
     }
 
     /**
@@ -117,38 +147,6 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         stopped = false;
     }
 
-    /**
-     * Build source from configuration.
-     * Source Expression should be:
-     * - EMPTY/BLANK STRING or NULL: use SLS default source generation;
-     * - A TEMPLATED STRING
-     * --- Rule 1: Replace [IP] to local address;
-     */
-    private static String buildSource(@Nullable String configuredSourceExpression) {
-        if (configuredSourceExpression == null || configuredSourceExpression.isBlank()) {
-            return "";
-        }
-        // Rule 1: Replace [IP] to local address
-        String localHostAddress = Keel.netHelper().getLocalHostAddress();
-        if (localHostAddress == null) {
-            Keel.getLogger().warning("Could not get local host address for SLS source!");
-            return "";
-        }
-        return configuredSourceExpression.replaceAll("\\[IP]", localHostAddress);
-    }
-
-    /**
-     * @since 1.4.21
-     */
-    private static int bufferSize = 1000;
-
-    /**
-     * @since 1.4.21
-     */
-    public static void setBufferSize(int bufferSize) {
-        AliyunSLSIssueAdapterImpl.bufferSize = bufferSize;
-    }
-
     @Override
     protected Future<Void> handleIssueRecordsForTopic(@Nonnull final String topic, @Nonnull final List<KeelIssueRecord<?>> buffer) {
         // Keel.getLogger().info("handleIssueRecordsForTopic["+topic+"] "+ buffer.size());
@@ -191,7 +189,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         } catch (Throwable throwable) {
             Keel.getLogger().exception(throwable, "Pack Logs into Aliyun SLS Log Items Failed");
             buffer.forEach(item -> {
-                String s = KeelIssueRecordStringRender.getInstance().renderIssueRecord(item);
+                String s = KeelIssueRecordStringRender.getInstance().renderIssueRecord(topic, item);
                 System.out.println(s);
             });
             promise.fail(throwable);
@@ -207,7 +205,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                             .message("Producer Send Error: " + result)
                     );
                     buffer.forEach(item -> {
-                        String s = KeelIssueRecordStringRender.getInstance().renderIssueRecord(item);
+                        String s = KeelIssueRecordStringRender.getInstance().renderIssueRecord(topic, item);
                         System.out.println(s);
                     });
                 }
@@ -224,7 +222,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                 promise.complete(null);
             });
             buffer.forEach(item -> {
-                String s = KeelIssueRecordStringRender.getInstance().renderIssueRecord(item);
+                String s = KeelIssueRecordStringRender.getInstance().renderIssueRecord(topic, item);
                 System.out.println(s);
             });
         }
