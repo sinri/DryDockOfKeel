@@ -1,8 +1,7 @@
-package io.github.sinri.drydock.naval.carrier;
+package io.github.sinri.drydock.aviation.carrier;
 
 import io.github.sinri.drydock.common.CommonUnit;
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
-import io.github.sinri.keel.core.TechnicalPreview;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.vertx.core.cli.Argument;
@@ -21,7 +20,6 @@ import java.util.List;
  * @see <a href="https://vertx.io/docs/vertx-core/java/#_vert_x_command_line_interface_api">Vert.x Command Line Interface API</a>
  * @since 1.5.0 Technical Preview
  */
-@TechnicalPreview(since = "1.5.0")
 public abstract class AircraftCarrierDeck implements CommonUnit {
 
     protected KeelIssueRecordCenter issueRecordCenter;

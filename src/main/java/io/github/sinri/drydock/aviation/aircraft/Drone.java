@@ -1,8 +1,7 @@
-package io.github.sinri.drydock.air;
+package io.github.sinri.drydock.aviation.aircraft;
 
+import io.github.sinri.drydock.aviation.carrier.AircraftCarrierDeck;
 import io.github.sinri.drydock.common.QueueMixin;
-import io.github.sinri.drydock.naval.carrier.AircraftCarrierDeck;
-import io.github.sinri.keel.core.TechnicalPreview;
 import io.github.sinri.keel.core.servant.queue.KeelQueueNextTaskSeeker;
 import io.github.sinri.keel.core.servant.queue.KeelQueueSignalReader;
 import io.github.sinri.keel.core.servant.queue.QueueManageIssueRecord;
@@ -12,8 +11,8 @@ import javax.annotation.Nonnull;
 
 /**
  * @since 1.5.0 Technical Preview
+ * 和AircraftCarrierDeck配合使用的舰载无人机类，用于按照战术设计按需执行任务，可基于弹性限度密集出动。
  */
-@TechnicalPreview(since = "1.5.0")
 public abstract class Drone extends Biplane implements QueueMixin, KeelQueueSignalReader, KeelQueueNextTaskSeeker {
     public Drone(@Nonnull AircraftCarrierDeck deck) {
         super(deck);

@@ -1,17 +1,16 @@
-package io.github.sinri.drydock.air;
+package io.github.sinri.drydock.aviation.aircraft;
 
+import io.github.sinri.drydock.aviation.carrier.AircraftCarrierDeck;
 import io.github.sinri.drydock.common.SundialMixin;
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
-import io.github.sinri.drydock.naval.carrier.AircraftCarrierDeck;
-import io.github.sinri.keel.core.TechnicalPreview;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 
 import javax.annotation.Nonnull;
 
 /**
  * @since 1.5.0 Technical Preview
+ * 和AircraftCarrierDeck配合使用的舰载轰炸机类，用于按照战术设计定时发起轰炸。
  */
-@TechnicalPreview(since = "1.5.0")
 public abstract class Bomber extends Biplane implements SundialMixin {
     public Bomber(@Nonnull AircraftCarrierDeck deck) {
         super(deck);

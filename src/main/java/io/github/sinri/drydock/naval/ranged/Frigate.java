@@ -17,7 +17,9 @@ import javax.annotation.Nonnull;
  *
  * @since 1.0.1
  * @since 1.1.0
+ * @since 2.0.0 use AircraftCarrier series.
  */
+@Deprecated(since = "2.0.0")
 public abstract class Frigate extends Quadrireme implements QueueMixin, SundialMixin, HealthMonitorMixin {
     protected KeelMetricRecorder metricRecorder;
 

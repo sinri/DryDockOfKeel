@@ -1,8 +1,8 @@
-package io.github.sinri.drydock.naval.carrier;
+package io.github.sinri.drydock.aviation.carrier;
 
-import io.github.sinri.drydock.air.Bomber;
-import io.github.sinri.drydock.air.Drone;
-import io.github.sinri.drydock.air.Fighter;
+import io.github.sinri.drydock.aviation.aircraft.Bomber;
+import io.github.sinri.drydock.aviation.aircraft.Drone;
+import io.github.sinri.drydock.aviation.aircraft.Fighter;
 import io.github.sinri.drydock.common.health.HealthMonitor;
 import io.github.sinri.drydock.common.health.HealthMonitorMixin;
 import io.github.sinri.drydock.common.health.HealthMonitorWithIssueRecorder;
@@ -11,7 +11,6 @@ import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
-import io.github.sinri.keel.core.TechnicalPreview;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
@@ -36,7 +35,6 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  *
  * @since 1.5.0 Technical Preview
  */
-@TechnicalPreview(since = "1.5.0")
 public abstract class AircraftCarrier extends AircraftCarrierDeck implements HealthMonitorMixin {
     public static final String optionDisableQueue = "disableQueue";
     public static final String optionDisableSundial = "disableSundial";

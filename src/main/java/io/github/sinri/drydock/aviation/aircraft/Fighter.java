@@ -1,9 +1,8 @@
-package io.github.sinri.drydock.air;
+package io.github.sinri.drydock.aviation.aircraft;
 
+import io.github.sinri.drydock.aviation.carrier.AircraftCarrierDeck;
 import io.github.sinri.drydock.common.HttpServerMixin;
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
-import io.github.sinri.drydock.naval.carrier.AircraftCarrierDeck;
-import io.github.sinri.keel.core.TechnicalPreview;
 import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.vertx.core.Future;
 
@@ -12,8 +11,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @since 1.5.0 Technical Preview
+ * 和AircraftCarrierDeck配合使用的舰载战斗机类，用于应对来犯的外部请求。
  */
-@TechnicalPreview(since = "1.5.0")
 public abstract class Fighter extends Biplane implements HttpServerMixin {
 
     private final int port;

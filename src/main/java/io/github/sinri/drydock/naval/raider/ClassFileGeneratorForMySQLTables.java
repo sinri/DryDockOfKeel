@@ -23,7 +23,11 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
      * @return MySQL表对应类所在根对应包的绝对路径，没有最后的斜杠。一般从配置`table.package.path`中读取。
      */
     protected String getTablePackagePath() {
-        return Keel.config("table.package.path");
+        var p = Keel.config("table.package.path");
+        if (p == null || p.isBlank()) {
+            throw new RuntimeException("The table package path not set in config as `table.package.path`!");
+        }
+        return p;
     }
 
     /**
@@ -71,7 +75,6 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
             String schemaName,
             @Nullable List<String> tables
     ) {
-
         return rebuildTablesInSchema(dataSourceName, sqlConnectionWrapper, schemaName, buildPackageNameForSchema(schemaName), tables);
     }
 

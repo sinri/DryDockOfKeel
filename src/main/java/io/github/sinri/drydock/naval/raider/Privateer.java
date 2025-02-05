@@ -20,9 +20,12 @@ abstract public class Privateer extends KeelInstantRunner {
      * 准备数据库连接之类的东西。
      *
      * @since 1.2.0
+     * @since 2.0.0 provide a default implementation.
      */
     @Nonnull
-    abstract protected Future<Void> prepareEnvironment();
+    protected Future<Void> prepareEnvironment() {
+        return Future.succeededFuture();
+    }
 
     /**
      * Override it, if you need more initialization.

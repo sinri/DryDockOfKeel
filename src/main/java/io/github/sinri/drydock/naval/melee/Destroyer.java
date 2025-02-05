@@ -11,7 +11,9 @@ import io.vertx.core.Future;
  * Support Sundial, Queue and Funnel.
  *
  * @since 1.0.0
+ * @since 2.0.0 use AircraftCarrier series.
  */
+@Deprecated(since = "2.0.0")
 abstract public class Destroyer extends Ironclad implements SundialMixin, QueueMixin {
 
     @Override
