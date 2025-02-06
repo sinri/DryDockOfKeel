@@ -34,7 +34,7 @@ public interface CommonUnit {
      * @return generated new KeelIssueRecorder instance following the format defined by T, by default with the KeelIssueRecordCenter instance maintained by this unit.
      * @since 1.3.4
      */
-    default <T extends KeelIssueRecord<?>> KeelIssueRecorder<T> generateIssueRecorder(@Nonnull String topic, @Nonnull Supplier<T> issueRecordBuilder) {
+    default <T extends KeelIssueRecord<T>> KeelIssueRecorder<T> generateIssueRecorder(@Nonnull String topic, @Nonnull Supplier<T> issueRecordBuilder) {
         return getIssueRecordCenter().generateIssueRecorder(topic, issueRecordBuilder);
     }
 

@@ -57,7 +57,7 @@ abstract public class Warship implements Boat {
      * @since 1.3.4
      */
     @Override
-    public final <T extends KeelIssueRecord<?>> KeelIssueRecorder<T> generateIssueRecorder(
+    public final <T extends KeelIssueRecord<T>> KeelIssueRecorder<T> generateIssueRecorder(
             @Nonnull String topic, @Nonnull Supplier<T> issueRecordBuilder
     ) {
         return getIssueRecordCenter().generateIssueRecorder(topic, issueRecordBuilder);
