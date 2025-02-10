@@ -47,7 +47,8 @@ public class HealthMonitorWithIssueRecorder extends HealthMonitor<JsonObject> {
             if (monitorSnapshot.getCPUTime().getCpuUsage() >= 0.50 || heapUsage >= 0.50) {
                 t.level(KeelLogLevel.WARNING);
             }
-            if (monitorSnapshot.getCPUTime().getCpuUsage() >= 0.75 || heapUsage >= 0.75 || monitorSnapshot.getGCStat().getOldGCCount() > 0) {
+            if (monitorSnapshot.getCPUTime().getCpuUsage() >= 0.75 || heapUsage >= 0.75 || monitorSnapshot.getGCStat()
+                                                                                                          .getMajorGCCount() > 0) {
                 t.level(KeelLogLevel.ERROR);
             }
         });
