@@ -2,7 +2,9 @@ package io.github.sinri.drydock.aviation.aircraft;
 
 import io.github.sinri.drydock.aviation.carrier.AircraftCarrierDeck;
 import io.github.sinri.drydock.common.CommonUnit;
+import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
+import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 
 import javax.annotation.Nonnull;
 
@@ -22,5 +24,13 @@ public abstract class Biplane implements CommonUnit {
     @Override
     public final KeelIssueRecordCenter getIssueRecordCenter() {
         return deck.getIssueRecordCenter();
+    }
+
+    /**
+     * @since 2.0.3
+     */
+    @Override
+    public KeelIssueRecorder<KeelEventLog> getUnitLogger() {
+        return deck.getUnitLogger();
     }
 }
