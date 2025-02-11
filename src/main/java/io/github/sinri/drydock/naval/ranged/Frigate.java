@@ -36,7 +36,7 @@ public abstract class Frigate extends Quadrireme implements QueueMixin, SundialM
         try {
             return KeelIssueRecordCenter.build(new AliyunSLSIssueAdapterImpl());
         } catch (Throwable e) {
-            getLogger().exception(e, "Failed in Frigate.buildIssueRecordCenter");
+            getUnitLogger().exception(e, "Failed in Frigate.buildIssueRecordCenter");
             throw e;
         }
     }

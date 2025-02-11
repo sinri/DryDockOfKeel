@@ -53,10 +53,10 @@ public interface SundialMixin extends CommonUnit {
                     if (sundial == null) return Future.succeededFuture();
                     return sundial.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER))
                             .onFailure(throwable -> {
-                                getLogger().exception(throwable, "Failed to load sundial");
+                                getUnitLogger().exception(throwable, "Failed to load sundial");
                             })
                             .compose(deploymentId -> {
-                                getLogger().info("Loaded sundial: " + deploymentId);
+                                getUnitLogger().info("Loaded sundial: " + deploymentId);
                                 return Future.succeededFuture();
                             });
                 });

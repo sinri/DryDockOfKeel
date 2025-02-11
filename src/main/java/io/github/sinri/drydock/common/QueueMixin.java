@@ -82,10 +82,10 @@ public interface QueueMixin extends CommonUnit {
                             .compose(v -> {
                                 return queue.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER))
                                         .onFailure(throwable -> {
-                                            getLogger().exception(throwable, "Failed to load queue");
+                                            this.getUnitLogger().exception(throwable, "Failed to load queue");
                                         })
                                         .compose(deploymentId -> {
-                                            getLogger().info("Loaded queue: " + deploymentId);
+                                            this.getUnitLogger().info("Loaded queue: " + deploymentId);
                                             return Future.succeededFuture();
                                         });
                             });

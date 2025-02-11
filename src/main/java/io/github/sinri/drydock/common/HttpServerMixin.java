@@ -1,7 +1,8 @@
 package io.github.sinri.drydock.common;
 
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
-import io.github.sinri.keel.logger.event.KeelEventLogger;
+import io.github.sinri.keel.logger.event.KeelEventLog;
+import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.github.sinri.keel.web.http.KeelHttpServer;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -15,30 +16,31 @@ import javax.annotation.Nonnull;
 public interface HttpServerMixin extends CommonUnit {
 
     /**
-     * Try to build a KeelHttpServer instance and start it up.
-     * Do nothing if this ability is not required.
+     * Try to build a KeelHttpServer instance and start it up. Do nothing if this ability is not required.
      *
      * @return a future as all work scheduled.
      */
     default Future<Void> loadHttpServer() {
         return Future.succeededFuture(buildHttpServer())
-                .compose(server -> {
-                    if (server == null) return Future.succeededFuture();
-                    return Future.succeededFuture()
-                            .compose(v -> {
-                                return beforeStartHttpServer();
-                            })
-                            .compose(v -> {
-                                return server.deployMe(new DeploymentOptions());
-                            })
-                            .onFailure(ironcladFailure -> {
-                                getLogger().exception(ironcladFailure, "Failed to start HTTP service.");
-                            })
-                            .compose(httpServerDeployed -> {
-                                getLogger().info("HTTP Service Started: " + httpServerDeployed);
-                                return Future.succeededFuture();
-                            });
-                });
+                     .compose(server -> {
+                         if (server == null) return Future.succeededFuture();
+                         return Future.succeededFuture()
+                                      .compose(v -> {
+                                          return beforeStartHttpServer();
+                                      })
+                                      .compose(v -> {
+                                          return server.deployMe(new DeploymentOptions());
+                                      })
+                                      .onFailure(ironcladFailure -> {
+                                          this.getUnitLogger()
+                                              .exception(ironcladFailure, "Failed to start HTTP service" +
+                                                      ".");
+                                      })
+                                      .compose(httpServerDeployed -> {
+                                          this.getUnitLogger().info("HTTP Service Started: " + httpServerDeployed);
+                                          return Future.succeededFuture();
+                                      });
+                     });
     }
 
     /**
@@ -47,7 +49,7 @@ public interface HttpServerMixin extends CommonUnit {
      * @return A built KeelHttpServer instance.
      */
     default KeelHttpServer buildHttpServer() {
-        KeelEventLogger eventLogger = this.generateEventLogger(DryDockLogTopics.TopicHttpServer);
+        KeelIssueRecorder<KeelEventLog> issueRecorder = this.generateIssueRecorder(DryDockLogTopics.TopicHttpServer);
         return new KeelHttpServer() {
 
             @Override
@@ -60,9 +62,10 @@ public interface HttpServerMixin extends CommonUnit {
                 configureHttpServerRoutes(router);
             }
 
+            @Nonnull
             @Override
-            protected KeelEventLogger buildEventLogger() {
-                return eventLogger;
+            protected KeelIssueRecorder<KeelEventLog> buildHttpServerIssueRecorder() {
+                return issueRecorder;
             }
         };
     }
@@ -77,8 +80,7 @@ public interface HttpServerMixin extends CommonUnit {
     /**
      * Provide the Router instance of HTTP Server, configure it.
      * <p>
-     * 最简单的情况下，铁甲舰仅需提供一份战术指南即可自动部署武器接敌。
-     * 其实就是设定 Vertx Web Server 的路由啦。
+     * 最简单的情况下，铁甲舰仅需提供一份战术指南即可自动部署武器接敌。 其实就是设定 Vertx Web Server 的路由啦。
      */
     void configureHttpServerRoutes(Router router);
 
@@ -91,8 +93,8 @@ public interface HttpServerMixin extends CommonUnit {
     Future<Void> beforeStartHttpServer();
 
     /**
-     * Declare the HTTP Server should be stopped.
-     * Note that, the HTTP Server is not ought to be actually stopped, but a declaration to be ready to close it.
+     * Declare the HTTP Server should be stopped. Note that, the HTTP Server is not ought to be actually stopped, but a
+     * declaration to be ready to close it.
      *
      * @since 1.4.17
      */

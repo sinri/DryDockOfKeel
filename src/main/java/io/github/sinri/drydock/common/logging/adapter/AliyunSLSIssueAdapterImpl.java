@@ -73,11 +73,8 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     }
 
     /**
-     * Build source from configuration.
-     * Source Expression should be:
-     * - EMPTY/BLANK STRING or NULL: use SLS default source generation;
-     * - A TEMPLATED STRING
-     * --- Rule 1: Replace [IP] to local address;
+     * Build source from configuration. Source Expression should be: - EMPTY/BLANK STRING or NULL: use SLS default
+     * source generation; - A TEMPLATED STRING --- Rule 1: Replace [IP] to local address;
      */
     private static String buildSource(@Nullable String configuredSourceExpression) {
         if (configuredSourceExpression == null || configuredSourceExpression.isBlank()) {
@@ -106,16 +103,18 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         Promise<Void> promise = Promise.promise();
         var producer = producerRef.get();
         if (producer != null) {
-            Keel.getLogger().info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.rebuildProducer to close producer");
+            Keel.getLogger()
+                .info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.rebuildProducer to " +
+                        "close producer");
             this.close(promise);
             producerRef.set(null);
         }
 
         return promise.future()
-                .compose(v -> {
-                    buildProducer();
-                    return Future.succeededFuture();
-                });
+                      .compose(v -> {
+                          buildProducer();
+                          return Future.succeededFuture();
+                      });
     }
 
     /**
@@ -137,8 +136,11 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
             producerRef.set(producer);
 
-            Keel.getLogger().info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.buildProducer built producer.");
-            //KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).info("Aliyun SLS Producer relied aliyunSlsConfig: " + aliyunSlsConfig.toJsonObject());
+            Keel.getLogger()
+                .info("io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl.buildProducer built " +
+                        "producer.");
+            //KeelOutputEventLogCenter.getInstance().createLogger(getClass().getName()).info("Aliyun SLS Producer
+            // relied aliyunSlsConfig: " + aliyunSlsConfig.toJsonObject());
         } else {
             producerRef.set(null);
             // a bug in 1.4.2, to stdout not means closed.
@@ -148,7 +150,8 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     }
 
     @Override
-    protected Future<Void> handleIssueRecordsForTopic(@Nonnull final String topic, @Nonnull final List<KeelIssueRecord<?>> buffer) {
+    protected Future<Void> handleIssueRecordsForTopic(@Nonnull final String topic,
+                                                      @Nonnull final List<KeelIssueRecord<?>> buffer) {
         // Keel.getLogger().info("handleIssueRecordsForTopic["+topic+"] "+ buffer.size());
         if (buffer.isEmpty()) return Future.succeededFuture();
 
@@ -165,13 +168,15 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         List<LogItem> logItems = new ArrayList<>();
 
         try {
-            //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" for each in buffer...");
+            //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" for each in
+            // buffer...");
             buffer.forEach(eventLog -> {
                 LogItem logItem = new LogItem(Math.toIntExact(eventLog.timestamp() / 1000));
                 logItem.PushBack(KeelIssueRecord.AttributeLevel, eventLog.level().name());
                 List<String> classification = eventLog.classification();
                 if (!classification.isEmpty()) {
-                    logItem.PushBack(KeelIssueRecord.AttributeClassification, String.valueOf(new JsonArray(classification)));
+                    logItem.PushBack(KeelIssueRecord.AttributeClassification,
+                            String.valueOf(new JsonArray(classification)));
                 }
                 eventLog.attributes().forEach(entry -> {
                     if (entry.getValue() == null) {
@@ -182,7 +187,8 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                 });
                 Throwable exception = eventLog.exception();
                 if (exception != null) {
-                    logItem.PushBack(KeelIssueRecord.AttributeException, String.valueOf(issueRecordRender().renderThrowable(exception)));
+                    logItem.PushBack(KeelIssueRecord.AttributeException,
+                            String.valueOf(issueRecordRender().renderThrowable(exception)));
                 }
                 logItems.add(logItem);
             });
@@ -197,7 +203,8 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         }
 
         try {
-            //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" buffer to send with producer");
+            //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" buffer to send
+            // with producer");
             producerRef.get().send(project, logstore, topic, source, logItems, result -> {
                 if (!result.isSuccessful()) {
                     Keel.getLogger().error(r -> r
@@ -210,7 +217,8 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
                     });
                 }
 
-                //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" promise to complete");
+                //Keel.getLogger().info("AliyunSLSIssueAdapterImpl handleIssueRecordsForTopic "+topic+" promise to
+                // complete");
                 promise.complete(null);
             });
         } catch (Throwable e) {

@@ -140,26 +140,26 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
         long startTime = System.currentTimeMillis();
 
         loadLocalConfiguration(commandLine);
-        getLogger().info("LOCAL CONFIG LOADED (if any)");
+        getUnitLogger().info("LOCAL CONFIG LOADED (if any)");
 
         VertxOptions vertxOptions = buildVertxOptions(commandLine);
 
         // todo 此处未考虑舰队模式，如果需要要新增 cluster master 的设定
         Keel.initializeVertx(vertxOptions)
                 .compose(initialized -> {
-                    getLogger().info("KEEL INITIALIZED");
-                    Keel.setLogger(getLogger());
+                    getUnitLogger().info("KEEL INITIALIZED");
+                    // Keel.setLogger(getLogger());
                     return loadRemoteConfiguration(commandLine);
                 })
                 .compose(done -> {
-                    getLogger().info("REMOTE CONFIG LOADED (if any)");
+                    getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
                     issueRecordCenter = buildIssueRecordCenter();
                     // 航海日志共享大计
                     if (!Objects.equals(getIssueRecordCenter(), KeelIssueRecordCenter.outputCenter())) {
                         var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
-                        this.getLogger().addBypassIssueRecorder(bypassLogger);
+                        this.getUnitLogger().addBypassIssueRecorder(bypassLogger);
                     } else {
-                        this.getLogger().info("Bypass logging is ignored.");
+                        this.getUnitLogger().info("Bypass logging is ignored.");
                     }
 
                     // Metric Recorder
@@ -169,11 +169,11 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                     return loadHealthMonitor();
                 })
                 .compose(v -> {
-                    getLogger().info("Loaded Health Monitor");
+                    getUnitLogger().info("Loaded Health Monitor");
                     return prepare(commandLine);
                 })
                 .compose(v -> {
-                    getLogger().info("Prepared For Biz");
+                    getUnitLogger().info("Prepared For Biz");
                     boolean disableQueue = commandLine.isFlagEnabled(optionDisableQueue);
                     if (!disableQueue) {
                         drone = constructDrone();
@@ -181,7 +181,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                     if (drone != null) {
                         return drone.loadQueue()
                                 .onSuccess(done -> {
-                                    getLogger().info("Loaded Queue");
+                                    getUnitLogger().info("Loaded Queue");
                                 });
                     }
                     return Future.succeededFuture();
@@ -194,7 +194,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                     if (bomber != null) {
                         return bomber.loadSundial()
                                 .onSuccess(done -> {
-                                    getLogger().info("Loaded Sundial");
+                                    getUnitLogger().info("Loaded Sundial");
                                 });
                     }
                     return Future.succeededFuture();
@@ -208,7 +208,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                         if (fighter != null) {
                             return fighter.loadHttpServer()
                                     .onSuccess(done -> {
-                                        getLogger().info("Loaded Http Server on port: " + fighter.configuredHttpServerPort());
+                                        getUnitLogger().info("Loaded Http Server on port: " + fighter.configuredHttpServerPort());
                                     });
                         }
                     }
@@ -218,11 +218,11 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                     return ready(commandLine)
                             .onSuccess(done -> {
                                 long endTime = System.currentTimeMillis();
-                                getLogger().info("Ready, spent " + (endTime - startTime) + " ms");
+                                getUnitLogger().info("Ready, spent " + (endTime - startTime) + " ms");
                             });
                 })
                 .onFailure(throwable -> {
-                    getLogger().exception(throwable, "SINK");
+                    getUnitLogger().exception(throwable, "SINK");
                     System.exit(1);
                 });
     }
@@ -235,7 +235,8 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
             try {
                 return KeelIssueRecordCenter.build(new AliyunSLSIssueAdapterImpl());
             } catch (Throwable e) {
-                getLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
+                getUnitLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel" +
+                        ".buildIssueRecordCenter");
                 throw e;
             }
         }

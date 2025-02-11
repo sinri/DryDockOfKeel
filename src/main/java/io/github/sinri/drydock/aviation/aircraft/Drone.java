@@ -31,8 +31,10 @@ public abstract class Drone extends Biplane implements QueueMixin, KeelQueueSign
         return this;
     }
 
-    @Override
-    public KeelIssueRecorder<QueueManageIssueRecord> getIssueRecorder() {
+    /**
+     * @since 2.0.3
+     */
+    public KeelIssueRecorder<QueueManageIssueRecord> getQueueManageIssueRecordKeelIssueRecorder() {
         return queueManageIssueRecordKeelIssueRecorder;
     }
 }

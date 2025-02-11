@@ -2,8 +2,9 @@ package io.github.sinri.drydock.aviation.carrier;
 
 import io.github.sinri.drydock.common.CommonUnit;
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
-import io.github.sinri.keel.logger.event.KeelEventLogger;
+import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
+import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.vertx.core.cli.Argument;
 import io.vertx.core.cli.CLI;
 import io.vertx.core.cli.CommandLine;
@@ -14,16 +15,17 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * A base class for a unit as a program entrance with command line options.
- * Default KeelIssueRecordCenter and KeelEventLogger provided.
+ * A base class for a unit as a program entrance with command line options. Default KeelIssueRecordCenter and
+ * KeelEventLogger provided.
  *
- * @see <a href="https://vertx.io/docs/vertx-core/java/#_vert_x_command_line_interface_api">Vert.x Command Line Interface API</a>
+ * @see <a href="https://vertx.io/docs/vertx-core/java/#_vert_x_command_line_interface_api">Vert.x Command Line
+ *         Interface API</a>
  * @since 1.5.0 Technical Preview
  */
 public abstract class AircraftCarrierDeck implements CommonUnit {
 
     protected KeelIssueRecordCenter issueRecordCenter;
-    private KeelEventLogger unitLogger;
+    private KeelIssueRecorder<KeelEventLog> unitLogger;
 
     /**
      * Launch this unit in `main` method with `args`.
@@ -32,10 +34,10 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
      */
     public final void launch(String[] args) {
         issueRecordCenter = KeelIssueRecordCenter.outputCenter();
-        unitLogger = generateEventLogger(DryDockLogTopics.TopicDryDock);
+        unitLogger = generateIssueRecorder(DryDockLogTopics.TopicDryDock, KeelEventLog::new);
 
         var cli = CLI.create(buildCliName())
-                .setDescription(buildCliDescription());
+                     .setDescription(buildCliDescription());
 
         List<Option> cliOptions = buildCliOptions();
         if (cliOptions != null) {
@@ -92,8 +94,11 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
         return issueRecordCenter;
     }
 
+    /**
+     * @since 2.0.3
+     */
     @Override
-    public KeelEventLogger getLogger() {
+    public KeelIssueRecorder<KeelEventLog> getUnitLogger() {
         return unitLogger;
     }
 }

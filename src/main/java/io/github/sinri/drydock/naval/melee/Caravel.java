@@ -45,9 +45,9 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
                     // 航海日志共享大计
                     if (getIssueRecordCenter() != KeelIssueRecordCenter.outputCenter()) {
                         var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
-                        this.getLogger().addBypassIssueRecorder(bypassLogger);
+                        this.getUnitLogger().addBypassIssueRecorder(bypassLogger);
                     } else {
-                        this.getLogger().info("Bypass logging is ignored.");
+                        this.getUnitLogger().info("Bypass logging is ignored.");
                     }
                     return Future.succeededFuture();
                 })
@@ -93,7 +93,8 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
             try {
                 return KeelIssueRecordCenter.build(new AliyunSLSIssueAdapterImpl());
             } catch (Throwable e) {
-                getLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel.buildIssueRecordCenter");
+                getUnitLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel" +
+                        ".buildIssueRecordCenter");
                 throw e;
             }
         }
