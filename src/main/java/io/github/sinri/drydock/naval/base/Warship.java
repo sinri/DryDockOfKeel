@@ -149,8 +149,8 @@ abstract public class Warship implements Boat {
             });
     }
 
-    @Override
-    public KeelIssueRecorder<KeelEventLog> getUnitLogger() {
+
+    protected KeelIssueRecorder<KeelEventLog> getUnitLogger() {
         return unitLogger;
     }
 

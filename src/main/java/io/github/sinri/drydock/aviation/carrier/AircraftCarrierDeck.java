@@ -94,10 +94,6 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
         return issueRecordCenter;
     }
 
-    /**
-     * @since 2.0.3
-     */
-    @Override
     public KeelIssueRecorder<KeelEventLog> getUnitLogger() {
         return unitLogger;
     }

@@ -13,28 +13,28 @@ import javax.annotation.Nonnull;
  * @since 1.5.0 Technical Preview 和AircraftCarrierDeck配合使用的舰载无人机类，用于按照战术设计按需执行任务，可基于弹性限度密集出动。
  */
 public abstract class Drone extends Biplane implements QueueMixin, KeelQueueSignalReader, KeelQueueNextTaskSeeker {
-    private final KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecordKeelIssueRecorder;
+    private final KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder;
 
     public Drone(@Nonnull AircraftCarrierDeck deck) {
         super(deck);
-        queueManageIssueRecordKeelIssueRecorder = getIssueRecordCenter()
+        queueManageIssueRecorder = getIssueRecordCenter()
                 .generateIssueRecorder(QueueManageIssueRecord.TopicQueue, QueueManageIssueRecord::new);
     }
 
     @Override
-    public final KeelQueueSignalReader buildSignalReader() {
+    public KeelQueueSignalReader buildSignalReader(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
         return this;
     }
 
     @Override
-    public final KeelQueueNextTaskSeeker buildQueueNextTaskSeeker() {
+    public final KeelQueueNextTaskSeeker buildQueueNextTaskSeeker(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
         return this;
     }
 
     /**
-     * @since 2.0.3
+     * @since 2.0.4
      */
-    public KeelIssueRecorder<QueueManageIssueRecord> getQueueManageIssueRecordKeelIssueRecorder() {
-        return queueManageIssueRecordKeelIssueRecorder;
+    public KeelIssueRecorder<QueueManageIssueRecord> getQueueManageIssueRecorder() {
+        return queueManageIssueRecorder;
     }
 }

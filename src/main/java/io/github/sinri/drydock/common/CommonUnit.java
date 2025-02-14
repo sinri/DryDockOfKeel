@@ -21,7 +21,7 @@ public interface CommonUnit {
     /**
      * @since 2.0.3
      */
-    KeelIssueRecorder<KeelEventLog> getUnitLogger();
+    // KeelIssueRecorder<KeelEventLog> getUnitLogger();
 
     /**
      * @return a KeelIssueRecordCenter instance maintained by the implementation unit.

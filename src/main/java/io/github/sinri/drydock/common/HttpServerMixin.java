@@ -20,7 +20,7 @@ public interface HttpServerMixin extends CommonUnit {
      *
      * @return a future as all work scheduled.
      */
-    default Future<Void> loadHttpServer() {
+    default Future<String> loadHttpServer() {
         return Future.succeededFuture(buildHttpServer())
                      .compose(server -> {
                          if (server == null) return Future.succeededFuture();
@@ -30,15 +30,6 @@ public interface HttpServerMixin extends CommonUnit {
                                       })
                                       .compose(v -> {
                                           return server.deployMe(new DeploymentOptions());
-                                      })
-                                      .onFailure(ironcladFailure -> {
-                                          this.getUnitLogger()
-                                              .exception(ironcladFailure, "Failed to start HTTP service" +
-                                                      ".");
-                                      })
-                                      .compose(httpServerDeployed -> {
-                                          this.getUnitLogger().info("HTTP Service Started: " + httpServerDeployed);
-                                          return Future.succeededFuture();
                                       });
                      });
     }
@@ -59,7 +50,8 @@ public interface HttpServerMixin extends CommonUnit {
 
             @Override
             protected void configureRoutes(Router router) {
-                configureHttpServerRoutes(router);
+                KeelIssueRecorder<KeelEventLog> httpServerLogger = getHttpServerLogger();
+                configureHttpServerRoutes(router, httpServerLogger);
             }
 
             @Nonnull
@@ -81,8 +73,9 @@ public interface HttpServerMixin extends CommonUnit {
      * Provide the Router instance of HTTP Server, configure it.
      * <p>
      * 最简单的情况下，铁甲舰仅需提供一份战术指南即可自动部署武器接敌。 其实就是设定 Vertx Web Server 的路由啦。
+     * @param httpServerLogger 自2.0.4新增
      */
-    void configureHttpServerRoutes(Router router);
+    void configureHttpServerRoutes(Router router, KeelIssueRecorder<KeelEventLog> httpServerLogger);
 
     /**
      * An asynchronous routine to be handled before starting HTTP Service.

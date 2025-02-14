@@ -1,10 +1,8 @@
 package io.github.sinri.drydock.common;
 
-import io.github.sinri.keel.core.servant.queue.KeelQueue;
-import io.github.sinri.keel.core.servant.queue.KeelQueueNextTaskSeeker;
-import io.github.sinri.keel.core.servant.queue.KeelQueueSignalReader;
-import io.github.sinri.keel.core.servant.queue.QueueWorkerPoolManager;
+import io.github.sinri.keel.core.servant.queue.*;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
+import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.ThreadingModel;
@@ -18,8 +16,7 @@ import javax.annotation.Nonnull;
  */
 public interface QueueMixin extends CommonUnit {
     /**
-     * Build a KeelQueue instance.
-     * A default implementation is provided.
+     * Build a KeelQueue instance. A default implementation is provided.
      *
      * @return The built KeelQueue instance.
      */
@@ -34,67 +31,65 @@ public interface QueueMixin extends CommonUnit {
 
             @Override
             protected @Nonnull KeelQueueNextTaskSeeker getNextTaskSeeker() {
-                return buildQueueNextTaskSeeker();
+                KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder = getQueueManageIssueRecorder();
+                return buildQueueNextTaskSeeker(queueManageIssueRecorder);
             }
 
             @Override
             protected @Nonnull KeelQueueSignalReader getSignalReader() {
-                return buildSignalReader();
+                KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder = getQueueManageIssueRecorder();
+                return buildSignalReader(queueManageIssueRecorder);
             }
 
             @Nonnull
             @Override
             protected QueueWorkerPoolManager getQueueWorkerPoolManager() {
-                var x = configuredQueueWorkerPoolSize();
+                KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder = getQueueManageIssueRecorder();
+                var x = configuredQueueWorkerPoolSize(queueManageIssueRecorder);
                 return new QueueWorkerPoolManager(x);
             }
         };
     }
 
     /**
+     * @param queueManageIssueRecorder as of 2.0.4
      * @return The worker pool size; return zero for an unlimited pool.
      */
-    default int configuredQueueWorkerPoolSize() {
+    default int configuredQueueWorkerPoolSize(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
         return 0;
     }
 
     /**
+     * @param queueManageIssueRecorder as of 2.0.4
      * @return The built signal reader.
      */
-    KeelQueueSignalReader buildSignalReader();
+    KeelQueueSignalReader buildSignalReader(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder);
 
     /**
+     * @param queueManageIssueRecorder as of 2.0.4
      * @return The built next task seeker.
      */
-    KeelQueueNextTaskSeeker buildQueueNextTaskSeeker();
+    KeelQueueNextTaskSeeker buildQueueNextTaskSeeker(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder);
 
     /**
-     * Try to build a KeelQueue instance and start it up.
-     * Do nothing if this ability is not required.
+     * Try to build a KeelQueue instance and start it up. Do nothing if this ability is not required.
      *
      * @return a future as all work scheduled.
      */
-    default Future<Void> loadQueue() {
+    default Future<String> loadQueue() {
         return Future.succeededFuture(this.buildQueue())
-                .compose(queue -> {
-                    if (queue == null) return Future.succeededFuture();
-                    return this.beforeLoadingQueue()
-                            .compose(v -> {
-                                return queue.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER))
-                                        .onFailure(throwable -> {
-                                            this.getUnitLogger().exception(throwable, "Failed to load queue");
-                                        })
-                                        .compose(deploymentId -> {
-                                            this.getUnitLogger().info("Loaded queue: " + deploymentId);
-                                            return Future.succeededFuture();
-                                        });
-                            });
-                });
+                     .compose(queue -> {
+                         if (queue == null) return Future.succeededFuture();
+                         return this.beforeLoadingQueue()
+                                    .compose(v -> {
+                                        return queue.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER));
+                                    });
+                     });
     }
 
     /**
-     * Execute before `io.github.sinri.drydock.common.QueueMixin#loadQueue()`,
-     * to clean up the left RUNNING tasks (let them ERROR).
+     * Execute before `io.github.sinri.drydock.common.QueueMixin#loadQueue()`, to clean up the left RUNNING tasks (let
+     * them ERROR).
      *
      * @since 1.5.8
      */

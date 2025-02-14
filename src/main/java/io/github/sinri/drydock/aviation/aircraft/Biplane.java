@@ -26,11 +26,7 @@ public abstract class Biplane implements CommonUnit {
         return deck.getIssueRecordCenter();
     }
 
-    /**
-     * @since 2.0.3
-     */
-    @Override
-    public KeelIssueRecorder<KeelEventLog> getUnitLogger() {
+    protected KeelIssueRecorder<KeelEventLog> getUnitLogger() {
         return deck.getUnitLogger();
     }
 }

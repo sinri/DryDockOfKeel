@@ -2,7 +2,6 @@ package io.github.sinri.drydock.aviation.aircraft;
 
 import io.github.sinri.drydock.aviation.carrier.AircraftCarrierDeck;
 import io.github.sinri.drydock.common.HttpServerMixin;
-import io.vertx.core.Future;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,10 +36,5 @@ public abstract class Fighter extends Biplane implements HttpServerMixin {
     @Override
     public final boolean isToStopServer() {
         return stopServerSwitch.get();
-    }
-
-    @Override
-    public Future<Void> loadHttpServer() {
-        return HttpServerMixin.super.loadHttpServer();
     }
 }

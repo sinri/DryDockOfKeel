@@ -11,18 +11,11 @@ public interface HealthMonitorMixin extends CommonUnit {
         return new HealthMonitorWithIssueRecorder(generateIssueRecorder(HealthMonitorIssueRecord.TopicHealthMonitor, HealthMonitorIssueRecord::new));
     }
 
-    default Future<Void> loadHealthMonitor() {
+    default Future<String> loadHealthMonitor() {
         return Future.succeededFuture(buildHealthMonitor())
                 .compose(healthMonitor -> {
                     if (healthMonitor == null) return Future.succeededFuture();
                     return healthMonitor.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER));
-                })
-                .onFailure(throwable -> {
-                    getUnitLogger().exception(throwable, "Failed to deploy HealthMonitor");
-                })
-                .compose(deploymentId -> {
-                    getUnitLogger().info("Deployed HealthMonitor: " + deploymentId);
-                    return Future.succeededFuture();
                 });
     }
 }

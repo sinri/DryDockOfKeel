@@ -2,7 +2,9 @@ package io.github.sinri.drydock.common;
 
 import io.github.sinri.keel.core.servant.sundial.KeelSundial;
 import io.github.sinri.keel.core.servant.sundial.KeelSundialPlan;
+import io.github.sinri.keel.core.servant.sundial.SundialIssueRecord;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
+import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.ThreadingModel;
@@ -16,8 +18,7 @@ import java.util.Collection;
  */
 public interface SundialMixin extends CommonUnit {
     /**
-     * Build a KeelSundial instance.
-     * A default implementation is provided.
+     * Build a KeelSundial instance. A default implementation is provided.
      *
      * @return The built KeelSundial instance.
      */
@@ -31,34 +32,29 @@ public interface SundialMixin extends CommonUnit {
 
             @Override
             protected Future<Collection<KeelSundialPlan>> fetchPlans() {
-                return fetchSundialPlans();
+                KeelIssueRecorder<SundialIssueRecord> sundialIssueRecorder = getSundialIssueRecorder();
+                return fetchSundialPlans(sundialIssueRecorder);
             }
         };
     }
 
     /**
-     * @return the asynchronously fetched sundial plans to completely overwrite; return null to modify none of the existed plans.
+     * @param sundialIssueRecorder as of 2.0.4 it is added.
+     * @return the asynchronously fetched sundial plans to completely overwrite; return null to modify none of the
+     *         existed plans.
      */
-    Future<Collection<KeelSundialPlan>> fetchSundialPlans();
+    Future<Collection<KeelSundialPlan>> fetchSundialPlans(KeelIssueRecorder<SundialIssueRecord> sundialIssueRecorder);
 
     /**
-     * Try to build a KeelSundial instance and start it up.
-     * Do nothing if this ability is not required.
+     * Try to build a KeelSundial instance and start it up. Do nothing if this ability is not required.
      *
-     * @return a future as all work scheduled.
+     * @return a future of the deployment of KeelSundial
      */
-    default Future<Void> loadSundial() {
+    default Future<String> loadSundial() {
         return Future.succeededFuture(this.buildSundial())
-                .compose(sundial -> {
-                    if (sundial == null) return Future.succeededFuture();
-                    return sundial.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER))
-                            .onFailure(throwable -> {
-                                getUnitLogger().exception(throwable, "Failed to load sundial");
-                            })
-                            .compose(deploymentId -> {
-                                getUnitLogger().info("Loaded sundial: " + deploymentId);
-                                return Future.succeededFuture();
-                            });
-                });
+                     .compose(sundial -> {
+                         if (sundial == null) return Future.succeededFuture();
+                         return sundial.deployMe(new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER));
+                     });
     }
 }
