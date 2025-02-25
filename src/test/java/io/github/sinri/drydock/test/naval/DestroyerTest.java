@@ -1,8 +1,8 @@
 package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.melee.Destroyer;
-import io.github.sinri.keel.core.servant.queue.KeelQueueNextTaskSeeker;
-import io.github.sinri.keel.core.servant.queue.KeelQueueSignalReader;
+import io.github.sinri.keel.core.servant.queue.KeelQueueSignal;
+import io.github.sinri.keel.core.servant.queue.KeelQueueTask;
 import io.github.sinri.keel.core.servant.queue.QueueManageIssueRecord;
 import io.github.sinri.keel.core.servant.sundial.KeelSundialPlan;
 import io.github.sinri.keel.core.servant.sundial.SundialIssueRecord;
@@ -20,16 +20,6 @@ public class DestroyerTest extends Destroyer {
 
     public static void main(String[] args) {
         new DestroyerTest().launch();
-    }
-
-    @Override
-    public KeelQueueSignalReader buildSignalReader(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
-        return null;
-    }
-
-    @Override
-    public KeelQueueNextTaskSeeker buildQueueNextTaskSeeker(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
-        return null;
     }
 
     @Override
@@ -72,5 +62,15 @@ public class DestroyerTest extends Destroyer {
     @Override
     protected Future<Void> prepareDataSources() {
         return Future.succeededFuture();
+    }
+
+    @Override
+    public Future<KeelQueueSignal> readSignal(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
+        return Future.succeededFuture(KeelQueueSignal.RUN);
+    }
+
+    @Override
+    public Future<KeelQueueTask> seekNextTask(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
+        return Future.succeededFuture(null);
     }
 }

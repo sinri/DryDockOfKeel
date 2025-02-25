@@ -22,23 +22,22 @@ public interface QueueMixin extends CommonUnit {
      */
     default KeelQueue buildQueue() {
         KeelIssueRecordCenter issueRecordCenter = this.getIssueRecordCenter();
+        var that = this;
         return new KeelQueue() {
+
+            @Override
+            public Future<KeelQueueSignal> readSignal() {
+                return that.readSignal(getQueueManageIssueRecorder());
+            }
+
+            @Override
+            public Future<KeelQueueTask> seekNextTask() {
+                return that.seekNextTask(getQueueManageIssueRecorder());
+            }
 
             @Override
             protected KeelIssueRecordCenter getIssueRecordCenter() {
                 return issueRecordCenter;
-            }
-
-            @Override
-            protected @Nonnull KeelQueueNextTaskSeeker getNextTaskSeeker() {
-                KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder = getQueueManageIssueRecorder();
-                return buildQueueNextTaskSeeker(queueManageIssueRecorder);
-            }
-
-            @Override
-            protected @Nonnull KeelQueueSignalReader getSignalReader() {
-                KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder = getQueueManageIssueRecorder();
-                return buildSignalReader(queueManageIssueRecorder);
             }
 
             @Nonnull
@@ -60,16 +59,14 @@ public interface QueueMixin extends CommonUnit {
     }
 
     /**
-     * @param queueManageIssueRecorder as of 2.0.4
-     * @return The built signal reader.
+     * @since 2.0.5
      */
-    KeelQueueSignalReader buildSignalReader(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder);
+    Future<KeelQueueSignal> readSignal(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder);
 
     /**
-     * @param queueManageIssueRecorder as of 2.0.4
-     * @return The built next task seeker.
+     * @since 2.0.5
      */
-    KeelQueueNextTaskSeeker buildQueueNextTaskSeeker(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder);
+    Future<KeelQueueTask> seekNextTask(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder);
 
     /**
      * Try to build a KeelQueue instance and start it up. Do nothing if this ability is not required.
