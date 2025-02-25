@@ -33,7 +33,7 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * {@code java -jar X.jar [--disableQueue] [--disableSundial] [--disableReceptionist] [--receptionistPort=8080]}
  * </p>
  *
- * @since 1.5.0 Technical Preview
+ * @since 1.5.0
  */
 public abstract class AircraftCarrier extends AircraftCarrierDeck implements HealthMonitorMixin {
     public static final String optionDisableQueue = "disableQueue";

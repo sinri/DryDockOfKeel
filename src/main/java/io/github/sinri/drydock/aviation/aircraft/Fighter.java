@@ -7,8 +7,9 @@ import javax.annotation.Nonnull;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @since 1.5.0 Technical Preview
  * 和AircraftCarrierDeck配合使用的舰载战斗机类，用于应对来犯的外部请求。
+ *
+ * @since 1.5.0
  */
 public abstract class Fighter extends Biplane implements HttpServerMixin {
 

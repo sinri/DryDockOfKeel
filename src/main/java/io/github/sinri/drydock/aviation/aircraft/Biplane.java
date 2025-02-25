@@ -9,7 +9,8 @@ import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import javax.annotation.Nonnull;
 
 /**
- * @since 1.5.0 Technical Preview 和AircraftCarrierDeck配合使用的舰载机基类。
+ * 和AircraftCarrierDeck配合使用的舰载机基类。
+ * @since 1.5.0
  */
 public abstract class Biplane implements CommonUnit {
     private final @Nonnull AircraftCarrierDeck deck;

@@ -20,7 +20,7 @@ import java.util.List;
  *
  * @see <a href="https://vertx.io/docs/vertx-core/java/#_vert_x_command_line_interface_api">Vert.x Command Line
  *         Interface API</a>
- * @since 1.5.0 Technical Preview
+ * @since 1.5.0
  */
 public abstract class AircraftCarrierDeck implements CommonUnit {
 
