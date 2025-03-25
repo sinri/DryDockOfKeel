@@ -11,6 +11,7 @@ import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
+import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
@@ -146,85 +147,85 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
 
         // todo 此处未考虑舰队模式，如果需要要新增 cluster master 的设定
         Keel.initializeVertx(vertxOptions)
-                .compose(initialized -> {
-                    getUnitLogger().info("KEEL INITIALIZED");
-                    // Keel.setLogger(getLogger());
-                    return loadRemoteConfiguration(commandLine);
-                })
-                .compose(done -> {
-                    getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
-                    issueRecordCenter = buildIssueRecordCenter();
-                    // 航海日志共享大计
-                    if (!Objects.equals(getIssueRecordCenter(), KeelIssueRecordCenter.outputCenter())) {
-                        var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
-                        this.getUnitLogger().addBypassIssueRecorder(bypassLogger);
-                    } else {
-                        this.getUnitLogger().info("Bypass logging is ignored.");
-                    }
+            .compose(initialized -> {
+                getUnitLogger().info("KEEL INITIALIZED");
+                // Keel.setLogger(getLogger());
+                return loadRemoteConfiguration(commandLine);
+            })
+            .compose(done -> {
+                getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
+                issueRecordCenter = buildIssueRecordCenter();
+                // 航海日志共享大计
+                if (!Objects.equals(getIssueRecordCenter(), KeelIssueRecordCenter.outputCenter())) {
+                    var bypassLogger = getIssueRecordCenter().generateIssueRecorder(DryDockLogTopics.TopicDryDock, KeelEventLog::new);
+                    this.getUnitLogger().addBypassIssueRecorder(bypassLogger);
+                } else {
+                    this.getUnitLogger().info("Bypass logging is ignored.");
+                }
 
-                    // Metric Recorder
-                    this.metricRecorder = new AliyunSLSMetricRecorder();
-                    this.metricRecorder.start();
+                // Metric Recorder
+                this.metricRecorder = new AliyunSLSMetricRecorder();
+                this.metricRecorder.start();
 
-                    return loadHealthMonitor();
-                })
-                .compose(v -> {
-                    getUnitLogger().info("Loaded Health Monitor");
-                    return prepare(commandLine);
-                })
-                .compose(v -> {
-                    getUnitLogger().info("Prepared For Biz");
-                    boolean disableQueue = commandLine.isFlagEnabled(optionDisableQueue);
-                    if (!disableQueue) {
-                        drone = constructDrone();
-                    }
-                    if (drone != null) {
-                        return drone.loadQueue()
+                return loadHealthMonitor();
+            })
+            .compose(v -> {
+                getUnitLogger().info("Loaded Health Monitor");
+                return prepare(commandLine);
+            })
+            .compose(v -> {
+                getUnitLogger().info("Prepared For Biz");
+                boolean disableQueue = commandLine.isFlagEnabled(optionDisableQueue);
+                if (!disableQueue) {
+                    drone = constructDrone();
+                }
+                if (drone != null) {
+                    return drone.loadQueue()
                                 .onSuccess(done -> {
                                     getUnitLogger().info("Loaded Queue");
                                 });
+                }
+                return Future.succeededFuture();
+            })
+            .compose(v -> {
+                boolean disableSundial = commandLine.isFlagEnabled(optionDisableSundial);
+                if (!disableSundial) {
+                    bomber = constructBomber();
+                }
+                if (bomber != null) {
+                    return bomber.loadSundial()
+                                 .onSuccess(done -> {
+                                     getUnitLogger().info("Loaded Sundial");
+                                 });
+                }
+                return Future.succeededFuture();
+            })
+            .compose(v -> {
+                boolean disableReceptionist = commandLine.isFlagEnabled(optionDisableReceptionist);
+                if (!disableReceptionist) {
+                    String receptionistPortStr = commandLine.getOptionValue(optionReceptionistPort);
+                    Integer receptionistPort = receptionistPortStr == null ? null : Integer.parseInt(receptionistPortStr);
+                    fighter = constructFighter(receptionistPort);
+                    if (fighter != null) {
+                        return fighter.loadHttpServer()
+                                      .onSuccess(done -> {
+                                          getUnitLogger().info("Loaded Http Server on port: " + fighter.configuredHttpServerPort());
+                                      });
                     }
-                    return Future.succeededFuture();
-                })
-                .compose(v -> {
-                    boolean disableSundial = commandLine.isFlagEnabled(optionDisableSundial);
-                    if (!disableSundial) {
-                        bomber = constructBomber();
-                    }
-                    if (bomber != null) {
-                        return bomber.loadSundial()
-                                .onSuccess(done -> {
-                                    getUnitLogger().info("Loaded Sundial");
-                                });
-                    }
-                    return Future.succeededFuture();
-                })
-                .compose(v -> {
-                    boolean disableReceptionist = commandLine.isFlagEnabled(optionDisableReceptionist);
-                    if (!disableReceptionist) {
-                        String receptionistPortStr = commandLine.getOptionValue(optionReceptionistPort);
-                        Integer receptionistPort = receptionistPortStr == null ? null : Integer.parseInt(receptionistPortStr);
-                        fighter = constructFighter(receptionistPort);
-                        if (fighter != null) {
-                            return fighter.loadHttpServer()
-                                    .onSuccess(done -> {
-                                        getUnitLogger().info("Loaded Http Server on port: " + fighter.configuredHttpServerPort());
-                                    });
-                        }
-                    }
-                    return Future.succeededFuture();
-                })
-                .compose(v -> {
-                    return ready(commandLine)
-                            .onSuccess(done -> {
-                                long endTime = System.currentTimeMillis();
-                                getUnitLogger().info("Ready, spent " + (endTime - startTime) + " ms");
-                            });
-                })
-                .onFailure(throwable -> {
-                    getUnitLogger().exception(throwable, "SINK");
-                    System.exit(1);
-                });
+                }
+                return Future.succeededFuture();
+            })
+            .compose(v -> {
+                return ready(commandLine)
+                        .onSuccess(done -> {
+                            long endTime = System.currentTimeMillis();
+                            getUnitLogger().info("Ready, spent " + (endTime - startTime) + " ms");
+                        });
+            })
+            .onFailure(throwable -> {
+                getUnitLogger().exception(throwable, "SINK");
+                System.exit(1);
+            });
     }
 
     protected KeelIssueRecordCenter buildIssueRecordCenter() {
