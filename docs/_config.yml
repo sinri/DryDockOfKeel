@@ -1,0 +1,33 @@
+title: "DryDock 框架文档"
+description: "基于 Vert.x 和 Keel 框架构建的 Java 微服务应用程序框架"
+author: "Sinri Edogawa"
+
+# 禁用自动生成的标题链接
+kramdown:
+  header_offset: 0
+
+# 主题设置
+theme: minima
+minima:
+  skin: classic
+
+# 导航设置
+header_pages:
+  - naval/index.md
+  - aviation/index.md
+  - common/index.md
+
+# GitHub Pages 设置
+github:
+  is_project_page: true
+  repository_url: https://github.com/sinri/DryDockOfKeel
+
+# 其他设置
+markdown: kramdown
+plugins:
+  - jekyll-seo-tag
+
+# 排除文件
+exclude:
+  - Gemfile
+  - Gemfile.lock 

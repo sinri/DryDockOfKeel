@@ -1,4 +1,7 @@
-# DryDock 框架文档总览
+---
+layout: default
+title: DryDock 框架文档总览
+---
 
 DryDock 是一个基于 Vert.x 和 Keel 框架构建的 Java 微服务应用程序框架，采用军舰类比的设计模式，提供了完整的应用程序生命周期管理和基础设施支持。
 

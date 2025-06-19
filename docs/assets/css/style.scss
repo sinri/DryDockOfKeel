@@ -1,0 +1,36 @@
+@import "{{ site.theme }}";
+
+// 移除标题自动生成的链接
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  a.anchor {
+    display: none;
+  }
+}
+
+// 调整内容区域标题样式
+.page-content {
+  h1:first-child {
+    margin-top: 0;
+  }
+  
+  h1 {
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+  }
+}
+
+// 调整导航样式
+.site-nav {
+  .page-link {
+    margin-left: 20px;
+    
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+} 
