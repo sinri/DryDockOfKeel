@@ -6,7 +6,7 @@ public class HealthMonitorMetricRecord extends KeelMetricRecord {
     public static final String TopicHealthMonitor = "HealthMonitor";
 
     public HealthMonitorMetricRecord(String metricName, double value) {
-        super(TopicHealthMonitor, metricName, value);
+        super(metricName, value);
     }
 
     public static HealthMonitorMetricRecord asSurvived(long value) {

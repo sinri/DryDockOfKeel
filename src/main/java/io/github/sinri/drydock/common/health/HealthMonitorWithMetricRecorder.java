@@ -1,7 +1,7 @@
 package io.github.sinri.drydock.common.health;
 
 import io.github.sinri.drydock.common.logging.metric.HealthMonitorMetricRecord;
-import io.github.sinri.keel.helper.runtime.MonitorSnapshot;
+import io.github.sinri.keel.core.helper.runtime.MonitorSnapshot;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 
 import javax.annotation.Nonnull;
@@ -78,25 +78,25 @@ public class HealthMonitorWithMetricRecorder extends HealthMonitor<List<HealthMo
         );
         metricRecorder.recordMetric(
                 HealthMonitorMetricRecord.asMajorGCCount(
-                                monitorSnapshot.getGCStat().getOldGCCount()
+                                                 monitorSnapshot.getGCStat().getMajorGCCount()
                         )
                         .timestamp(monitorSnapshot.getGCStat().getStatTime())
         );
         metricRecorder.recordMetric(
                 HealthMonitorMetricRecord.asMajorGCTime(
-                                monitorSnapshot.getGCStat().getOldGCTime()
+                                                 monitorSnapshot.getGCStat().getMajorGCTime()
                         )
                         .timestamp(monitorSnapshot.getGCStat().getStatTime())
         );
         metricRecorder.recordMetric(
                 HealthMonitorMetricRecord.asMinorGCCount(
-                                monitorSnapshot.getGCStat().getYoungGCCount()
+                                                 monitorSnapshot.getGCStat().getMinorGCCount()
                         )
                         .timestamp(monitorSnapshot.getGCStat().getStatTime())
         );
         metricRecorder.recordMetric(
                 HealthMonitorMetricRecord.asMinorGCTime(
-                                monitorSnapshot.getGCStat().getYoungGCTime()
+                                                 monitorSnapshot.getGCStat().getMinorGCTime()
                         )
                         .timestamp(monitorSnapshot.getGCStat().getStatTime())
         );

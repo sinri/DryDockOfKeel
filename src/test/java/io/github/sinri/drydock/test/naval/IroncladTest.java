@@ -1,7 +1,10 @@
 package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.melee.Ironclad;
+import io.github.sinri.keel.logger.event.KeelEventLog;
+import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.vertx.core.Future;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
@@ -10,6 +13,11 @@ import javax.annotation.Nonnull;
 public class IroncladTest extends Ironclad {
     public static void main(String[] args) {
         new IroncladTest().launch();
+    }
+
+    @Override
+    public VertxOptions buildVertxOptions() {
+        return new VertxOptions();
     }
 
     @Override
@@ -22,11 +30,21 @@ public class IroncladTest extends Ironclad {
         return Future.succeededFuture();
     }
 
+
     @Override
-    public void configureHttpServerRoutes(Router router) {
+    public void configureHttpServerRoutes(Router router, KeelIssueRecorder<KeelEventLog> httpServerLogger) {
         router.route("/").handler(routingContext -> {
             routingContext.json(new JsonObject().put("a", "b"));
         });
+    }
+
+    /**
+     * @since 1.5.2
+     */
+    @Nonnull
+    @Override
+    public Future<Void> beforeStartHttpServer() {
+        return Future.succeededFuture();
     }
 
     @Nonnull

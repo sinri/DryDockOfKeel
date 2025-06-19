@@ -2,10 +2,16 @@ package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.melee.Galley;
 import io.vertx.core.Future;
+import io.vertx.core.VertxOptions;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 public class GalleyTest extends Galley {
+    @Override
+    public VertxOptions buildVertxOptions() {
+        return new VertxOptions();
+    }
+
     @Override
     protected void loadLocalConfiguration() {
 
@@ -18,9 +24,9 @@ public class GalleyTest extends Galley {
 
     @Override
     protected Future<Void> launchAsGalley() {
-        getLogger().info("launched");
+        getUnitLogger().info("launched");
         Keel.getVertx().setTimer(2000L, timer -> {
-            getLogger().info("time up");
+            getUnitLogger().info("time up");
             Keel.getVertx().close();
         });
         return Future.succeededFuture();

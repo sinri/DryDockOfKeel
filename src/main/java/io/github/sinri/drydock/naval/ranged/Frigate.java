@@ -6,7 +6,6 @@ import io.github.sinri.drydock.common.health.HealthMonitorMixin;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
 import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
-import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenterAsAsync;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 
@@ -18,7 +17,9 @@ import javax.annotation.Nonnull;
  *
  * @since 1.0.1
  * @since 1.1.0
+ * @since 2.0.0 use AircraftCarrier series.
  */
+@Deprecated(since = "2.0.0")
 public abstract class Frigate extends Quadrireme implements QueueMixin, SundialMixin, HealthMonitorMixin {
     protected KeelMetricRecorder metricRecorder;
 
@@ -33,9 +34,9 @@ public abstract class Frigate extends Quadrireme implements QueueMixin, SundialM
     @Override
     protected KeelIssueRecordCenter buildIssueRecordCenter() {
         try {
-            return new KeelIssueRecordCenterAsAsync(new AliyunSLSIssueAdapterImpl());
+            return KeelIssueRecordCenter.build(new AliyunSLSIssueAdapterImpl());
         } catch (Throwable e) {
-            getLogger().exception(e, "Failed in Frigate.buildIssueRecordCenter");
+            getUnitLogger().exception(e, "Failed in Frigate.buildIssueRecordCenter");
             throw e;
         }
     }

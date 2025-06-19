@@ -1,8 +1,10 @@
 package io.github.sinri.drydock.common.health;
 
-import io.github.sinri.keel.helper.runtime.KeelRuntimeMonitor;
-import io.github.sinri.keel.helper.runtime.MonitorSnapshot;
-import io.github.sinri.keel.verticles.KeelVerticleImplPure;
+
+import io.github.sinri.keel.core.helper.runtime.KeelRuntimeMonitor;
+import io.github.sinri.keel.core.helper.runtime.MonitorSnapshot;
+import io.github.sinri.keel.core.verticles.KeelVerticleImplPure;
+import io.vertx.core.Promise;
 
 import javax.annotation.Nonnull;
 
@@ -32,7 +34,7 @@ public abstract class HealthMonitor<X> extends KeelVerticleImplPure {
 
 
     @Override
-    protected void startAsPureKeelVerticle() {
+    protected void startAsPureKeelVerticle(Promise<Void> startPromise) {
         prepare();
         new KeelRuntimeMonitor().startRuntimeMonitor(
                 interval(),
@@ -43,6 +45,7 @@ public abstract class HealthMonitor<X> extends KeelVerticleImplPure {
                     handleRecord(monitorSnapshot, draft);
                 }
         );
+        startPromise.complete();
     }
 
     /**

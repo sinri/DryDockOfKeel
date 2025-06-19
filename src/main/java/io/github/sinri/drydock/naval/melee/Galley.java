@@ -16,9 +16,10 @@ import io.vertx.core.VertxOptions;
  * @since 1.1.0 extends Warship
  */
 public abstract class Galley extends Warship {
+
+    @Override
     public VertxOptions buildVertxOptions() {
-        return new VertxOptions()
-                .setWorkerPoolSize(32);
+        return new VertxOptions();
     }
 
     /**

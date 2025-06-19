@@ -1,7 +1,7 @@
 package io.github.sinri.drydock.common.health;
 
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
-import io.github.sinri.keel.helper.runtime.MonitorSnapshot;
+import io.github.sinri.keel.core.helper.runtime.MonitorSnapshot;
 import io.github.sinri.keel.logger.KeelLogLevel;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.vertx.core.json.JsonObject;
@@ -47,7 +47,8 @@ public class HealthMonitorWithIssueRecorder extends HealthMonitor<JsonObject> {
             if (monitorSnapshot.getCPUTime().getCpuUsage() >= 0.50 || heapUsage >= 0.50) {
                 t.level(KeelLogLevel.WARNING);
             }
-            if (monitorSnapshot.getCPUTime().getCpuUsage() >= 0.75 || heapUsage >= 0.75 || monitorSnapshot.getGCStat().getOldGCCount() > 0) {
+            if (monitorSnapshot.getCPUTime().getCpuUsage() >= 0.75 || heapUsage >= 0.75 || monitorSnapshot.getGCStat()
+                                                                                                          .getMajorGCCount() > 0) {
                 t.level(KeelLogLevel.ERROR);
             }
         });

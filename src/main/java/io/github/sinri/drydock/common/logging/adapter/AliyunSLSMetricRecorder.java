@@ -10,16 +10,18 @@ import io.github.sinri.keel.logger.metric.KeelMetricRecord;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
-import static io.github.sinri.keel.helper.KeelHelpersInterface.KeelHelpers;
 
 public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
 
+    private static final Logger log = LoggerFactory.getLogger(AliyunSLSMetricRecorder.class);
     private static boolean disabled;
     private String project;
     private String logstore;
@@ -79,7 +81,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
             return "";
         }
         // Rule 1: Replace [IP] to local address
-        String localHostAddress = KeelHelpers.netHelper().getLocalHostAddress();
+        String localHostAddress = Keel.netHelper().getLocalHostAddress();
         if (localHostAddress == null) {
             Keel.getLogger().warning("Could not get local host address for SLS source!");
             return "";
@@ -96,7 +98,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
         if (disabled) {
             list.forEach(item -> {
                 Keel.getLogger().debug(log -> {
-                    log.topic(item.topic());
+                    log.classification("TOPIC:" + topic);
                     log.context(item.toJsonObject());
                 });
             });

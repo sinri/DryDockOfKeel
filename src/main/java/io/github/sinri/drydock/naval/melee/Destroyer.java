@@ -11,7 +11,9 @@ import io.vertx.core.Future;
  * Support Sundial, Queue and Funnel.
  *
  * @since 1.0.0
+ * @since 2.0.0 use AircraftCarrier series.
  */
+@Deprecated(since = "2.0.0")
 abstract public class Destroyer extends Ironclad implements SundialMixin, QueueMixin {
 
     @Override
@@ -22,7 +24,7 @@ abstract public class Destroyer extends Ironclad implements SundialMixin, QueueM
 
     @Override
     final protected Future<Void> launchAsIronclad() {
-        getLogger().info("To deploy async services");
+        getUnitLogger().info("To deploy async services");
 
         return Future.succeededFuture()
                 .compose(v -> {
@@ -32,7 +34,7 @@ abstract public class Destroyer extends Ironclad implements SundialMixin, QueueM
                     return this.loadQueue();
                 })
                 .compose(compositeFuture -> {
-                    getLogger().info("Async services loaded.");
+                    getUnitLogger().info("Async services loaded.");
 
                     return this.launchAsDestroyer();
                 });

@@ -1,5 +1,6 @@
-package io.github.sinri.drydock.common;
+package io.github.sinri.drydock.aviation.aircraft;
 
+import io.github.sinri.drydock.aviation.carrier.AircraftCarrierDeck;
 import io.github.sinri.keel.core.servant.queue.*;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
@@ -10,29 +11,44 @@ import io.vertx.core.ThreadingModel;
 import javax.annotation.Nonnull;
 
 /**
- * The mixin interface for a unit for Queue.
+ * 和AircraftCarrierDeck配合使用的舰载无人机类，用于按照战术设计按需执行任务，可基于弹性限度密集出动。
  *
- * @since 1.1.0
+ * @since 1.5.0
  */
-public interface QueueMixin extends CommonUnit {
+public abstract class Drone extends Biplane {
+    private final KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder;
+
+    public Drone(@Nonnull AircraftCarrierDeck deck) {
+        super(deck);
+        queueManageIssueRecorder = getIssueRecordCenter()
+                .generateIssueRecorder(QueueManageIssueRecord.TopicQueue, QueueManageIssueRecord::new);
+    }
+
+    /**
+     * @since 2.0.4
+     */
+    protected KeelIssueRecorder<QueueManageIssueRecord> getQueueManageIssueRecorder() {
+        return queueManageIssueRecorder;
+    }
+
     /**
      * Build a KeelQueue instance. A default implementation is provided.
      *
      * @return The built KeelQueue instance.
      */
-    default KeelQueue buildQueue() {
+    protected KeelQueue buildQueue() {
         KeelIssueRecordCenter issueRecordCenter = this.getIssueRecordCenter();
         var that = this;
         return new KeelQueue() {
 
             @Override
             public Future<KeelQueueSignal> readSignal() {
-                return that.readSignal(getQueueManageIssueRecorder());
+                return that.readSignal();
             }
 
             @Override
             public Future<KeelQueueTask> seekNextTask() {
-                return that.seekNextTask(getQueueManageIssueRecorder());
+                return that.seekNextTask();
             }
 
             @Override
@@ -43,37 +59,35 @@ public interface QueueMixin extends CommonUnit {
             @Nonnull
             @Override
             protected QueueWorkerPoolManager getQueueWorkerPoolManager() {
-                KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder = getQueueManageIssueRecorder();
-                var x = configuredQueueWorkerPoolSize(queueManageIssueRecorder);
+                var x = configuredQueueWorkerPoolSize();
                 return new QueueWorkerPoolManager(x);
             }
         };
     }
 
     /**
-     * @param queueManageIssueRecorder as of 2.0.4
      * @return The worker pool size; return zero for an unlimited pool.
      */
-    default int configuredQueueWorkerPoolSize(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
+    protected int configuredQueueWorkerPoolSize() {
         return 0;
     }
 
     /**
      * @since 2.0.5
      */
-    Future<KeelQueueSignal> readSignal(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder);
+    abstract protected Future<KeelQueueSignal> readSignal();
 
     /**
      * @since 2.0.5
      */
-    Future<KeelQueueTask> seekNextTask(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder);
+    abstract protected Future<KeelQueueTask> seekNextTask();
 
     /**
      * Try to build a KeelQueue instance and start it up. Do nothing if this ability is not required.
      *
      * @return a future as all work scheduled.
      */
-    default Future<String> loadQueue() {
+    public Future<String> loadQueue() {
         return Future.succeededFuture(this.buildQueue())
                      .compose(queue -> {
                          if (queue == null) return Future.succeededFuture();
@@ -90,7 +104,7 @@ public interface QueueMixin extends CommonUnit {
      *
      * @since 1.5.8
      */
-    default Future<Void> beforeLoadingQueue() {
+    protected Future<Void> beforeLoadingQueue() {
         return Future.succeededFuture();
     }
 }
