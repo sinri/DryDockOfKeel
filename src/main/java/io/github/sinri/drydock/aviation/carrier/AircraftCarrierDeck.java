@@ -15,11 +15,21 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * A base class for a unit as a program entrance with command line options. Default KeelIssueRecordCenter and
- * KeelEventLogger provided.
+ * A base class for a unit as a program entrance with command line options.
+ * Default KeelIssueRecordCenter and KeelEventLogger provided.
+ * <p>
+ * The start-up command line is
+ * {@code java -jar X.jar [...]}
+ * <p>
+ * This class is designed to be the base of the Program Entrance Class,
+ * which would contain the `main` method where the `launch` method should be
+ * called.
+ * </p>
  *
- * @see <a href="https://vertx.io/docs/vertx-core/java/#_vert_x_command_line_interface_api">Vert.x Command Line
- *         Interface API</a>
+ * @see <a href=
+ *      "https://vertx.io/docs/vertx-core/java/#_vert_x_command_line_interface_api">Vert.x
+ *      Command Line
+ *      Interface API</a>
  * @since 1.5.0
  */
 public abstract class AircraftCarrierDeck implements CommonUnit {
@@ -37,7 +47,7 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
         unitLogger = generateIssueRecorder(DryDockLogTopics.TopicDryDock, KeelEventLog::new);
 
         var cli = CLI.create(buildCliName())
-                     .setDescription(buildCliDescription());
+                .setDescription(buildCliDescription());
 
         List<Option> cliOptions = buildCliOptions();
         if (cliOptions != null) {
@@ -83,9 +93,11 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
     protected abstract String buildCliDescription();
 
     /**
-     * The handler with the parsed command line parameters, carries the whole program lifecycle.
+     * The handler with the parsed command line parameters, carries the whole
+     * program lifecycle.
      *
-     * @param commandLine a CommandLine instance contains the parsed command line parameters.
+     * @param commandLine a CommandLine instance contains the parsed command line
+     *                    parameters.
      */
     abstract protected void runWithCommandLine(@Nonnull CommandLine commandLine);
 

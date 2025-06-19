@@ -27,7 +27,7 @@ import java.util.Objects;
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
- * An implementation of AircraftCarrierDeck.
+ * An further implementation of AircraftCarrierDeck.
  * By default, support Health Monitor, Queue, Sundial, HTTP Server.
  * <p>
  * The start-up command line is
