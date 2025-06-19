@@ -1,4 +1,4 @@
-# Aviation Package Documentation
+# Aviation
 
 航空包 (`io.github.sinri.drydock.aviation`) 提供了基于 Vert.x 的微服务应用程序启动框架，采用航母-舰载机的设计模式，实现了完整的微服务生命周期管理系统。
 
