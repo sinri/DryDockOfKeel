@@ -1,15 +1,12 @@
 package io.github.sinri.drydock.common;
 
 import io.github.sinri.keel.logger.event.KeelEventLog;
-import io.github.sinri.keel.logger.event.KeelEventLogger;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
-import io.vertx.core.Handler;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
 /**
@@ -48,29 +45,6 @@ public interface CommonUnit {
      */
     default KeelIssueRecorder<KeelEventLog> generateIssueRecorder(@Nonnull String topic) {
         return getIssueRecordCenter().generateIssueRecorder(topic, KeelEventLog::new);
-    }
-
-    /**
-     * @param topic The topic of the generated KeelEventLogger instance.
-     * @return generated new KeelEventLogger instance for the provided topic, by default with the KeelIssueRecordCenter
-     *         instance maintained by this unit.
-     */
-    @Deprecated(forRemoval = true, since = "2.0.3")
-    default KeelEventLogger generateEventLogger(@Nonnull String topic) {
-        return getIssueRecordCenter().generateEventLogger(topic);
-    }
-
-    /**
-     * @param topic                  The topic of the generated KeelEventLogger instance.
-     * @param templateEventLogEditor A handler with a provided KeelEventLog instance, to edit it as source.
-     * @return generated new KeelEventLogger instance for the provided topic, by default with the KeelIssueRecordCenter
-     *         instance maintained by this unit.
-     * @since 1.4.6
-     */
-    @Deprecated(forRemoval = true, since = "2.0.3")
-    default KeelEventLogger generateEventLogger(@Nonnull String topic,
-                                                @Nullable Handler<KeelEventLog> templateEventLogEditor) {
-        return getIssueRecordCenter().generateEventLogger(topic, templateEventLogEditor);
     }
 
     /**

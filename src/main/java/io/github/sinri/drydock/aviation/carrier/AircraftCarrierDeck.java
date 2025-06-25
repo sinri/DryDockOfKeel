@@ -47,7 +47,7 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
         unitLogger = generateIssueRecorder(DryDockLogTopics.TopicDryDock, KeelEventLog::new);
 
         var cli = CLI.create(buildCliName())
-                .setDescription(buildCliDescription());
+                     .setDescription(buildCliDescription());
 
         List<Option> cliOptions = buildCliOptions();
         if (cliOptions != null) {

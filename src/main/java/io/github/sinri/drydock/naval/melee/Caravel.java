@@ -2,8 +2,9 @@ package io.github.sinri.drydock.naval.melee;
 
 import io.github.sinri.drydock.common.health.HealthMonitorMixin;
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
-import io.github.sinri.drydock.common.logging.adapter.AliyunSLSIssueAdapterImpl;
-import io.github.sinri.drydock.common.logging.adapter.AliyunSLSMetricRecorder;
+import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSIssueAdapterImpl;
+import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSMetricRecorder;
+import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
@@ -44,7 +45,7 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
                 .compose(v -> {
                     // 航海日志共享大计
                     if (getIssueRecordCenter() != KeelIssueRecordCenter.outputCenter()) {
-                        var bypassLogger = getIssueRecordCenter().generateEventLogger(DryDockLogTopics.TopicDryDock);
+                        var bypassLogger = getIssueRecordCenter().generateIssueRecorder(DryDockLogTopics.TopicDryDock, KeelEventLog::new);
                         this.getUnitLogger().addBypassIssueRecorder(bypassLogger);
                     } else {
                         this.getUnitLogger().info("Bypass logging is ignored.");
@@ -86,12 +87,13 @@ public abstract class Caravel extends Galley implements HealthMonitorMixin {
      */
     @Override
     protected KeelIssueRecordCenter buildIssueRecordCenter() {
-        boolean disabled = AliyunSLSIssueAdapterImpl.isDisabled();
+        AliyunSLSIssueAdapterImpl aliyunSLSIssueAdapter = new AliyunSLSIssueAdapterImpl();
+        boolean disabled = aliyunSLSIssueAdapter.isDisabled();
         if (disabled) {
             return KeelIssueRecordCenter.outputCenter();
         } else {
             try {
-                return KeelIssueRecordCenter.build(new AliyunSLSIssueAdapterImpl());
+                return KeelIssueRecordCenter.build(aliyunSLSIssueAdapter);
             } catch (Throwable e) {
                 getUnitLogger().exception(e, "Failed in io.github.sinri.drydock.naval.melee.Caravel" +
                         ".buildIssueRecordCenter");
