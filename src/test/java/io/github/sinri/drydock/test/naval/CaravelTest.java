@@ -1,7 +1,7 @@
 package io.github.sinri.drydock.test.naval;
 
 import io.github.sinri.drydock.naval.melee.Caravel;
-import io.github.sinri.keel.logger.event.KeelEventLogger;
+import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
 
@@ -27,7 +27,7 @@ public class CaravelTest extends Caravel {
 
     @Override
     protected Future<Void> launchAsCaravel() {
-        KeelEventLogger logger = getIssueRecordCenter().generateEventLogger("CaravelTest");
+        var logger = getIssueRecordCenter().generateIssueRecorder("CaravelTest", KeelEventLog::new);
         logger.info("launched");
         Keel.getVertx().setPeriodic(10_000L, timer -> {
             logger.info("trigger time here");
