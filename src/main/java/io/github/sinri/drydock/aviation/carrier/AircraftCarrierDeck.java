@@ -5,10 +5,8 @@ import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
-import io.vertx.core.cli.Argument;
-import io.vertx.core.cli.CLI;
-import io.vertx.core.cli.CommandLine;
-import io.vertx.core.cli.Option;
+import picocli.CommandLine;
+import picocli.CommandLine.Model.CommandSpec;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -24,12 +22,10 @@ import java.util.List;
  * This class is designed to be the base of the Program Entrance Class,
  * which would contain the `main` method where the `launch` method should be
  * called.
- * </p>
+ * <p>
+ * As of 2.1.0, the CLI module of vert.x is deprecated, so we use Picocli instead follow vert.x docs.
  *
- * @see <a href=
- *      "https://vertx.io/docs/vertx-core/java/#_vert_x_command_line_interface_api">Vert.x
- *      Command Line
- *      Interface API</a>
+ * @see <a href="https://picocli.info/picocli-programmatic-api.html">Programmatic API of Picocli</a>
  * @since 1.5.0
  */
 public abstract class AircraftCarrierDeck implements CommonUnit {
@@ -46,37 +42,39 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
         issueRecordCenter = KeelIssueRecordCenter.outputCenter();
         unitLogger = generateIssueRecorder(DryDockLogTopics.TopicDryDock, KeelEventLog::new);
 
-        var cli = CLI.create(buildCliName())
-                     .setDescription(buildCliDescription());
+        CommandSpec spec = CommandSpec.create();
+        spec.name(buildCliName());
+        spec.usageMessage().description(buildCliDescription());
 
-        List<Option> cliOptions = buildCliOptions();
-        if (cliOptions != null) {
-            cli.addOptions(cliOptions);
+        // Add options if any
+        List<picocli.CommandLine.Model.OptionSpec> options = buildCliOptions();
+        if (options != null) {
+            for (picocli.CommandLine.Model.OptionSpec option : options) {
+                spec.add(option);
+            }
         }
 
-        List<Argument> cliArguments = buildCliArguments();
-        if (cliArguments != null) {
-            cli.addArguments(cliArguments);
+        // Add positional parameters if any
+        List<picocli.CommandLine.Model.PositionalParamSpec> arguments = buildCliArguments();
+        if (arguments != null) {
+            for (picocli.CommandLine.Model.PositionalParamSpec argument : arguments) {
+                spec.add(argument);
+            }
         }
 
-        // as of 1.5.11: not to catch exception
-        var commandLine = cli.parse(List.of(args));
-        runWithCommandLine(commandLine);
+        CommandLine cmd = new CommandLine(spec);
+        cmd.setExecutionStrategy(this::runWithCommandLine);
+        int exitCode = cmd.execute(args);
+        System.exit(exitCode);
     }
 
-    /**
-     * @return a list of Argument to be defined for command line parsing.
-     */
     @Nullable
-    protected List<Argument> buildCliArguments() {
+    protected List<picocli.CommandLine.Model.OptionSpec> buildCliOptions() {
         return null;
     }
 
-    /**
-     * @return a list of Option to be defined for command line parsing.
-     */
     @Nullable
-    protected List<Option> buildCliOptions() {
+    protected List<picocli.CommandLine.Model.PositionalParamSpec> buildCliArguments() {
         return null;
     }
 
@@ -92,14 +90,7 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
     @Nonnull
     protected abstract String buildCliDescription();
 
-    /**
-     * The handler with the parsed command line parameters, carries the whole
-     * program lifecycle.
-     *
-     * @param commandLine a CommandLine instance contains the parsed command line
-     *                    parameters.
-     */
-    abstract protected void runWithCommandLine(@Nonnull CommandLine commandLine);
+    protected abstract int runWithCommandLine(CommandLine.ParseResult parseResult) throws CommandLine.ExecutionException, CommandLine.ParameterException;
 
     @Override
     public KeelIssueRecordCenter getIssueRecordCenter() {

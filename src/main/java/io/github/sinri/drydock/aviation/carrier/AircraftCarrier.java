@@ -11,13 +11,14 @@ import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSIssueAdapterImpl;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSMetricRecorder;
+import io.github.sinri.keel.core.json.JsonifiableSerializer;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.cli.CommandLine;
-import io.vertx.core.cli.Option;
+import picocli.CommandLine;
+import picocli.CommandLine.Model;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -82,75 +83,87 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
 
     @Nullable
     @Override
-    protected List<Option> buildCliOptions() {
+    protected List<Model.OptionSpec> buildCliOptions() {
         return List.of(
-                new Option().setLongName(optionDisableQueue).setFlag(true),
-                new Option().setLongName(optionDisableSundial).setFlag(true),
-                new Option().setLongName(optionDisableReceptionist).setFlag(true),
-                new Option().setLongName(optionReceptionistPort).setRequired(false)
+                Model.OptionSpec.builder("--" + optionDisableQueue)
+                                .description("Disable queue functionality")
+                                .build(),
+                Model.OptionSpec.builder("--" + optionDisableSundial)
+                                .description("Disable sundial functionality")
+                                .build(),
+                Model.OptionSpec.builder("--" + optionDisableReceptionist)
+                                .description("Disable receptionist functionality")
+                                .build(),
+                Model.OptionSpec.builder("--" + optionReceptionistPort)
+                                .description("Port for the receptionist")
+                                .type(Integer.class)
+                                .build()
         );
     }
 
     /**
      * @since 1.5.2
      */
-    protected boolean isQueueDisabled(@Nonnull CommandLine commandLine) {
-        return commandLine.isFlagEnabled(optionDisableQueue);
+    protected boolean isQueueDisabled(@Nonnull CommandLine.ParseResult parseResult) {
+        return parseResult.hasMatchedOption(optionDisableQueue);
     }
 
     /**
      * @since 1.5.2
      */
-    protected boolean isSundialDisabled(@Nonnull CommandLine commandLine) {
-        return commandLine.isFlagEnabled(optionDisableSundial);
+    protected boolean isSundialDisabled(@Nonnull CommandLine.ParseResult parseResult) {
+        return parseResult.hasMatchedOption(optionDisableSundial);
     }
 
     /**
      * @since 1.5.2
      */
-    protected boolean isReceptionistDisabled(@Nonnull CommandLine commandLine) {
-        return commandLine.isFlagEnabled(optionDisableReceptionist);
+    protected boolean isReceptionistDisabled(@Nonnull CommandLine.ParseResult parseResult) {
+        return parseResult.hasMatchedOption(optionDisableReceptionist);
     }
 
     /**
      * Load the local configuration synchronously into `Keel.getConfiguration()`.
      * By default, it reads local file "config.properties" to fetch config.
      *
-     * @param commandLine the parsed command line parameters.
+     * @param parseResult the parsed command line parameters.
      */
-    protected void loadLocalConfiguration(@Nonnull CommandLine commandLine) {
+    protected void loadLocalConfiguration(@Nonnull CommandLine.ParseResult parseResult) {
         Keel.getConfiguration().loadPropertiesFile("config.properties");
     }
 
     /**
-     * @param commandLine the parsed command line parameters.
+     * @param parseResult the parsed command line parameters.
      * @return the built VertxOptions instance.
      */
-    protected abstract VertxOptions buildVertxOptions(@Nonnull CommandLine commandLine);
+    protected abstract VertxOptions buildVertxOptions(@Nonnull CommandLine.ParseResult parseResult);
 
     /**
      * Load the remote configuration asynchronously into `Keel.getConfiguration()`.
      *
-     * @param commandLine the parsed command line parameters.
+     * @param parseResult the parsed command line parameters.
      * @return a future after done
      */
-    protected abstract Future<Void> loadRemoteConfiguration(@Nonnull CommandLine commandLine);
+    protected abstract Future<Void> loadRemoteConfiguration(@Nonnull CommandLine.ParseResult parseResult);
 
     @Override
-    protected final void runWithCommandLine(@Nonnull CommandLine commandLine) {
+    protected final int runWithCommandLine(CommandLine.ParseResult parseResult) throws CommandLine.ExecutionException, CommandLine.ParameterException {
         long startTime = System.currentTimeMillis();
 
-        loadLocalConfiguration(commandLine);
+        // as of 2.1.0, register JsonifiableSerializer before everything.
+        this.loadJsonifiableSerializer();
+
+        loadLocalConfiguration(parseResult);
         getUnitLogger().info("LOCAL CONFIG LOADED (if any)");
 
-        VertxOptions vertxOptions = buildVertxOptions(commandLine);
+        VertxOptions vertxOptions = buildVertxOptions(parseResult);
 
         // todo 此处未考虑舰队模式，如果需要要新增 cluster master 的设定
         Keel.initializeVertx(vertxOptions)
             .compose(initialized -> {
                 getUnitLogger().info("KEEL INITIALIZED");
                 // Keel.setLogger(getLogger());
-                return loadRemoteConfiguration(commandLine);
+                return loadRemoteConfiguration(parseResult);
             })
             .compose(done -> {
                 getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
@@ -171,11 +184,11 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
             })
             .compose(v -> {
                 getUnitLogger().info("Loaded Health Monitor");
-                return prepare(commandLine);
+                return prepare(parseResult);
             })
             .compose(v -> {
                 getUnitLogger().info("Prepared For Biz");
-                boolean disableQueue = commandLine.isFlagEnabled(optionDisableQueue);
+                boolean disableQueue = isQueueDisabled(parseResult);
                 if (!disableQueue) {
                     drone = constructDrone();
                 }
@@ -188,7 +201,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                 return Future.succeededFuture();
             })
             .compose(v -> {
-                boolean disableSundial = commandLine.isFlagEnabled(optionDisableSundial);
+                boolean disableSundial = isSundialDisabled(parseResult);
                 if (!disableSundial) {
                     bomber = constructBomber();
                 }
@@ -201,10 +214,11 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                 return Future.succeededFuture();
             })
             .compose(v -> {
-                boolean disableReceptionist = commandLine.isFlagEnabled(optionDisableReceptionist);
+                boolean disableReceptionist = isReceptionistDisabled(parseResult);
                 if (!disableReceptionist) {
-                    String receptionistPortStr = commandLine.getOptionValue(optionReceptionistPort);
-                    Integer receptionistPort = receptionistPortStr == null ? null : Integer.parseInt(receptionistPortStr);
+                    Integer receptionistPort = parseResult.hasMatchedOption(optionReceptionistPort)
+                            ? parseResult.matchedOptionValue(optionReceptionistPort, null)
+                            : null;
                     fighter = constructFighter(receptionistPort);
                     if (fighter != null) {
                         return fighter.loadHttpServer()
@@ -216,7 +230,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                 return Future.succeededFuture();
             })
             .compose(v -> {
-                return ready(commandLine)
+                return ready(parseResult)
                         .onSuccess(done -> {
                             long endTime = System.currentTimeMillis();
                             getUnitLogger().info("Ready, spent " + (endTime - startTime) + " ms");
@@ -226,6 +240,15 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                 getUnitLogger().exception(throwable, "SINK");
                 System.exit(1);
             });
+
+        return 0;
+    }
+
+    /**
+     * @since 2.1.0
+     */
+    protected void loadJsonifiableSerializer() {
+        JsonifiableSerializer.register();
     }
 
     protected KeelIssueRecordCenter buildIssueRecordCenter() {
@@ -259,18 +282,18 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     /**
      * Prepare for business, after logger and health monitor initialized.
      *
-     * @param commandLine the parsed command line parameters.
+     * @param parseResult the parsed command line parameters.
      */
     @Nonnull
-    protected abstract Future<Void> prepare(@Nonnull CommandLine commandLine);
+    protected abstract Future<Void> prepare(@Nonnull CommandLine.ParseResult parseResult);
 
     /**
      * An asynchronous code block after the business of this program is initialized.
      *
-     * @param commandLine the parsed command line parameters.
+     * @param parseResult the parsed command line parameters.
      */
     @Nonnull
-    protected abstract Future<Void> ready(@Nonnull CommandLine commandLine);
+    protected abstract Future<Void> ready(@Nonnull CommandLine.ParseResult parseResult);
 
     @Nonnull
     @Override
