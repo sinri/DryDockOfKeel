@@ -65,7 +65,6 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
             Function<SqlConnection, C> sqlConnectionWrapper,
             String schemaName
     ) {
-
         return rebuildTablesInSchema(dataSourceName, sqlConnectionWrapper, schemaName,
                 buildPackageNameForSchema(schemaName), null);
     }
@@ -103,36 +102,37 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
                    })
                    .compose(dirEnsured -> {
                        return this.stashOldClassFiles(dir)
-                                  .compose(v -> {
-                                      return mySQLDataSource.withConnection(sqlConnection -> {
-                                          var x = new TableRowClassSourceCodeGenerator(sqlConnection)
-                                                  .forSchema(schemaName);
-                                          if (tables != null) {
-                                              x.forTables(tables);
-                                          }
+                                  .compose((Void v) -> mySQLDataSource.withConnection(sqlConnection -> {
+                                      var x = new TableRowClassSourceCodeGenerator(sqlConnection)
+                                              .forSchema(schemaName);
+                                      if (tables != null) {
+                                          x.forTables(tables);
+                                      }
+                                      x.setStandardHandler(standard -> {
                                           String strictEnumPackage = getStrictEnumPackage();
                                           if (strictEnumPackage != null) {
-                                              x.setStrictEnumPackage(strictEnumPackage);
+                                              standard.setStrictEnumPackage(strictEnumPackage);
                                           }
                                           String envelopePackage = getEnvelopePackage();
                                           if (envelopePackage != null) {
-                                              x.setEnvelopePackage(envelopePackage);
+                                              standard.setEnvelopePackage(envelopePackage);
                                           }
-                                          return x
+                                          standard
                                                   .setProvideConstSchema(isProvideConstSchema())
                                                   .setProvideConstTable(isProvideConstTable())
-                                                  .setProvideConstSchemaAndTable(isProvideConstSchemaAndTable())
-                                                  .generate(getTablePackage() + "." + dataSourceName + "." + schemaPackageName, dir);
+                                                  .setProvideConstSchemaAndTable(isProvideConstSchemaAndTable());
+                                          standard.setVcsFriendly(true);
                                       });
-                                  })
-                                  .compose(v -> {
-                                      return this.removeOldClassFiles(dir);
-                                  }, failure -> {
-                                      return this.callbackOldClassFiles(dir)
-                                                 .compose(v -> {
-                                                     return Future.failedFuture(failure);
-                                                 });
-                                  });
+
+                                      return x.generate(getTablePackage() + "." + dataSourceName + "." + schemaPackageName);
+                                  }))
+                                  .compose(
+                                          v -> this.removeOldClassFiles(dir),
+                                          failure -> this.callbackOldClassFiles(dir)
+                                                         .eventually(() -> {
+                                                             return Future.failedFuture(failure);
+                                                         })
+                                  );
                    });
     }
 
@@ -140,7 +140,7 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
      * @since 1.5.11
      */
     private Future<Void> stashOldClassFiles(String dir) {
-        getInstantLogger().notice("stashOldClassFiles");
+        getUnitLogger().notice("stashOldClassFiles");
         return Keel.getVertx().fileSystem().readDir(dir)
                    .compose(files -> {
                        return Keel.asyncCallIteratively(files, file -> {
@@ -158,7 +158,7 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
      * @since 1.5.11
      */
     private Future<Void> callbackOldClassFiles(String dir) {
-        getInstantLogger().warning("callbackOldClassFiles");
+        getUnitLogger().warning("callbackOldClassFiles");
         return Keel.getVertx().fileSystem().readDir(dir)
                    .compose(files -> {
                        return Keel.asyncCallIteratively(files, file -> {
@@ -175,7 +175,7 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
      * @since 1.5.11
      */
     private Future<Void> removeOldClassFiles(String dir) {
-        getInstantLogger().notice("removeOldClassFiles");
+        getUnitLogger().notice("removeOldClassFiles");
         return Keel.getVertx().fileSystem().readDir(dir)
                    .compose(files -> {
                        return Keel.asyncCallIteratively(files, file -> {

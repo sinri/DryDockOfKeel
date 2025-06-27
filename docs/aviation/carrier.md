@@ -18,7 +18,7 @@
 基础抽象类，实现了 `CommonUnit` 接口，提供：
 
 #### 主要功能
-- **命令行解析**: 基于 Vert.x CLI API 的命令行参数处理
+- **命令行解析**: 基于 Picocli API 的命令行参数处理
 - **程序入口**: 通过 `launch(String[] args)` 方法启动应用程序
 - **日志系统**: 内置 `KeelEventLog` 日志记录器
 - **问题记录中心**: 提供 `KeelIssueRecordCenter` 支持
@@ -31,11 +31,11 @@ public final void launch(String[] args)
 // 抽象方法，需要子类实现
 protected abstract String buildCliName()
 protected abstract String buildCliDescription()
-protected abstract void runWithCommandLine(CommandLine commandLine)
+protected abstract int runWithCommandLine(CommandLine.ParseResult parseResult)
 
 // 可选重写的方法
-protected List<Option> buildCliOptions()
-protected List<Argument> buildCliArguments()
+protected List<picocli.CommandLine.Model.OptionSpec> buildCliOptions()
+protected List<picocli.CommandLine.Model.PositionalParamSpec> buildCliArguments()
 ```
 
 ### 2. AircraftCarrier
@@ -92,12 +92,12 @@ protected abstract Drone constructDrone()
 protected abstract Fighter constructFighter(@Nullable Integer port)
 
 // 配置方法
-protected abstract VertxOptions buildVertxOptions(CommandLine commandLine)
-protected abstract Future<Void> loadRemoteConfiguration(CommandLine commandLine)
+protected abstract VertxOptions buildVertxOptions(@Nonnull CommandLine.ParseResult parseResult)
+protected abstract Future<Void> loadRemoteConfiguration(@Nonnull CommandLine.ParseResult parseResult)
 
 // 生命周期方法
-protected abstract Future<Void> prepare(CommandLine commandLine)
-protected abstract Future<Void> ready(CommandLine commandLine)
+protected abstract Future<Void> prepare(@Nonnull CommandLine.ParseResult parseResult)
+protected abstract Future<Void> ready(@Nonnull CommandLine.ParseResult parseResult)
 
 // CLI方法
 protected abstract String buildCliName()
@@ -108,7 +108,7 @@ protected abstract String buildCliDescription()
 
 ```java
 // 配置加载
-protected void loadLocalConfiguration(CommandLine commandLine)
+protected void loadLocalConfiguration(@Nonnull CommandLine.ParseResult parseResult)
 
 // 问题记录中心构建
 protected KeelIssueRecordCenter buildIssueRecordCenter()
@@ -135,12 +135,12 @@ public class MyApplication extends AircraftCarrier {
     }
     
     @Override
-    protected VertxOptions buildVertxOptions(CommandLine commandLine) {
+    protected VertxOptions buildVertxOptions(CommandLine.ParseResult parseResult) {
         return new VertxOptions();
     }
     
     @Override
-    protected Future<Void> loadRemoteConfiguration(CommandLine commandLine) {
+    protected Future<Void> loadRemoteConfiguration(CommandLine.ParseResult parseResult) {
         // 实现远程配置加载逻辑
         return Future.succeededFuture();
     }
@@ -161,13 +161,13 @@ public class MyApplication extends AircraftCarrier {
     }
     
     @Override
-    protected Future<Void> prepare(CommandLine commandLine) {
+    protected Future<Void> prepare(CommandLine.ParseResult parseResult) {
         // 业务准备逻辑
         return Future.succeededFuture();
     }
     
     @Override
-    protected Future<Void> ready(CommandLine commandLine) {
+    protected Future<Void> ready(CommandLine.ParseResult parseResult) {
         // 应用就绪后的逻辑
         return Future.succeededFuture();
     }
@@ -219,7 +219,7 @@ java -jar my-app.jar --disableQueue --receptionistPort=8080
 - **模板方法模式**: `AircraftCarrier` 定义启动流程模板，子类实现具体步骤
 - **工厂方法模式**: 通过 `construct*()` 方法创建组件实例
 - **Mixin模式**: 通过 `HealthMonitorMixin` 提供健康监控能力
-- **命令模式**: 基于 Vert.x CLI 的命令行参数处理
+- **命令模式**: 基于 Picocli 的命令行参数处理
 
 ## 配置说明
 
@@ -244,11 +244,12 @@ java -jar my-app.jar --disableQueue --receptionistPort=8080
 3. **组件依赖**: 各组件之间存在启动顺序依赖，不可随意调整
 4. **资源管理**: 注意及时释放资源，避免内存泄漏
 5. **集群模式**: 当前版本未完全支持集群模式（代码中有 TODO 注释）
+6. **CLI 框架**: 从 2.1.0 版本开始使用 Picocli 替代已弃用的 Vert.x CLI 模块
 
 ## 版本历史
 
 - **1.5.0**: 初始版本，提供基础航母框架
 - **1.5.2**: 增加组件获取方法和配置检查方法
-- **1.5.11**: 移除异常捕获，允许异常向上传播
+- **2.1.0**: 从 Vert.x CLI 迁移到 Picocli，增加 JsonifiableSerializer 注册
 
 该包提供了一个强大而灵活的微服务应用程序框架，通过模块化设计支持各种业务场景的快速开发和部署。

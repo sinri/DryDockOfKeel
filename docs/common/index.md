@@ -12,7 +12,6 @@
 
 - **日志记录中心**: 提供 `KeelIssueRecordCenter` 用于统一的日志管理
 - **问题记录器**: 支持创建不同主题的 `KeelIssueRecorder` 实例
-- **事件日志器**: 提供 `KeelEventLogger` 用于事件记录（已标记为弃用）
 - **指标记录器**: 提供 `KeelMetricRecorder` 用于性能指标记录
 
 ## 混入接口 (Mixin Interfaces)
@@ -23,8 +22,8 @@ HTTP服务器混入接口，为实现类提供Web服务能力：
 
 - **服务器构建**: `buildHttpServer()` 方法创建 `KeelHttpServer` 实例
 - **端口配置**: `configuredHttpServerPort()` 配置监听端口（默认8080）
-- **路由配置**: `configureHttpServerRoutes()` 配置路由规则
-- **生命周期管理**: 支持启动前回调和停止声明
+- **路由配置**: `configureHttpServerRoutes(Router router, KeelIssueRecorder<KeelEventLog> httpServerLogger)` 配置路由规则
+- **生命周期管理**: 支持启动前回调 `beforeStartHttpServer()` 和停止声明 `stopServer()`
 - **异步加载**: `loadHttpServer()` 异步启动HTTP服务
 
 ### QueueMixin
@@ -32,24 +31,25 @@ HTTP服务器混入接口，为实现类提供Web服务能力：
 队列处理混入接口，提供异步任务队列功能：
 
 - **队列构建**: `buildQueue()` 创建 `KeelQueue` 实例
-- **工作池管理**: 支持配置工作线程池大小
-- **信号读取**: `readSignal()` 读取队列信号
-- **任务查找**: `seekNextTask()` 查找下一个待处理任务
+- **工作池管理**: `configuredQueueWorkerPoolSize()` 配置工作线程池大小
+- **信号读取**: `readSignal(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder)` 读取队列信号
+- **任务查找**: `seekNextTask(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder)` 查找下一个待处理任务
 - **异步加载**: `loadQueue()` 以Worker线程模式部署队列服务
+- **预加载钩子**: `beforeLoadingQueue()` 清理遗留任务
 
 ### SundialMixin
 
 定时任务混入接口，提供日晷（Sundial）定时调度功能：
 
 - **日晷构建**: `buildSundial()` 创建 `KeelSundial` 实例
-- **计划获取**: `fetchSundialPlans()` 异步获取定时计划
+- **计划获取**: `fetchSundialPlans(KeelIssueRecorder<SundialIssueRecord> sundialIssueRecorder)` 异步获取定时计划
 - **异步加载**: `loadSundial()` 以Worker线程模式部署定时服务
 
 ### HealthMonitorMixin
 
 健康监控混入接口，提供系统健康状态监控：
 
-- **监控器构建**: `buildHealthMonitor()` 创建健康监控实例
+- **监控器构建**: `buildHealthMonitor()` 创建健康监控实例，默认返回 `HealthMonitorWithIssueRecorder`
 - **异步加载**: `loadHealthMonitor()` 以Worker线程模式部署监控服务
 
 ## 子模块
@@ -67,6 +67,7 @@ HTTP服务器混入接口，为实现类提供Web服务能力：
 - 支持自定义监控间隔（默认60秒）
 - 集成运行时监控器 `KeelRuntimeMonitor`
 - 提供可扩展的监控项和记录处理
+- 抽象方法：`prepare()`, `createDraft()`, `moreMonitorItems()`, `handleRecord()`
 
 参见 [健康监控](./health.md)。
 
@@ -100,13 +101,8 @@ HTTP服务器混入接口，为实现类提供Web服务能力：
 
 #### logging.metric 子包
 
-指标记录相关组件
-
-#### logging.adapter 子包
-
-日志适配器实现：
-- **AliyunSLSIssueAdapterImpl**: 阿里云SLS问题适配器
-- **AliyunSLSMetricRecorder**: 阿里云SLS指标记录器
+指标记录相关组件：
+- **HealthMonitorMetricRecord**: 健康监控指标记录
 
 ## 设计模式
 
@@ -148,20 +144,32 @@ public class MyApplicationService implements CommonUnit,
                                            HealthMonitorMixin {
     
     @Override
-    public void configureHttpServerRoutes(Router router, KeelIssueRecorder<KeelEventLog> logger) {
+    public void configureHttpServerRoutes(Router router, KeelIssueRecorder<KeelEventLog> httpServerLogger) {
         router.get("/health").handler(ctx -> ctx.response().end("OK"));
     }
     
     @Override
-    public Future<KeelQueueTask> seekNextTask(KeelIssueRecorder<QueueManageIssueRecord> logger) {
+    public Future<KeelQueueSignal> readSignal(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
+        // 实现信号读取逻辑
+        return Future.succeededFuture(null);
+    }
+    
+    @Override
+    public Future<KeelQueueTask> seekNextTask(KeelIssueRecorder<QueueManageIssueRecord> queueManageIssueRecorder) {
         // 实现任务查找逻辑
         return Future.succeededFuture(null);
     }
     
     @Override
-    public Future<Collection<KeelSundialPlan>> fetchSundialPlans(KeelIssueRecorder<SundialIssueRecord> logger) {
+    public Future<Collection<KeelSundialPlan>> fetchSundialPlans(KeelIssueRecorder<SundialIssueRecord> sundialIssueRecorder) {
         // 实现定时计划获取逻辑
         return Future.succeededFuture(Collections.emptyList());
+    }
+    
+    @Override
+    public Future<Void> beforeStartHttpServer() {
+        // HTTP服务器启动前的处理
+        return Future.succeededFuture();
     }
 }
 ```
@@ -183,3 +191,4 @@ public class MyApplicationService implements CommonUnit,
 2. **线程模型**: 队列和定时任务默认使用Worker线程模型，HTTP服务器使用事件循环线程
 3. **配置管理**: BaiyatanConfigurationLoader需要配置相应的Kumori服务参数
 4. **日志集成**: 所有组件都集成了统一的日志记录体系，支持不同的适配器实现
+5. **方法签名**: 自2.0.4版本起，多个混入接口的方法增加了日志记录器参数，提供更好的日志追踪能力

@@ -9,16 +9,19 @@ DryDock 项目的日志包 (`io.github.sinri.drydock.common.logging`) 提供了�
 ```
 logging/
 ├── DryDockLogTopics.java           # 日志主题定义
-├── adapter/                        # 日志适配器
-│   ├── AliyunSLSIssueAdapterImpl.java    # 阿里云SLS问题日志适配器
-│   ├── AliyunSLSMetricRecorder.java      # 阿里云SLS指标记录器
-│   └── package-info.java
 ├── issue/                          # 问题记录相关
 │   ├── HealthMonitorIssueRecord.java    # 健康监控问题记录
 │   └── package-info.java
-└── metric/                         # 指标记录相关
-    ├── HealthMonitorMetricRecord.java    # 健康监控指标记录
-    └── package-info.java
+├── metric/                         # 指标记录相关
+│   ├── HealthMonitorMetricRecord.java    # 健康监控指标记录
+│   └── package-info.java
+└── package-info.java
+
+注：阿里云SLS适配器实现位于 plugin/aliyun/sls/writer/ 目录下：
+├── AliyunSLSIssueAdapterImpl.java    # 阿里云SLS问题日志适配器
+├── AliyunSLSMetricRecorder.java      # 阿里云SLS指标记录器
+├── AliyunSlsConfigElement.java       # 阿里云SLS配置元素
+└── AliyunSLSLogPutter.java          # 阿里云SLS日志推送器
 ```
 
 ## 核心组件
@@ -40,17 +43,19 @@ public class DryDockLogTopics {
 - `TopicSundial`：定时任务相关日志主题
 - `TopicHttpServer`：HTTP服务器相关日志主题
 
-### 2. Adapter 层
+### 2. 阿里云SLS适配器 (位于 plugin/aliyun/sls/writer/ 包)
 
 #### AliyunSLSIssueAdapterImpl
 
-阿里云 SLS 问题日志适配器的实现，继承自 `AliyunSLSIssueAdapter`。
+阿里云 SLS 问题日志适配器的实现，继承自 `AliyunSLSIssueAdapter`（来自Keel框架）。
 
 **主要功能：**
 - 将问题记录异步发送到阿里云 SLS
 - 支持配置禁用，禁用时回退到标准输出
 - 支持 IP 地址模板替换
-- 提供连接重建机制
+- 自动处理连接管理
+
+**配置路径：** `aliyun.sls`
 
 **配置项：**
 ```properties
@@ -65,17 +70,20 @@ aliyun.sls.accessKeySecret=your-access-key-secret
 
 **核心方法：**
 - `handleIssueRecordsForTopic()`: 处理特定主题的问题记录
-- `buildSource()`: 构建日志源标识，支持IP模板替换
-- `rebuildProducer()`: 重建SLS生产者连接
+- `buildProducer()`: 构建SLS日志推送器
+- `isDisabled()`: 检查是否禁用
 
 #### AliyunSLSMetricRecorder
 
-阿里云 SLS 指标记录器，继承自 `KeelMetricRecorder`。
+阿里云 SLS 指标记录器，继承自 `KeelMetricRecorder`（来自Keel框架）。
 
 **主要功能：**
 - 将指标数据发送到阿里云 SLS
 - 支持标签排序和格式化
 - 自动添加时间戳和源信息
+- 支持配置禁用，禁用时回退到调试日志
+
+**配置路径：** `aliyun.sls_metric`
 
 **配置项：**
 ```properties
@@ -114,15 +122,20 @@ HealthMonitorIssueRecord record = new HealthMonitorIssueRecord()
 
 健康监控指标记录类，扩展了 `KeelMetricRecord`。
 
-**预定义指标：**
-- `survived`: 存活时间
-- `minor_gc_count/time`: Minor GC 次数和时间
-- `major_gc_count/time`: Major GC 次数和时间
-- `cpu_usage`: CPU 使用率
-- `hardware_memory_usage`: 硬件内存使用率
-- `jvm_memory_usage`: JVM 内存使用率
-- `jvm_heap_memory_used_bytes`: JVM 堆内存使用字节数
-- `jvm_non_heap_memory_used_bytes`: JVM 非堆内存使用字节数
+**关键属性：**
+- `TopicHealthMonitor`: 健康监控主题常量
+
+**预定义指标和工厂方法：**
+- `survived`: 存活时间 → `asSurvived(long value)`
+- `minor_gc_count`: Minor GC 次数 → `asMinorGCCount(long value)`
+- `minor_gc_time`: Minor GC 时间 → `asMinorGCTime(long value)`
+- `major_gc_count`: Major GC 次数 → `asMajorGCCount(long value)`
+- `major_gc_time`: Major GC 时间 → `asMajorGCTime(long value)`
+- `cpu_usage`: CPU 使用率 → `asCpuUsage(double value)`
+- `hardware_memory_usage`: 硬件内存使用率 → `asHardwareMemoryUsage(double value)`
+- `jvm_memory_usage`: JVM 内存使用率 → `asJvmMemoryUsage(double value)`
+- `jvm_heap_memory_used_bytes`: JVM 堆内存使用字节数 → `asJvmHeapMemoryUsedBytes(long value)`
+- `jvm_non_heap_memory_used_bytes`: JVM 非堆内存使用字节数 → `asJvmNonHeapMemoryUsedBytes(long value)`
 
 **工厂方法示例：**
 ```java
@@ -130,6 +143,8 @@ HealthMonitorIssueRecord record = new HealthMonitorIssueRecord()
 HealthMonitorMetricRecord.asSurvived(upTime);
 HealthMonitorMetricRecord.asCpuUsage(0.75);
 HealthMonitorMetricRecord.asJvmMemoryUsage(0.60);
+HealthMonitorMetricRecord.asMinorGCCount(10);
+HealthMonitorMetricRecord.asJvmHeapMemoryUsedBytes(1024 * 1024 * 100L);
 ```
 
 ## 使用模式
@@ -269,9 +284,18 @@ aliyun.sls_metric.disabled=YES
 ## 依赖关系
 
 该日志包依赖于：
-- Keel 框架的日志组件
-- 阿里云 SLS Java SDK
+- Keel 框架的日志组件（`KeelIssueRecord`、`KeelMetricRecord`、`AliyunSLSIssueAdapter`、`KeelMetricRecorder`等）
+- 阿里云 SLS Java SDK（通过 `AliyunSLSLogPutter` 封装）
 - Vert.x 异步框架
-- SLF4J 日志门面
+- JsonObject 序列化支持
+
+## 架构说明
+
+DryDock 的日志架构分为两个主要层次：
+
+1. **核心日志层** (`common.logging`)：定义了日志主题、问题记录和指标记录的基础结构
+2. **插件适配层** (`plugin.aliyun.sls.writer`)：提供具体的阿里云SLS集成实现
+
+这种分层设计使得日志系统既保持了核心的简洁性，又提供了灵活的扩展能力。
 
 通过这套日志系统，DryDock 应用可以实现完整的可观测性，支持问题追踪和性能监控。

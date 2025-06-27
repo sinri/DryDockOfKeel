@@ -46,6 +46,7 @@ DryDock 框架以海军舰船和航空兵的概念来抽象不同类型的应用
 
 **核心组件：**
 - **AircraftCarrier** - 微服务应用启动框架
+- **Biplane** - 舰载机基类，所有舰载机的抽象基础
 - **Bomber** - 定时任务执行器（替代Sundial）
 - **Drone** - 队列任务处理器（替代Queue）
 - **Fighter** - HTTP服务提供器

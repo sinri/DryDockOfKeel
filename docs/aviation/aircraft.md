@@ -144,6 +144,8 @@ public class DataSyncBomber extends Bomber {
 - `seekNextTask()`: 抽象方法，寻找下一个待执行任务
 - `loadQueue()`: 启动队列服务
 - `configuredQueueWorkerPoolSize()`: 配置工作线程池大小（默认为0，表示无限制）
+- `beforeLoadingQueue()`: 队列加载前的清理工作（自1.5.8版本引入）
+- `getQueueManageIssueRecorder()`: 获取队列管理问题记录器（自2.0.4版本引入）
 
 **在AircraftCarrierDeck中的初始化方式：**
 ```java
@@ -215,6 +217,13 @@ public class EmailProcessingDrone extends Drone {
             });
     }
     
+    @Override
+    protected Future<Void> beforeLoadingQueue() {
+        // 队列启动前的清理工作
+        getUnitLogger().info("清理未完成的任务");
+        return Future.succeededFuture();
+    }
+    
     private Future<Boolean> checkForNewEmailTasks() {
         // 实现检查新任务的逻辑
         return Future.succeededFuture(true);
@@ -260,8 +269,9 @@ public class EmailProcessingDrone extends Drone {
 - `configureHttpServerRoutes()`: 抽象方法，配置HTTP路由
 - `beforeStartHttpServer()`: 抽象方法，服务启动前的预处理
 - `loadHttpServer()`: 启动HTTP服务
-- `stopServer()`: 停止服务器
+- `stopServer()`: 停止服务器（自1.4.17版本引入）
 - `isToStopServer()`: 检查是否需要停止服务器
+- `configuredHttpServerPort()`: 获取配置的HTTP服务端口
 
 **在AircraftCarrierDeck中的初始化方式：**
 ```java
@@ -370,7 +380,7 @@ public class ComprehensiveCarrier extends AircraftCarrier {
     }
     
     @Override
-    protected VertxOptions buildVertxOptions(@Nonnull CommandLine commandLine) {
+    protected VertxOptions buildVertxOptions(@Nonnull CommandLine.ParseResult parseResult) {
         // 配置Vert.x选项
         return new VertxOptions()
             .setWorkerPoolSize(50)
@@ -378,21 +388,21 @@ public class ComprehensiveCarrier extends AircraftCarrier {
     }
     
     @Override
-    protected Future<Void> loadRemoteConfiguration(@Nonnull CommandLine commandLine) {
+    protected Future<Void> loadRemoteConfiguration(@Nonnull CommandLine.ParseResult parseResult) {
         // 加载远程配置（如需要）
         getUnitLogger().info("加载远程配置完成");
         return Future.succeededFuture();
     }
     
     @Override
-    protected Future<Void> prepare(@Nonnull CommandLine commandLine) {
+    protected Future<Void> prepare(@Nonnull CommandLine.ParseResult parseResult) {
         // 业务初始化准备工作
         getUnitLogger().info("业务准备工作完成");
         return Future.succeededFuture();
     }
     
     @Override
-    protected Future<Void> ready(@Nonnull CommandLine commandLine) {
+    protected Future<Void> ready(@Nonnull CommandLine.ParseResult parseResult) {
         // 服务就绪后的处理
         getUnitLogger().info("所有服务已就绪，系统正常运行");
         return Future.succeededFuture();
@@ -420,147 +430,6 @@ public class ComprehensiveCarrier extends AircraftCarrier {
     
     public static void main(String[] args) {
         new ComprehensiveCarrier().launch(args);
-    }
-}
-
-// 自定义Bomber实现
-class DataSyncBomber extends Bomber {
-    public DataSyncBomber(@Nonnull AircraftCarrierDeck deck) {
-        super(deck);
-    }
-
-    @Override
-    protected Future<Collection<KeelSundialPlan>> fetchSundialPlans(
-            KeelIssueRecorder<SundialIssueRecord> sundialIssueRecorder) {
-        List<KeelSundialPlan> plans = new ArrayList<>();
-        
-        // 每天凌晨2点执行数据同步
-        plans.add(new KeelSundialPlan()
-            .setCronExpression("0 0 2 * * ?")
-            .setTaskHandler(() -> {
-                sundialIssueRecorder.info("开始执行数据同步");
-                return performDataSync();
-            }));
-        
-        return Future.succeededFuture(plans);
-    }
-    
-    private Future<Void> performDataSync() {
-        getUnitLogger().info("执行数据同步逻辑");
-        return Future.succeededFuture();
-    }
-}
-
-// 自定义Drone实现
-class EmailProcessingDrone extends Drone {
-    public EmailProcessingDrone(@Nonnull AircraftCarrierDeck deck) {
-        super(deck);
-    }
-    
-    @Override
-    protected int configuredQueueWorkerPoolSize() {
-        return 10; // 配置10个工作线程
-    }
-    
-    @Override
-    protected Future<KeelQueueSignal> readSignal() {
-        return checkForNewEmailTasks()
-            .map(hasNewTasks -> hasNewTasks ? 
-                KeelQueueSignal.CONTINUE : KeelQueueSignal.WAIT);
-    }
-    
-    @Override
-    protected Future<KeelQueueTask> seekNextTask() {
-        return getNextEmailTask()
-            .map(emailTask -> {
-                if (emailTask == null) {
-                    return null;
-                }
-                
-                return new KeelQueueTask() {
-                    @Override
-                    public String getTaskId() {
-                        return emailTask.getId();
-                    }
-                    
-                    @Override
-                    public Future<Void> execute() {
-                        return processEmailTask(emailTask)
-                            .compose(result -> {
-                                getQueueManageIssueRecorder().info(
-                                    "邮件任务处理完成", 
-                                    "taskId", emailTask.getId()
-                                );
-                                return Future.succeededFuture();
-                            });
-                    }
-                };
-            });
-    }
-    
-    private Future<Boolean> checkForNewEmailTasks() {
-        return Future.succeededFuture(true);
-    }
-    
-    private Future<EmailTask> getNextEmailTask() {
-        return Future.succeededFuture(new EmailTask("task-001"));
-    }
-    
-    private Future<Void> processEmailTask(EmailTask task) {
-        getUnitLogger().info("处理邮件任务", "taskId", task.getId());
-        return Future.succeededFuture();
-    }
-    
-    private static class EmailTask {
-        private final String id;
-        
-        public EmailTask(String id) {
-            this.id = id;
-        }
-        
-        public String getId() {
-            return id;
-        }
-    }
-}
-
-// 自定义Fighter实现
-class UserApiFighter extends Fighter {
-    public UserApiFighter(@Nonnull AircraftCarrierDeck deck, int port) {
-        super(deck, port);
-    }
-    
-    @Override
-    protected void configureHttpServerRoutes(Router router, 
-                                           KeelIssueRecorder<KeelEventLog> httpServerLogger) {
-        // 健康检查接口
-        router.get("/health").handler(ctx -> {
-            httpServerLogger.info("健康检查请求");
-            ctx.response()
-               .putHeader("Content-Type", "application/json")
-               .end("{\"status\":\"UP\",\"timestamp\":\"" + Instant.now() + "\"}");
-        });
-        
-        // 用户信息接口
-        router.get("/api/users/:id").handler(ctx -> {
-            String userId = ctx.pathParam("id");
-            httpServerLogger.info("获取用户信息请求", "userId", userId);
-            
-            String userJson = String.format(
-                "{\"id\":\"%s\",\"name\":\"用户%s\",\"timestamp\":\"%s\"}", 
-                userId, userId, Instant.now()
-            );
-            
-            ctx.response()
-               .putHeader("Content-Type", "application/json")
-               .end(userJson);
-        });
-    }
-    
-    @Override
-    protected Future<Void> beforeStartHttpServer() {
-        getUnitLogger().info("正在初始化HTTP服务");
-        return Future.succeededFuture();
     }
 }
 ```

@@ -8,7 +8,7 @@
 
 ### 1. HealthMonitor (抽象基类)
 
-`HealthMonitor<X>` 是健康监控的抽象基类，继承自 `KeelVerticleImplPure`。
+`HealthMonitor<X>` 是健康监控的抽象基类，继承自 `KeelVerticleImpl`。
 
 #### 关键特性
 - **泛型设计**: 支持不同类型的数据记录格式

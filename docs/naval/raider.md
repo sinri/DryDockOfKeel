@@ -8,7 +8,7 @@
 
 | 类名 | 描述 |
 |------|------|
-| `Privateer` | 私掠船基类，提供快速启动和配置加载功能 |
+| `Privateer` | 私掠船基类，继承自 `Warship`，提供快速启动和配置加载功能 |
 | `ClassFileGeneratorForMySQLTables` | MySQL表类文件生成器，自动生成表对应的Java类 |
 
 ## 核心组件
@@ -17,32 +17,47 @@
 
 **位置**: `src/main/java/io/github/sinri/drydock/naval/raider/Privateer.java`
 
-私掠船是一个抽象基类，继承自 `KeelInstantRunner`，专为快速开发和一次性任务设计。
+私掠船是一个抽象基类，继承自 `Warship`，专为快速开发和一次性任务设计。
 
 #### 主要特点
-- **快速启动**: 基于 `KeelInstantRunner` 的即时运行能力
+- **快速启动**: 基于 `Warship` 的战舰启动能力
 - **配置管理**: 自动加载本地 `config.properties` 配置文件
-- **环境准备**: 提供可重写的环境准备方法
+- **生命周期管理**: 提供可重写的启动和结束方法
 - **轻量级**: 最小化的依赖和初始化流程
+- **反射启动**: 支持通过反射机制动态创建实例并启动
 
 #### 核心方法
 
 ```java
-// 加载本地配置文件
+// 私掠船特定的启动逻辑（必须实现的抽象方法）
+abstract protected Future<Void> launchAsPrivateer()
+
+// 启动前的准备工作（可重写）
+protected Future<Void> starting()
+
+// 结束时的清理工作（可重写）
+protected Future<Void> ending()
+
+// 加载本地配置文件（可重写）
 protected void loadLocalConfiguration()
 
-// 环境准备（可重写）
-protected Future<Void> prepareEnvironment()
-
-// 最终启动方法（不可重写）
-protected final Future<Void> starting()
+// 主入口点（静态方法）
+public static void main(String[] args)
 ```
 
 #### 启动流程
 
 1. **本地配置加载** - 自动加载 `config.properties` 文件
-2. **环境准备** - 调用 `prepareEnvironment()` 方法进行自定义准备工作
-3. **任务执行** - 执行具体的业务逻辑
+2. **Keel初始化** - 初始化 Vert.x 和 Keel 框架
+3. **远程配置加载** - 加载远程配置（默认为空实现）
+4. **启动准备** - 调用 `starting()` 方法进行启动前准备
+5. **执行任务** - 调用 `launchAsPrivateer()` 方法执行具体业务逻辑
+6. **清理工作** - 无论成功或失败都会调用 `ending()` 方法进行清理
+
+#### 版本演进
+
+- **1.2.0**: 依赖于 `KeelInstantRunner`，直到 Keel 4.1.0 被废弃
+- **2.1.0**: 重构实现，改为继承 `Warship`，与之前版本不兼容
 
 #### 使用示例
 
@@ -50,19 +65,26 @@ protected final Future<Void> starting()
 public class DataMigrationPrivateer extends Privateer {
     
     @Override
-    protected Future<Void> prepareEnvironment() {
-        // 准备数据库连接等资源
+    protected Future<Void> starting() {
+        // 启动前的准备工作
         getUnitLogger().info("准备数据迁移环境");
         return Future.succeededFuture();
     }
     
     @Override
-    protected Future<Void> work() {
-        // 执行数据迁移任务
+    protected Future<Void> launchAsPrivateer() {
+        // 执行具体的业务逻辑
         getUnitLogger().info("开始执行数据迁移");
         return performDataMigration()
             .onSuccess(v -> getUnitLogger().info("数据迁移完成"))
             .onFailure(error -> getUnitLogger().error("数据迁移失败", error));
+    }
+    
+    @Override
+    protected Future<Void> ending() {
+        // 清理工作
+        getUnitLogger().info("清理资源");
+        return Future.succeededFuture();
     }
     
     private Future<Void> performDataMigration() {
@@ -70,9 +92,8 @@ public class DataMigrationPrivateer extends Privateer {
         return Future.succeededFuture();
     }
     
-    public static void main(String[] args) {
-        new DataMigrationPrivateer().run();
-    }
+    // 注意：不需要重写main方法，直接使用父类的main方法即可
+    // 在IDE中右键运行此类，或使用命令行: java DataMigrationPrivateer
 }
 ```
 
@@ -102,6 +123,9 @@ protected String getTablePackagePath()                 // 表类文件路径
 public boolean isProvideConstSchema()                  // 是否提供Schema常量
 public boolean isProvideConstTable()                   // 是否提供Table常量  
 public boolean isProvideConstSchemaAndTable()          // 是否提供Schema和Table常量
+
+// 辅助方法
+protected String buildPackageNameForSchema(String schemaName)  // 构建Schema包名
 ```
 
 #### 核心生成方法
@@ -153,13 +177,14 @@ public class MyTableClassGenerator extends ClassFileGeneratorForMySQLTables {
     }
     
     @Override
-    protected Future<Void> prepareEnvironment() {
+    protected Future<Void> starting() {
         // 初始化数据库连接等
+        getUnitLogger().info("初始化代码生成器");
         return Future.succeededFuture();
     }
     
     @Override
-    protected Future<Void> work() {
+    protected Future<Void> launchAsPrivateer() {
         // 生成用户数据库的所有表类
         return rebuildTablesInSchema(
             "userdb",                    // 数据源名称
@@ -176,9 +201,8 @@ public class MyTableClassGenerator extends ClassFileGeneratorForMySQLTables {
         });
     }
     
-    public static void main(String[] args) {
-        new MyTableClassGenerator().run();
-    }
+    // 注意：不需要重写main方法，直接使用父类的main方法即可
+    // 在IDE中右键运行此类，或使用命令行: java MyTableClassGenerator
 }
 ```
 
@@ -232,10 +256,10 @@ src/main/java/
 
 ## 版本历史
 
-- **1.2.0**: 引入 `Privateer` 基类
+- **1.2.0**: 引入 `Privateer` 基类，基于 `KeelInstantRunner`
 - **1.2.4**: 添加 `ClassFileGeneratorForMySQLTables` 类
 - **1.5.11**: 改进文件管理机制，添加暂存和回滚功能
-- **2.0.0**: 提供默认的 `prepareEnvironment()` 实现
+- **2.1.0**: 重构 `Privateer` 实现，改为继承 `Warship`，与之前版本不兼容
 
 ## 最佳实践
 
@@ -252,8 +276,9 @@ src/main/java/
 
 ### 3. 错误处理
 
-- 重写 `prepareEnvironment()` 方法进行环境检查
-- 在 `work()` 方法中实现具体的业务逻辑和错误处理
+- 重写 `starting()` 方法进行环境检查和准备
+- 在 `launchAsPrivateer()` 方法中实现具体的业务逻辑和错误处理
+- 重写 `ending()` 方法进行资源清理
 - 利用 Vert.x Future 的链式调用进行异步错误处理
 
 ### 4. 日志记录
@@ -261,6 +286,13 @@ src/main/java/
 - 使用内置的 `getUnitLogger()` 进行日志记录
 - 配置阿里云SLS进行集中日志管理
 - 在关键步骤记录详细的执行信息
+
+### 5. 启动方式
+
+- 子类**不应该重写main方法**，直接使用父类提供的main方法
+- 在IDE中右键运行子类，或使用命令行 `java ClassName`
+- **不要直接调用 `launch()` 方法**，应该通过main方法启动
+- 确保在 `launchAsPrivateer()` 方法中实现具体的业务逻辑
 
 ## 适用场景
 
@@ -279,8 +311,13 @@ src/main/java/
 
 ## 注意事项
 
-1. **配置文件**: 确保 `config.properties` 文件在类路径中
-2. **数据库权限**: 生成器需要对目标数据库有读取权限
-3. **文件权限**: 确保对目标目录有写入权限
-4. **备份机制**: 生成前会自动备份现有文件，但建议使用版本控制系统
-5. **包名规范**: 遵循Java包命名规范，避免使用特殊字符
+1. **继承结构**: `Privateer` 继承自 `Warship`，而非 `KeelInstantRunner`
+2. **版本兼容性**: 2.1.0 版本的 `Privateer` 与之前版本不兼容
+3. **必须实现**: 子类必须实现 `launchAsPrivateer()` 抽象方法
+4. **启动方式**: **不要重写main方法**，不要直接调用 `launch()` 方法，应通过父类的main方法启动
+5. **反射机制**: 父类main方法通过 `sun.java.command` 系统属性获取当前运行的类名进行反射启动
+6. **配置文件**: 确保 `config.properties` 文件在类路径中
+7. **数据库权限**: 生成器需要对目标数据库有读取权限
+8. **文件权限**: 确保对目标目录有写入权限
+9. **备份机制**: 生成前会自动备份现有文件，但建议使用版本控制系统
+10. **包名规范**: 遵循Java包命名规范，避免使用特殊字符

@@ -55,6 +55,13 @@ aviation/
 ### 1. 基本应用程序结构
 
 ```java
+import io.github.sinri.drydock.aviation.carrier.AircraftCarrier;
+import io.github.sinri.drydock.aviation.aircraft.Bomber;
+import io.github.sinri.drydock.aviation.aircraft.Drone;
+import io.github.sinri.drydock.aviation.aircraft.Fighter;
+
+import javax.annotation.Nullable;
+
 public class MyApplication extends AircraftCarrier {
     
     // 实现必要的抽象方法
@@ -80,7 +87,7 @@ public class MyApplication extends AircraftCarrier {
     }
     
     @Override
-    protected Fighter constructFighter(Integer port) {
+    protected Fighter constructFighter(@Nullable Integer port) {
         return new MyFighter(this, port);
     }
     
