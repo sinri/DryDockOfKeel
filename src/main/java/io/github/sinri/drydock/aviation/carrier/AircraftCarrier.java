@@ -147,7 +147,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     protected abstract Future<Void> loadRemoteConfiguration(@Nonnull CommandLine.ParseResult parseResult);
 
     @Override
-    protected final int runWithCommandLine(CommandLine.ParseResult parseResult) throws CommandLine.ExecutionException, CommandLine.ParameterException {
+    protected final void runWithCommandLine(CommandLine.ParseResult parseResult) throws CommandLine.ExecutionException, CommandLine.ParameterException {
         long startTime = System.currentTimeMillis();
 
         // as of 2.1.0, register JsonifiableSerializer before everything.
@@ -230,18 +230,21 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                 return Future.succeededFuture();
             })
             .compose(v -> {
-                return ready(parseResult)
-                        .onSuccess(done -> {
-                            long endTime = System.currentTimeMillis();
-                            getUnitLogger().info("Ready, spent " + (endTime - startTime) + " ms");
-                        });
+                return ready(parseResult);
             })
-            .onFailure(throwable -> {
-                getUnitLogger().exception(throwable, "SINK");
-                System.exit(1);
-            });
-
-        return 0;
+            .compose(done -> {
+                long endTime = System.currentTimeMillis();
+                getUnitLogger().info("Ready, spent " + (endTime - startTime) + " ms");
+                return Future.succeededFuture();
+            })
+            .compose(
+                    Future::succeededFuture,
+                    throwable -> {
+                        getUnitLogger().exception(throwable, "SINK");
+                        System.exit(1);
+                        return Future.succeededFuture();
+                    }
+            );
     }
 
     /**

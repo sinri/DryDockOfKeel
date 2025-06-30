@@ -63,9 +63,19 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
         }
 
         CommandLine cmd = new CommandLine(spec);
-        cmd.setExecutionStrategy(this::runWithCommandLine);
-        int exitCode = cmd.execute(args);
-        System.exit(exitCode);
+
+        CommandLine.ParseResult parseResult = cmd.parseArgs(args);
+        runWithCommandLine(parseResult);
+
+        //        cmd.setExecutionStrategy(parseResult -> {
+        //            Integer resultCode = runWithCommandLine(parseResult).await();
+        //            if (resultCode == null) {
+        //                resultCode = 0;
+        //            }
+        //            return resultCode;
+        //        });
+        //        int exitCode = cmd.execute(args);
+        //        getUnitLogger().info("ExitCode: " + exitCode);
     }
 
     @Nullable
@@ -90,7 +100,7 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
     @Nonnull
     protected abstract String buildCliDescription();
 
-    protected abstract int runWithCommandLine(CommandLine.ParseResult parseResult) throws CommandLine.ExecutionException, CommandLine.ParameterException;
+    protected abstract void runWithCommandLine(CommandLine.ParseResult parseResult) throws CommandLine.ExecutionException, CommandLine.ParameterException;
 
     @Override
     public KeelIssueRecordCenter getIssueRecordCenter() {
