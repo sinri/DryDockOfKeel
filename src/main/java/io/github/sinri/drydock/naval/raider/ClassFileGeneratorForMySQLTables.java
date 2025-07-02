@@ -101,10 +101,12 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
                        }
                    })
                    .compose(dirEnsured -> {
+                       getUnitLogger().debug("Table Row Class Directory Ensured as " + dir);
                        return this.stashOldClassFiles(dir)
                                   .compose((Void v) -> mySQLDataSource.withConnection(sqlConnection -> {
                                       var x = new TableRowClassSourceCodeGenerator(sqlConnection)
                                               .forSchema(schemaName);
+                                      x.setLogger(getUnitLogger());
                                       if (tables != null) {
                                           x.forTables(tables);
                                       }
@@ -124,7 +126,10 @@ abstract public class ClassFileGeneratorForMySQLTables extends Privateer {
                                           standard.setVcsFriendly(true);
                                       });
 
-                                      return x.generate(getTablePackage() + "." + dataSourceName + "." + schemaPackageName);
+                                      return x.generate(
+                                              getTablePackage() + "." + dataSourceName + "." + schemaPackageName,
+                                              getTablePackagePath() + "/" + dataSourceName + "/" + schemaPackageName
+                                      );
                                   }))
                                   .compose(
                                           v -> this.removeOldClassFiles(dir),

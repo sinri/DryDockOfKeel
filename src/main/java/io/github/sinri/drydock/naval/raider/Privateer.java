@@ -209,4 +209,10 @@ public abstract class Privateer extends Warship {
         getUnitLogger().debug("ending...");
         return Future.succeededFuture();
     }
+
+    @Override
+    protected void whenWarshipSetOff(long startTime) {
+        super.whenWarshipSetOff(startTime);
+        System.exit(0);
+    }
 }
