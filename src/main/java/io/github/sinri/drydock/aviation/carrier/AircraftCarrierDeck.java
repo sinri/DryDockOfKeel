@@ -66,16 +66,6 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
 
         CommandLine.ParseResult parseResult = cmd.parseArgs(args);
         runWithCommandLine(parseResult);
-
-        //        cmd.setExecutionStrategy(parseResult -> {
-        //            Integer resultCode = runWithCommandLine(parseResult).await();
-        //            if (resultCode == null) {
-        //                resultCode = 0;
-        //            }
-        //            return resultCode;
-        //        });
-        //        int exitCode = cmd.execute(args);
-        //        getUnitLogger().info("ExitCode: " + exitCode);
     }
 
     @Nullable

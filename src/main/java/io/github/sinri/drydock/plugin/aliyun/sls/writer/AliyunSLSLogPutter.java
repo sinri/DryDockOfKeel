@@ -1,6 +1,7 @@
 package io.github.sinri.drydock.plugin.aliyun.sls.writer;
 
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.entity.LogGroup;
+import io.github.sinri.drydock.plugin.aliyun.sls.writer.entity.LogItem;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.protocol.Lz4Utils;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
- * @since 1.0
+ * @since 2.1.0
  */
 class AliyunSLSLogPutter {
     @Nonnull
@@ -41,8 +42,11 @@ class AliyunSLSLogPutter {
     }
 
     /**
-     * Build source from configuration. Source Expression should be: - EMPTY/BLANK STRING or NULL: use SLS default
-     * source generation; - A TEMPLATED STRING --- Rule 1: Replace [IP] to local address;
+     * Build source from configuration.
+     * Source Expression should be:
+     * - EMPTY/BLANK STRING or NULL: use SLS default source generation;
+     * - A TEMPLATED STRING
+     * --- Rule 1: Replace [IP] to local address;
      */
     @Nonnull
     public static String buildSource(@Nullable String configuredSourceExpression) {
@@ -59,7 +63,55 @@ class AliyunSLSLogPutter {
     }
 
     public void close() {
+        Keel.getLogger().debug("Closing AliyunSLSLogPutter web client");
         this.webClient.close();
+    }
+
+    /**
+     * 阿里云日志服务要求日志组中每条日志下的Value部分建议不超过1MB，而写入日志的接口每一次可以接受的原始数据大小不超过10MB。
+     * 所以需要将日志组拆分成多个日志组，尽量确保每次调用不超标。
+     * <p>
+     * 拆分规则为仅看日志组里的Value部分字节数来计算，在日志组内Value已达到5MB时即拆分。
+     *
+     * @param logGroup 需要拆分的日志组
+     * @return 拆分后的日志组列表
+     */
+    private List<LogGroup> divideLogGroup(@Nonnull LogGroup logGroup) {
+        List<LogGroup> array = new ArrayList<>();
+
+        LogGroup ptr = new LogGroup(logGroup.getTopic(), logGroup.getSource());
+        ptr.addLogTags(logGroup.getLogTags());
+
+        List<LogItem> logItems = logGroup.getLogItems();
+        long byteCount = 0;
+        for (var logItem : logItems) {
+            for (var c : logItem.getContents()) {
+                String v = c.getValue();
+                if (v != null) {
+                    byteCount += v.getBytes(StandardCharsets.UTF_8).length;
+                }
+            }
+            ptr.addLogItem(logItem);
+
+            if (byteCount > 5 * 1024 * 1024) {
+                // divide here
+                array.add(ptr);
+                ptr = new LogGroup(logGroup.getTopic(), logGroup.getSource());
+                ptr.addLogTags(logGroup.getLogTags());
+                byteCount = 0; // Reset byte count for new group
+            }
+        }
+
+        if (!ptr.getLogItems().isEmpty()) {
+            array.add(ptr);
+        }
+
+        return array;
+    }
+
+    public Future<Void> putLogs(@Nonnull String project, @Nonnull String logstore, @Nonnull LogGroup logGroup) {
+        List<LogGroup> logGroups = divideLogGroup(logGroup);
+        return Keel.asyncCallIteratively(logGroups, x -> putLogsImpl(project, logstore, x));
     }
 
     /**
@@ -70,7 +122,7 @@ class AliyunSLSLogPutter {
      * @param logGroup LogGroup to be sent
      * @return Future of void if successful, or failed future with error message
      */
-    public Future<Void> putLogs(@Nonnull String project, @Nonnull String logstore, @Nonnull LogGroup logGroup) {
+    private Future<Void> putLogsImpl(@Nonnull String project, @Nonnull String logstore, @Nonnull LogGroup logGroup) {
         String uri = String.format("/logstores/%s/shards/lb", logstore);
         String url = String.format("https://%s.%s%s", project, endpoint, uri);
 
@@ -93,8 +145,7 @@ class AliyunSLSLogPutter {
 
         try {
             var contentMd5 = Base64.getEncoder().encodeToString(
-                    java.security.MessageDigest.getInstance("MD5").digest(payload.getBytes())
-            );
+                    java.security.MessageDigest.getInstance("MD5").digest(payload.getBytes()));
             headers.put("Content-MD5", contentMd5);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("MD5 algorithm not available", e);
@@ -108,21 +159,25 @@ class AliyunSLSLogPutter {
                 date,
                 headers,
                 uri,
-                null
-        );
+                null);
         headers.put("Authorization", "LOG " + accessKeyId + ":" + signature);
 
         HttpRequest<Buffer> request = this.webClient.postAbs(url);
         headers.forEach(request::putHeader);
         return request.sendBuffer(payload)
                       .compose(bufferHttpResponse -> {
-                          if (bufferHttpResponse.statusCode() == 200) {
+                          if (bufferHttpResponse.statusCode() != 200) {
                               // System.out.println("write to sls: 200");
-                              return Future.succeededFuture();
+                              Keel.getLogger().error("put log failed [" + bufferHttpResponse.statusCode() + "] "
+                                      + bufferHttpResponse.bodyAsString());
                           }
-                          return Future.failedFuture("put log failed [" + bufferHttpResponse.statusCode() + "] "
-                                  + bufferHttpResponse.bodyAsString());
-                      });
+                          return Future.succeededFuture();
+                      })
+                      .recover(throwable -> {
+                          Keel.getLogger().exception(throwable, "put log failed [X]");
+                          return Future.succeededFuture();
+                      })
+                      .mapEmpty();
     }
 
     /**
@@ -146,22 +201,39 @@ class AliyunSLSLogPutter {
         return sdf.format(new Date());
     }
 
+    /**
+     * 如果是GET请求这样没有HTTP Request Body，则在签名计算过程里contentType和body均对应作空行处理。
+     *
+     * @param method      HTTP方法，如 GET, POST 等
+     * @param body        HTTP请求体，可以为 null
+     * @param contentType Content-Type 头部，可以为 null
+     * @param date        请求时间
+     * @param headers     请求头部集合
+     * @param uri         请求URI
+     * @param queries     查询参数字符串，可以为 null
+     * @return 计算得到的签名字符串
+     */
     private String calculateSignature(
             String method,
-            Buffer body,
-            String contentType,
+            @Nullable Buffer body,
+            @Nullable String contentType,
             String date,
             Map<String, String> headers,
             String uri,
-            String queries
-    ) {
+            @Nullable String queries) {
         StringBuilder sb = new StringBuilder();
         sb.append(method).append("\n");
         if (body != null) {
             String md5 = Keel.digestHelper().MD5(body.getBytes());
             sb.append(md5).append("\n");
+        } else {
+            sb.append("\n");
         }
-        sb.append(contentType).append("\n");
+        if (contentType != null) {
+            sb.append(contentType).append("\n");
+        } else {
+            sb.append("\n");
+        }
         sb.append(date).append("\n");
 
         List<String> headerLines = headers.keySet().stream()
@@ -183,8 +255,7 @@ class AliyunSLSLogPutter {
             Mac mac = Mac.getInstance(HmacSHA1);
             SecretKeySpec signingKey = new SecretKeySpec(
                     accessKeySecret.getBytes(StandardCharsets.UTF_8),
-                    HmacSHA1
-            );
+                    HmacSHA1);
             mac.init(signingKey);
             byte[] signatureBytes = mac.doFinal(signStr.getBytes(StandardCharsets.UTF_8));
 

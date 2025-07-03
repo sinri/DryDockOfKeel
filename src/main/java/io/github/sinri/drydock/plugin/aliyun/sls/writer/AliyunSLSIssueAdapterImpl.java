@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
- * @since 1.0
+ * @since 2.1.0
  */
 public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     private final String source;
@@ -38,6 +38,9 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
         this.source = AliyunSLSLogPutter.buildSource(aliyunSlsConfig.getSource());
         this.logPutter = this.buildProducer();
+
+        // let us start
+        this.start();
     }
 
     public boolean isDisabled() {
@@ -97,6 +100,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         if (this.logPutter != null) {
             this.logPutter.close();
         }
+        promise.complete();
     }
 
     @Override
@@ -112,4 +116,8 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         return isStopped() && this.logPutter == null;
     }
 
+    @Override
+    protected int bufferSize() {
+        return 512;
+    }
 }
