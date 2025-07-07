@@ -154,7 +154,7 @@ public abstract class Privateer extends Warship {
      * @return 表示启动完成的 Future
      */
     @Override
-    protected Future<Void> launchAsWarship() {
+    protected final Future<Void> launchAsWarship() {
         // 设置调试级别的日志输出
         getUnitLogger().setVisibleLevel(KeelLogLevel.DEBUG);
         
