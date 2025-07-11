@@ -245,7 +245,6 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                         return Future.succeededFuture();
                     }
             );
-        forceMainThreadWait();
     }
 
     /**
@@ -302,19 +301,5 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     @Override
     public KeelMetricRecorder getMetricRecorder() {
         return this.metricRecorder;
-    }
-
-    /**
-     * 目前观测到，Aliyun 上的 OpenJDK Dragonwell 17 似乎存在一些和 Vert.x 5 的不协调，会导致异步加载完verticles后，直接进程退出。
-     * 同样的程序，Temurin-17 则没有这个问题。
-     * 因此，为了临时尝试解决这个问题，提供这个机制，按需重载之。
-     * <p>
-     * 例如，可以用如下的实现来阻止主程序退出：<br>
-     * {@code CountDownLatch latch = new CountDownLatch(1);latch.wait();}
-     *
-     * @since 2.1.0
-     */
-    protected void forceMainThreadWait() {
-
     }
 }

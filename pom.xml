@@ -12,6 +12,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <vertxVersion>5.0.1</vertxVersion>
     </properties>
 
     <name>Dry Dock of Keel</name>
@@ -50,14 +51,9 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-junit5</artifactId>
-            <version>5.0.1</version>
+            <version>${vertxVersion}</version>
             <scope>test</scope>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>io.vertx</groupId>-->
-        <!--            <artifactId>vertx-launcher-legacy-cli</artifactId>-->
-        <!--            <version>5.0.1</version>-->
-        <!--        </dependency>-->
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
@@ -73,12 +69,6 @@
             <artifactId>protobuf-java</artifactId>
             <version>4.31.1</version>
         </dependency>
-        <!--        &lt;!&ndash; https://mvnrepository.com/artifact/com.aliyun.openservices/aliyun-log-producer &ndash;&gt;-->
-        <!--        <dependency>-->
-        <!--            <groupId>com.aliyun.openservices</groupId>-->
-        <!--            <artifactId>aliyun-log-producer</artifactId>-->
-        <!--            <version>0.3.24</version>-->
-        <!--        </dependency>-->
     </dependencies>
 
     <build>
