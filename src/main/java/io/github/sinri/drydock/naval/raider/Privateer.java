@@ -21,16 +21,14 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  *   <li>简单的应用程序启动</li>
  *   <li>开发过程中的调试和验证</li>
  * </ul>
- * </p>
- * 
+ *
  * <p>
  * 版本演进：
  * <ul>
  *   <li>1.2.0: 依赖于 {@link KeelInstantRunner}，直到 Keel 4.1.0 被废弃</li>
  *   <li>2.1.0: 重构实现，与之前版本不兼容</li>
  * </ul>
- * </p>
- * 
+ *
  * <p>
  * 使用方式：
  * <ol>
@@ -38,7 +36,6 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  *   <li>在IDE中通过 {@link #main(String[])} 方法启动，其会调用 {@link #launch()} 方法。注意不要自行重写 main 方法或直接调用 {@link #launch()} 方法。</li>
  *   <li>可选择性重写 {@link #starting()} 和 {@link #ending()} 方法自定义生命周期</li>
  * </ol>
- * </p>
  *
  * @since 2.1.0
  */
@@ -49,8 +46,7 @@ public abstract class Privateer extends Warship {
      * <p>
      * 通过反射机制动态创建调用类的实例并启动。
      * 这种设计允许子类直接使用 main 方法启动而无需重复编写启动逻辑。
-     * </p>
-     * 
+     *
      * @param args 命令行参数（当前未使用）
      * @throws ClassNotFoundException 当无法找到调用类时抛出
      * @throws NoSuchMethodException 当调用类缺少无参构造函数时抛出
@@ -80,11 +76,9 @@ public abstract class Privateer extends Warship {
      * <p>
      * 私掠船提供默认实现：使用简单的输出中心，将日志直接输出到控制台，
      * 适用于开发和测试环境。
-     * </p>
      * <p>
      * 子类可以重写此方法以提供自定义的日志记录中心实现。
-     * </p>
-     * 
+     *
      * @return 输出类型的事件日志记录中心
      */
     @Override
@@ -96,11 +90,9 @@ public abstract class Privateer extends Warship {
      * 构建 Vert.x 选项配置。
      * <p>
      * 私掠船提供默认实现：使用默认的 Vert.x 配置，适用于大多数开发和测试场景。
-     * </p>
      * <p>
      * 子类可以重写此方法以提供自定义的 Vert.x 配置。
-     * </p>
-     * 
+     *
      * @return 默认的 VertxOptions 实例
      */
     @Override
@@ -113,10 +105,8 @@ public abstract class Privateer extends Warship {
      * <p>
      * 私掠船提供默认实现：尝试加载 "config.properties" 配置文件。
      * 如果文件不存在，操作会静默失败。
-     * </p>
      * <p>
      * 子类可以重写此方法以实现自定义的本地配置加载逻辑。
-     * </p>
      */
     @Override
     protected void loadLocalConfiguration() {
@@ -127,11 +117,9 @@ public abstract class Privateer extends Warship {
      * 加载远程配置。
      * <p>
      * 私掠船提供默认实现：不加载任何远程配置，直接返回成功的 Future。
-     * </p>
      * <p>
      * 子类可以重写此方法以实现自定义的远程配置加载逻辑。
-     * </p>
-     * 
+     *
      * @return 表示加载完成的成功 Future
      */
     @Override
@@ -149,8 +137,7 @@ public abstract class Privateer extends Warship {
      *   <li>调用子类实现的 {@link #launchAsPrivateer()}</li>
      *   <li>无论成功或失败都执行清理工作 {@link #ending()}</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @return 表示启动完成的 Future
      */
     @Override
@@ -171,8 +158,7 @@ public abstract class Privateer extends Warship {
      * <p>
      * 子类必须实现此方法以定义具体的业务逻辑。
      * 此方法在完成基础设施初始化后被调用。
-     * </p>
-     * 
+     *
      * @return 表示私掠船启动完成的 Future
      */
     abstract protected Future<Void> launchAsPrivateer();
@@ -181,11 +167,9 @@ public abstract class Privateer extends Warship {
      * 启动前的准备工作。
      * <p>
      * 私掠船提供默认实现：记录启动日志并返回成功的 Future。
-     * </p>
      * <p>
      * 子类可以重写此方法以添加自定义的启动前准备工作。
-     * </p>
-     * 
+     *
      * @return 表示准备工作完成的 Future
      */
     protected Future<Void> starting() {
@@ -198,11 +182,9 @@ public abstract class Privateer extends Warship {
      * <p>
      * 私掠船提供默认实现：记录结束日志并返回成功的 Future。
      * 无论启动成功或失败，此方法都会被调用。
-     * </p>
      * <p>
      * 子类可以重写此方法以添加自定义的清理逻辑。
-     * </p>
-     * 
+     *
      * @return 表示清理工作完成的 Future
      */
     protected Future<Void> ending() {
