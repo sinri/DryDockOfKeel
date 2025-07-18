@@ -8,9 +8,9 @@
 ```xml
 
 <dependency>
-    <groupId>io.github.sinri</groupId>
-    <artifactId>DryDock</artifactId>
-  <version>1.4.22</version>
+  <groupId>io.github.sinri</groupId>
+  <artifactId>DryDock</artifactId>
+  <version>2.1.0</version>
 </dependency>
 ```
 
