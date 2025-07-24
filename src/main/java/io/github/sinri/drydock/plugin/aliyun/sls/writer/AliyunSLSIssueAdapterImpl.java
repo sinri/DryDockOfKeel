@@ -2,6 +2,7 @@ package io.github.sinri.drydock.plugin.aliyun.sls.writer;
 
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.entity.LogGroup;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.entity.LogItem;
+import io.github.sinri.keel.core.json.JsonifiedThrowable;
 import io.github.sinri.keel.facade.configuration.KeelConfigElement;
 import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.github.sinri.keel.logger.issue.recorder.adapter.AliyunSLSIssueAdapter;
@@ -85,8 +86,9 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
             });
             Throwable exception = eventLog.exception();
             if (exception != null) {
-                logItem.addContent(KeelIssueRecord.AttributeException,
-                        String.valueOf(issueRecordRender().renderThrowable(exception)));
+                // as of 2.1.0.1, use JsonifiedThrowable
+                JsonifiedThrowable jsonifiedThrowable = JsonifiedThrowable.wrap(exception);
+                logItem.addContent(KeelIssueRecord.AttributeException, jsonifiedThrowable.toJsonExpression());
             }
             logGroup.addLogItem(logItem);
         });
