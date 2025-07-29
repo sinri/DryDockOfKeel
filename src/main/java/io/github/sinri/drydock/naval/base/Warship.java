@@ -1,6 +1,7 @@
 package io.github.sinri.drydock.naval.base;
 
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
+import io.github.sinri.keel.core.json.JsonifiableSerializer;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
@@ -61,6 +62,13 @@ abstract public class Warship implements Boat {
     }
 
     /**
+     * @since 2.1.0
+     */
+    protected void loadJsonifiableSerializer() {
+        JsonifiableSerializer.register();
+    }
+
+    /**
      * 通过已加载的本地配置进行Vertx配置的构造。 此时可以使用航海日志记录器。
      */
     abstract public VertxOptions buildVertxOptions();
@@ -71,6 +79,8 @@ abstract public class Warship implements Boat {
     @Override
     public final void launch() {
         long startTime = System.currentTimeMillis();
+
+        loadJsonifiableSerializer();
 
         loadLocalConfiguration();
         this.getUnitLogger().info("LOCAL CONFIG LOADED (if any)");
