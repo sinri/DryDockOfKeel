@@ -10,7 +10,7 @@
 <dependency>
   <groupId>io.github.sinri</groupId>
   <artifactId>DryDock</artifactId>
-  <version>2.1.0.1</version>
+  <version>2.1.1-rc.1</version>
 </dependency>
 ```
 
