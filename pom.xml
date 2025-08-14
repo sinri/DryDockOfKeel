@@ -6,7 +6,7 @@
 
     <groupId>io.github.sinri</groupId>
     <artifactId>DryDock</artifactId>
-    <version>1.4.26</version>
+    <version>1.4.27</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>io.github.sinri</groupId>
             <artifactId>Keel</artifactId>
-            <version>3.2.22</version>
+            <version>3.2.23</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.aliyun.openservices/aliyun-log-producer -->
         <dependency>
@@ -88,27 +88,27 @@
             <id>snapshot</id>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <version>2.4.1</version>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>shade</goal>
-                                </goals>
-                                <configuration>
-                                    <transformers>
-                                        <transformer
-                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                            <mainClass>io.github.sinri.drydock.DryDockerLauncher</mainClass>
-                                        </transformer>
-                                    </transformers>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
+                    <!--                    <plugin>-->
+                    <!--                        <groupId>org.apache.maven.plugins</groupId>-->
+                    <!--                        <artifactId>maven-shade-plugin</artifactId>-->
+                    <!--                        <version>2.4.1</version>-->
+                    <!--                        <executions>-->
+                    <!--                            <execution>-->
+                    <!--                                <phase>package</phase>-->
+                    <!--                                <goals>-->
+                    <!--                                    <goal>shade</goal>-->
+                    <!--                                </goals>-->
+                    <!--                                <configuration>-->
+                    <!--                                    <transformers>-->
+                    <!--                                        <transformer-->
+                    <!--                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+                    <!--                                            <mainClass>io.github.sinri.drydock.DryDockerLauncher</mainClass>-->
+                    <!--                                        </transformer>-->
+                    <!--                                    </transformers>-->
+                    <!--                                </configuration>-->
+                    <!--                            </execution>-->
+                    <!--                        </executions>-->
+                    <!--                    </plugin>-->
                 </plugins>
             </build>
             <distributionManagement>
@@ -122,27 +122,27 @@
             <id>release</id>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <version>2.4.1</version>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>shade</goal>
-                                </goals>
-                                <configuration>
-                                    <transformers>
-                                        <transformer
-                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                            <mainClass>io.github.sinri.drydock.DryDockerLauncher</mainClass>
-                                        </transformer>
-                                    </transformers>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
+                    <!--                    <plugin>-->
+                    <!--                        <groupId>org.apache.maven.plugins</groupId>-->
+                    <!--                        <artifactId>maven-shade-plugin</artifactId>-->
+                    <!--                        <version>2.4.1</version>-->
+                    <!--                        <executions>-->
+                    <!--                            <execution>-->
+                    <!--                                <phase>package</phase>-->
+                    <!--                                <goals>-->
+                    <!--                                    <goal>shade</goal>-->
+                    <!--                                </goals>-->
+                    <!--                                <configuration>-->
+                    <!--                                    <transformers>-->
+                    <!--                                        <transformer-->
+                    <!--                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+                    <!--                                            <mainClass>io.github.sinri.drydock.DryDockerLauncher</mainClass>-->
+                    <!--                                        </transformer>-->
+                    <!--                                    </transformers>-->
+                    <!--                                </configuration>-->
+                    <!--                            </execution>-->
+                    <!--                        </executions>-->
+                    <!--                    </plugin>-->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
