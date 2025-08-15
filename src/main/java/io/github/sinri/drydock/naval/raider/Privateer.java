@@ -9,6 +9,7 @@ import io.vertx.core.VertxOptions;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.CountDownLatch;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
@@ -40,6 +41,7 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * @since 2.1.0
  */
 public abstract class Privateer extends Warship {
+    private CountDownLatch countDownLatch;
 
     /**
      * 私掠船的主入口点。
@@ -48,27 +50,31 @@ public abstract class Privateer extends Warship {
      * 这种设计允许子类直接使用 main 方法启动而无需重复编写启动逻辑。
      *
      * @param args 命令行参数（当前未使用）
-     * @throws ClassNotFoundException 当无法找到调用类时抛出
-     * @throws NoSuchMethodException 当调用类缺少无参构造函数时抛出
+     * @throws ClassNotFoundException    当无法找到调用类时抛出
+     * @throws NoSuchMethodException     当调用类缺少无参构造函数时抛出
      * @throws InvocationTargetException 当构造函数调用失败时抛出
-     * @throws InstantiationException 当无法实例化调用类时抛出
-     * @throws IllegalAccessException 当访问构造函数被拒绝时抛出
+     * @throws InstantiationException    当无法实例化调用类时抛出
+     * @throws IllegalAccessException    当访问构造函数被拒绝时抛出
      */
-    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, InterruptedException {
         // 获取调用此 main 方法的类名
         String calledClass = System.getProperty("sun.java.command");
         // Keel.getLogger().debug(r -> r.message("Privateer Class: " + calledClass));
-        
+
         // 通过反射加载调用类
         Class<?> aClass = Class.forName(calledClass);
         // Keel.getLogger().debug(r -> r.message("Reflected Class: " + aClass));
-        
+
         // 获取无参构造函数并创建实例
         Constructor<?> constructor = aClass.getConstructor();
         Privateer testInstance = (Privateer) constructor.newInstance();
-        
+
+        testInstance.countDownLatch = new CountDownLatch(1);
+
         // 启动私掠船实例
         testInstance.launch();
+
+        testInstance.countDownLatch.await();
     }
 
     /**
@@ -137,6 +143,8 @@ public abstract class Privateer extends Warship {
      *   <li>调用子类实现的 {@link #launchAsPrivateer()}</li>
      *   <li>无论成功或失败都执行清理工作 {@link #ending()}</li>
      * </ol>
+     * <p>
+     *     As of 2.1.1, virtual thread would be applied when run in JDK 21+.
      *
      * @return 表示启动完成的 Future
      */
@@ -144,13 +152,22 @@ public abstract class Privateer extends Warship {
     protected final Future<Void> launchAsWarship() {
         // 设置调试级别的日志输出
         getUnitLogger().setVisibleLevel(KeelLogLevel.DEBUG);
-        
+
         return starting()
-                .compose(v -> launchAsPrivateer())
+                .compose(v -> {
+                    if (Keel.reflectionHelper().isVirtualThreadsAvailable()) {
+                        return Keel.runInVerticleOnVirtualThread(this::launchAsPrivateer);
+                    } else {
+                        return launchAsPrivateer();
+                    }
+                })
                 .onFailure(e -> {
                     getUnitLogger().exception(e, "Thrown from launchAsPrivateer");
                 })
-                .eventually(this::ending);
+                .eventually(this::ending)
+                .andThen(ar -> {
+                    countDownLatch.countDown();
+                });
     }
 
     /**
@@ -158,6 +175,8 @@ public abstract class Privateer extends Warship {
      * <p>
      * 子类必须实现此方法以定义具体的业务逻辑。
      * 此方法在完成基础设施初始化后被调用。
+     * <p>
+     * As of 2.1.1, virtual thread would be applied when run in JDK 21+.
      *
      * @return 表示私掠船启动完成的 Future
      */
