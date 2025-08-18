@@ -26,8 +26,9 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * <p>
  * 版本演进：
  * <ul>
- *   <li>1.2.0: 依赖于 {@link KeelInstantRunner}，直到 Keel 4.1.0 被废弃</li>
+ *   <li>1.2.0: 依赖于 {@link KeelInstantRunner}，直到 Keel 4.1.0 其被废弃</li>
  *   <li>2.1.0: 重构实现，与之前版本不兼容</li>
+ *   <li>2.1.1: 支持 JDK 21+ 虚拟线程特性</li>
  * </ul>
  *
  * <p>
@@ -41,6 +42,12 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * @since 2.1.0
  */
 public abstract class Privateer extends Warship {
+    /**
+     * 用于控制程序退出的同步锁。
+     * <p>
+     * 在 main 方法中创建，在启动完成后通过 {@link #launchAsWarship()} 方法释放，
+     * 确保程序能够正确退出。
+     */
     private CountDownLatch countDownLatch;
 
     /**
@@ -144,7 +151,7 @@ public abstract class Privateer extends Warship {
      *   <li>无论成功或失败都执行清理工作 {@link #ending()}</li>
      * </ol>
      * <p>
-     *     As of 2.1.1, virtual thread would be applied when run in JDK 21+.
+     * 自 2.1.1 版本起，在 JDK 21+ 环境下将自动应用虚拟线程特性。
      *
      * @return 表示启动完成的 Future
      */
@@ -176,7 +183,7 @@ public abstract class Privateer extends Warship {
      * 子类必须实现此方法以定义具体的业务逻辑。
      * 此方法在完成基础设施初始化后被调用。
      * <p>
-     * As of 2.1.1, virtual thread would be applied when run in JDK 21+.
+     * 自 2.1.1 版本起，在 JDK 21+ 环境下将自动应用虚拟线程特性。
      *
      * @return 表示私掠船启动完成的 Future
      */
@@ -211,6 +218,14 @@ public abstract class Privateer extends Warship {
         return Future.succeededFuture();
     }
 
+    /**
+     * 战舰启航后的处理逻辑。
+     * <p>
+     * 私掠船在完成所有任务后，通过调用 {@link System#exit(int)} 强制退出程序。
+     * 这种设计确保了私掠船作为快速本地测试工具能够及时释放资源并退出。
+     *
+     * @param startTime 战舰启航的时间戳
+     */
     @Override
     protected void whenWarshipSetOff(long startTime) {
         super.whenWarshipSetOff(startTime);
