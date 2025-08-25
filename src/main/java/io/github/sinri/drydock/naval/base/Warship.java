@@ -100,6 +100,7 @@ abstract public class Warship implements Boat {
             .compose(done -> {
                 this.getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
                 issueRecordCenter = buildIssueRecordCenter();
+                Keel.setIssueRecordCenter(issueRecordCenter);
                 return launchAsWarship();
             })
             .onSuccess(done -> {
