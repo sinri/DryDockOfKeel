@@ -23,6 +23,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
@@ -97,6 +98,11 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                         .description("Disable receptionist functionality"),
                 new KeelCliOption()
                         .alias(optionReceptionistPort)
+                        .setValueValidator(s -> {
+                            return Pattern.compile("^[1-9][0-9]+$")
+                                          .matcher(s)
+                                          .matches();
+                        })
                         .description("Port for the receptionist")
         );
     }
@@ -175,7 +181,6 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     }
 
     private Future<Void> startWithKeelInitialized() {
-        this.addOneLatch();
         return Future.succeededFuture()
                      .compose(initialized -> {
                          getUnitLogger().info("KEEL INITIALIZED");
@@ -247,10 +252,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                          return Future.succeededFuture();
                      })
                      .compose(v -> {
-                         return ready()
-                                 .onSuccess(done -> {
-                                     this.releaseOneLatch();
-                                 });
+                         return ready();
                      });
     }
 

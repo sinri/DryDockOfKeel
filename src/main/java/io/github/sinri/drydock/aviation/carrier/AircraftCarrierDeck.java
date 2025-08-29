@@ -10,9 +10,6 @@ import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A base class for a unit as a program entrance with command line options.
@@ -33,8 +30,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class AircraftCarrierDeck implements CommonUnit {
 
-    private final AtomicInteger latchCounter = new AtomicInteger(0);
-    private final AtomicReference<CountDownLatch> latchRef = new AtomicReference<>();
     protected KeelIssueRecordCenter issueRecordCenter;
     private KeelIssueRecorder<KeelEventLog> unitLogger;
     private KeelCliArgs cliArgs;
@@ -59,11 +54,6 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
             }
             this.cliArgs = argsParser.parse(args);
             runWithCommandLine();
-
-            CountDownLatch countDownLatch = new CountDownLatch(latchCounter.get());
-            latchRef.set(countDownLatch);
-            countDownLatch.await();
-            System.exit(0);
         } catch (KeelCliArgsDefinitionError e) {
             unitLogger.exception(e, "Failed to build command line parser.");
             System.exit(1);
@@ -74,9 +64,6 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
             System.out.println("=== Arguments Error ===");
             System.out.println(e.getMessage());
             System.exit(2);
-        } catch (InterruptedException e) {
-            unitLogger.exception(e, "Failed to wait for latch.");
-            System.exit(3);
         }
     }
 
@@ -131,39 +118,5 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
 
     public KeelIssueRecorder<KeelEventLog> getUnitLogger() {
         return unitLogger;
-    }
-
-    /**
-     * Increments the counter associated with the latch mechanism.
-     * <p>
-     * This method manages the internal latch operation and ensures thread-safe
-     * updates to the latch counter by incrementing its value atomically.
-     *
-     * @since 2.1.1
-     */
-    public final void addOneLatch() {
-        if (latchRef.get() != null) {
-            throw new IllegalStateException("The latch has been initialized already.");
-        }
-        latchCounter.incrementAndGet();
-    }
-
-    /**
-     * Reduces the count of the internal latch by one, allowing threads waiting on the latch
-     * to continue execution if the count reaches zero.
-     * <p>
-     * This method provides thread-safe interaction with the latch referenced internally.
-     * <p>
-     * To be called by each aircraft at the end of service.
-     *
-     * @since 2.1.1
-     */
-    public final void releaseOneLatch() {
-        synchronized (latchRef) {
-            CountDownLatch countDownLatch = latchRef.get();
-            if (countDownLatch != null) {
-                countDownLatch.countDown();
-            }
-        }
     }
 }
