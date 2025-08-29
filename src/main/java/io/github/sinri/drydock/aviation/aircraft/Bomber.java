@@ -51,12 +51,26 @@ public abstract class Bomber extends Biplane {
      */
     abstract protected Future<Collection<KeelSundialPlan>> fetchSundialPlans(KeelIssueRecorder<SundialIssueRecord> sundialIssueRecorder);
 
+
+    /**
+     * Attempts to load and initialize a KeelSundial instance asynchronously.
+     *
+     * @return a future representing the asynchronous result of the KeelSundial deployment process.
+     * @deprecated The operation is marked as deprecated since version 2.1.1 and may be removed in future releases,
+     *         use {@link #load()} instead.
+     */
+    @Deprecated(since = "2.1.1")
+    public final Future<String> loadSundial() {
+        return load();
+    }
+
     /**
      * Try to build a KeelSundial instance and start it up. Do nothing if this ability is not required.
      *
-     * @return a future of the deployment of KeelSundial
+     * @return a future wraps the deployment id of KeelSundial
      */
-    public Future<String> loadSundial() {
+    @Override
+    public Future<String> load() {
         return Future.succeededFuture(this.buildSundial())
                      .compose(sundial -> {
                          if (sundial == null) return Future.succeededFuture();

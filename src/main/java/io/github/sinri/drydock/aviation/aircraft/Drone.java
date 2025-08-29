@@ -83,11 +83,24 @@ public abstract class Drone extends Biplane {
     abstract protected Future<KeelQueueTask> seekNextTask();
 
     /**
+     * Attempts to load and initialize a KeelQueue instance asynchronously.
+     *
+     * @return a future representing the asynchronous result of the KeelQueue deployment process.
+     * @deprecated The operation is marked as deprecated since version 2.1.1 and may be removed in future releases.
+     *         Use {@link #load()} instead.
+     */
+    @Deprecated(since = "2.1.1")
+    public final Future<String> loadQueue() {
+        return load();
+    }
+
+    /**
      * Try to build a KeelQueue instance and start it up. Do nothing if this ability is not required.
      *
      * @return a future as all work scheduled.
      */
-    public Future<String> loadQueue() {
+    @Override
+    public Future<String> load() {
         return Future.succeededFuture(this.buildQueue())
                      .compose(queue -> {
                          if (queue == null) return Future.succeededFuture();

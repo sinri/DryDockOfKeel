@@ -6,14 +6,14 @@
 
     <groupId>io.github.sinri</groupId>
     <artifactId>DryDock</artifactId>
-    <!--    <version>2.1.1-SNAPSHOT</version>-->
-    <version>2.1.1-rc.7</version>
+    <!--        <version>2.1.1-SNAPSHOT</version>-->
+    <version>2.1.1-rc.8</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <vertxVersion>5.0.2</vertxVersion>
+        <vertxVersion>5.0.3</vertxVersion>
     </properties>
 
     <name>Dry Dock of Keel</name>
@@ -47,18 +47,13 @@
         <dependency>
             <groupId>io.github.sinri</groupId>
             <artifactId>Keel</artifactId>
-            <version>4.1.1-rc.7</version>
+            <version>4.1.1-rc.8</version>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-junit5</artifactId>
             <version>${vertxVersion}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>info.picocli</groupId>
-            <artifactId>picocli</artifactId>
-            <version>4.7.7</version>
         </dependency>
         <dependency>
             <groupId>org.lz4</groupId>
@@ -119,7 +114,7 @@
             <distributionManagement>
                 <snapshotRepository>
                     <id>snapshots</id>
-                    <url>https://nexus.leqee.com/repository/snapshots/</url>
+                    <url>https://nexus.leqeegroup.com/repository/snapshots/</url>
                 </snapshotRepository>
             </distributionManagement>
         </profile>
@@ -167,18 +162,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <!--                    <plugin>-->
-                    <!--                        <groupId>org.sonatype.plugins</groupId>-->
-                    <!--                        <artifactId>nexus-staging-maven-plugin</artifactId>-->
-                    <!--                        <version>1.6.13</version>-->
-                    <!--                        <extensions>true</extensions>-->
-                    <!--                        <configuration>-->
-                    <!--                            <serverId>ossrh</serverId>-->
-                    <!--                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>-->
-                    <!--                            <autoReleaseAfterClose>true</autoReleaseAfterClose>-->
-                    <!--                            <stagingProgressTimeoutMinutes>20</stagingProgressTimeoutMinutes>-->
-                    <!--                        </configuration>-->
-                    <!--                    </plugin>-->
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
@@ -257,11 +240,11 @@
             <distributionManagement>
                 <snapshotRepository>
                     <id>snapshots</id>
-                    <url>https://nexus.leqee.com/repository/snapshots/</url>
+                    <url>https://nexus.leqeegroup.com/repository/snapshots/</url>
                 </snapshotRepository>
                 <repository>
                     <id>releases</id>
-                    <url>https://nexus.leqee.com/repository/releases/</url>
+                    <url>https://nexus.leqeegroup.com/repository/releases/</url>
                 </repository>
             </distributionManagement>
         </profile>

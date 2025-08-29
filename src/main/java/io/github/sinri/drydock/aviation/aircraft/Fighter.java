@@ -41,13 +41,13 @@ public abstract class Fighter extends Biplane {
     public final boolean isToStopServer() {
         return stopServerSwitch.get();
     }
-
     /**
      * Try to build a KeelHttpServer instance and start it up. Do nothing if this ability is not required.
      *
      * @return a future as all work scheduled.
      */
-    public Future<String> loadHttpServer() {
+    @Override
+    public Future<String> load() {
         return Future.succeededFuture(buildHttpServer())
                      .compose(server -> {
                          if (server == null) return Future.succeededFuture();
@@ -59,6 +59,20 @@ public abstract class Fighter extends Biplane {
                                           return server.deployMe(new DeploymentOptions());
                                       });
                      });
+    }
+
+
+    /**
+     * Attempts to load and initialize an HTTP server asynchronously.
+     * This method builds a KeelHttpServer instance if applicable and starts it.
+     * It is marked as deprecated and may be removed in future releases. Use {@link #load()} instead.
+     *
+     * @return a Future representing the asynchronous result of the HTTP server deployment process.
+     * @deprecated since version 2.1.1. Use {@link #load()} instead.
+     */
+    @Deprecated(since = "2.1.1")
+    public final Future<String> loadHttpServer() {
+        return load();
     }
 
     /**
