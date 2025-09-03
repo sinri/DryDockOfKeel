@@ -189,8 +189,9 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                      })
                      .compose(done -> {
                          getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
-                         issueRecordCenter = buildIssueRecordCenter();
-                         Keel.setIssueRecordCenter(issueRecordCenter);
+                         var c = buildIssueRecordCenter();
+                         replaceIssueRecordCenter(c);
+                         Keel.setIssueRecordCenter(c);
                          // 航海日志共享大计
                          if (!Objects.equals(getIssueRecordCenter(), KeelIssueRecordCenter.outputCenter())) {
                              var bypassLogger = getIssueRecordCenter().generateIssueRecorder(DryDockLogTopics.TopicDryDock, KeelEventLog::new);

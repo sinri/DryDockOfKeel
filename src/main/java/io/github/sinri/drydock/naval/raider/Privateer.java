@@ -1,7 +1,6 @@
 package io.github.sinri.drydock.naval.raider;
 
 import io.github.sinri.drydock.naval.base.Warship;
-import io.github.sinri.keel.facade.tesuto.instant.KeelInstantRunner;
 import io.github.sinri.keel.logger.KeelLogLevel;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.vertx.core.Future;
@@ -26,7 +25,6 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * <p>
  * 版本演进：
  * <ul>
- *   <li>1.2.0: 依赖于 {@link KeelInstantRunner}，直到 Keel 4.1.0 其被废弃</li>
  *   <li>2.1.0: 重构实现，与之前版本不兼容</li>
  *   <li>2.1.1: 支持 JDK 21+ 虚拟线程特性</li>
  * </ul>

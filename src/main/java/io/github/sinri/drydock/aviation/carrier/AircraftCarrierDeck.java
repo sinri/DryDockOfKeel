@@ -30,7 +30,7 @@ import java.util.List;
  */
 public abstract class AircraftCarrierDeck implements CommonUnit {
 
-    protected KeelIssueRecordCenter issueRecordCenter;
+    private KeelIssueRecordCenter issueRecordCenter;
     private KeelIssueRecorder<KeelEventLog> unitLogger;
     private KeelCliArgs cliArgs;
 
@@ -114,6 +114,14 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
     @Override
     public KeelIssueRecordCenter getIssueRecordCenter() {
         return issueRecordCenter;
+    }
+
+    /**
+     * @since 2.1.3
+     */
+    protected void replaceIssueRecordCenter(@Nonnull KeelIssueRecordCenter issueRecordCenter) {
+        this.issueRecordCenter = issueRecordCenter;
+        this.unitLogger = generateIssueRecorder(DryDockLogTopics.TopicDryDock, KeelEventLog::new);
     }
 
     public KeelIssueRecorder<KeelEventLog> getUnitLogger() {
