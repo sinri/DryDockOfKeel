@@ -1,36 +1,33 @@
 package io.github.sinri.drydock.naval.base;
 
+import io.github.sinri.drydock.common.Boat;
 import io.github.sinri.drydock.common.logging.DryDockLogTopics;
-import io.github.sinri.keel.core.json.JsonifiableSerializer;
+import io.github.sinri.keel.facade.cli.KeelCliProgram;
 import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
+import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.spi.cluster.ClusterManager;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
- * 一切海军舰船的基底，首先，得具备海洋航行的能力。 1. 建立航海日志记录器，藉此向标准输出记录一切运行时底层信息。 2. 获取本地配置。 3. 建立Keel引擎。 4. 获取远程配置。 5.
- * 建立事件通信中心，用于向事件日志中心进行事件报告。
- *
- * @since 1.1.0
+ * @since 3.0.0
  */
-abstract public class Warship implements Boat {
+abstract public class Warship extends KeelCliProgram implements Boat {
     public static final int EXIT_CODE_FOR_KEEL_INIT_FAILED = 1;
     public static final int EXIT_CODE_FOR_SELF_SINK = 0;
-    /**
-     * 航海日志记录器
-     */
     private final KeelIssueRecorder<KeelEventLog> unitLogger;
-    /**
-     * 应用级事件日志中心
-     */
     private KeelIssueRecordCenter issueRecordCenter;
+    private KeelMetricRecorder metricRecorder;
+
 
     public Warship() {
         this.issueRecordCenter = KeelIssueRecordCenter.outputCenter();
@@ -39,130 +36,110 @@ abstract public class Warship implements Boat {
         );
     }
 
-    /**
-     * @since 1.3.4
-     */
+    @Nullable
     abstract protected KeelIssueRecordCenter buildIssueRecordCenter();
 
-    /**
-     * @since 1.3.4
-     */
     public final KeelIssueRecordCenter getIssueRecordCenter() {
         return issueRecordCenter;
     }
 
-    /**
-     * @since 1.3.4
-     */
-    @Override
     public final <T extends KeelIssueRecord<T>> KeelIssueRecorder<T> generateIssueRecorder(
             @Nonnull String topic, @Nonnull Supplier<T> issueRecordBuilder
     ) {
         return getIssueRecordCenter().generateIssueRecorder(topic, issueRecordBuilder);
     }
 
-    /**
-     * @since 2.1.0
-     */
-    protected void loadJsonifiableSerializer() {
-        JsonifiableSerializer.register();
+    @Nullable
+    abstract protected KeelMetricRecorder buildMetricRecorder();
+
+    @Nonnull
+    abstract protected VertxOptions buildVertxOptions();
+
+    @Nullable
+    protected ClusterManager buildClusterManager() {
+        return null;
     }
 
-    /**
-     * 通过已加载的本地配置进行Vertx配置的构造。 此时可以使用航海日志记录器。
-     */
-    abstract public VertxOptions buildVertxOptions();
-
-    /**
-     * 起航。
-     */
     @Override
-    public final void launch() {
+    protected final void runWithCommandLine() {
         long startTime = System.currentTimeMillis();
-
-        loadJsonifiableSerializer();
 
         loadLocalConfiguration();
         this.getUnitLogger().info("LOCAL CONFIG LOADED (if any)");
 
         VertxOptions vertxOptions = buildVertxOptions();
+        ClusterManager clusterManager = buildClusterManager();
 
-        // todo 此处未考虑舰队模式，如果需要要新增 cluster master 的设定
-        Keel.initializeVertx(vertxOptions)
-            .compose(initialized -> {
-                this.getUnitLogger().info("KEEL INITIALIZED");
+        Future.succeededFuture()
+              .compose(v -> {
+                  if (clusterManager == null) {
+                      // NOT SUPPORT CLUSTER MODE
+                      return Keel.initializeVertx(vertxOptions);
+                  } else {
+                      return Keel.initializeVertx(vertxOptions, clusterManager);
+                  }
+              })
+              .compose(initialized -> {
+                  this.getUnitLogger().info("KEEL INITIALIZED");
+                  return loadRemoteConfiguration();
+              })
+              .compose(done -> {
+                  this.getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
 
-                // since 1.2.5 till 2.0.3
-                // Keel.setLogger(getLogger());
+                  // customized logging
+                  var builtIssueRecordCenter = buildIssueRecordCenter();
+                  if (builtIssueRecordCenter != null && builtIssueRecordCenter != issueRecordCenter) {
+                      issueRecordCenter = builtIssueRecordCenter;
+                      this.unitLogger.addBypassIssueRecorder(builtIssueRecordCenter.generateIssueRecorder(
+                              DryDockLogTopics.TopicDryDock, KeelEventLog::new
+                      ));
+                      Keel.setIssueRecordCenter(issueRecordCenter);
+                  }
 
-                return loadRemoteConfiguration();
-            })
-            .compose(done -> {
-                this.getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
-                issueRecordCenter = buildIssueRecordCenter();
-                Keel.setIssueRecordCenter(issueRecordCenter);
-                return launchAsWarship();
-            })
-            .onSuccess(done -> {
-                whenWarshipSetOff(startTime);
-            })
-            .onFailure(this::shipwreck);
+                  // metric recording
+                  this.metricRecorder = buildMetricRecorder();
+                  if (this.metricRecorder != null) {
+                      this.metricRecorder.start();
+                  }
+
+                  return launchAsWarship();
+              })
+              .onSuccess(done -> {
+                  whenLaunched(startTime);
+              })
+              .onFailure(this::handleError);
     }
 
-    /**
-     * @since 1.4.18
-     */
-    protected void whenWarshipSetOff(long startTime) {
+    protected void whenLaunched(long startTime) {
         long endTime = System.currentTimeMillis();
-        this.getUnitLogger().notice("Warship set off, spent " + (endTime - startTime) + " ms");
+        this.getUnitLogger().notice("Warship launched, spent " + (endTime - startTime) + " ms");
     }
 
-    /**
-     * 加载本地配置。 仅可以使用航海日志记录器。
-     */
     abstract protected void loadLocalConfiguration();
-
-    /**
-     * 加载远程配置。 此时已加载本地配置，已初始化Keel(Vert.x)。 仅可以使用航海日志记录器。
-     */
 
     abstract protected Future<Void> loadRemoteConfiguration();
 
-    /**
-     * 本地及远端配置文件已加载。 Keel已初始化。 可使用航海日志记录器以及应用级事件日志记录器。 在此方法中加载其他模块并开始航行。
-     */
     abstract protected Future<Void> launchAsWarship();
 
-    /**
-     * 发生海难时的标准处理程序，即向航海日志记录事故并以指定故障码退出。
-     */
     @Override
-    public void shipwreck(Throwable throwable) {
+    public void handleError(Throwable throwable) {
         this.getUnitLogger().exception(throwable, "Failed to launch, shipwreck");
         System.exit(EXIT_CODE_FOR_KEEL_INIT_FAILED);
     }
 
-    /**
-     * 打开通海阀进行自沉。
-     *
-     * @since 1.0.4
-     */
     @Override
-    public void sink() {
+    public void finish() {
         this.getUnitLogger().fatal("SINK");
-        Keel.close()
-            .onComplete(ar -> {
-                if (ar.failed()) {
-                    this.getUnitLogger().exception(ar.cause(), "Failure in closing Keel.");
-                }
-                this.getUnitLogger().fatal("Keel Sank.");
-                System.exit(EXIT_CODE_FOR_SELF_SINK);
-            });
+        System.exit(EXIT_CODE_FOR_SELF_SINK);
     }
 
-
-    protected KeelIssueRecorder<KeelEventLog> getUnitLogger() {
+    public final KeelIssueRecorder<KeelEventLog> getUnitLogger() {
         return unitLogger;
     }
 
+    @Nullable
+    @Override
+    public final KeelMetricRecorder getMetricRecorder() {
+        return metricRecorder;
+    }
 }

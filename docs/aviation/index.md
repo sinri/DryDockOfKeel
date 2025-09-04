@@ -55,44 +55,44 @@ aviation/
 ### 1. 基本应用程序结构
 
 ```java
-import io.github.sinri.drydock.aviation.carrier.AircraftCarrier;
-import io.github.sinri.drydock.aviation.aircraft.Bomber;
-import io.github.sinri.drydock.aviation.aircraft.Drone;
-import io.github.sinri.drydock.aviation.aircraft.Fighter;
+import io.github.sinri.drydock.naval.carrier.AircraftCarrier;
+import io.github.sinri.drydock.aviation.Bomber;
+import io.github.sinri.drydock.aviation.Drone;
+import io.github.sinri.drydock.aviation.Fighter;
 
 import javax.annotation.Nullable;
 
 public class MyApplication extends AircraftCarrier {
-    
+
     // 实现必要的抽象方法
     @Override
     protected String buildCliName() {
         return "my-microservice";
     }
-    
+
     @Override
     protected String buildCliDescription() {
         return "My microservice application";
     }
-    
+
     // 构造舰载机组件
     @Override
     protected Bomber constructBomber() {
         return new MyBomber(this);
     }
-    
+
     @Override
     protected Drone constructDrone() {
         return new MyDrone(this);
     }
-    
+
     @Override
     protected Fighter constructFighter(@Nullable Integer port) {
         return new MyFighter(this, port);
     }
-    
+
     // 应用程序入口
-    public static void main(String[] args) {
+    static void main(String[] args) {
         new MyApplication().launch(args);
     }
 }

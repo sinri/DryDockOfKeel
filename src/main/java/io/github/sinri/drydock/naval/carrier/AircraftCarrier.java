@@ -1,19 +1,16 @@
-package io.github.sinri.drydock.aviation.carrier;
+package io.github.sinri.drydock.naval.carrier;
 
-import io.github.sinri.drydock.aviation.aircraft.Bomber;
-import io.github.sinri.drydock.aviation.aircraft.Drone;
-import io.github.sinri.drydock.aviation.aircraft.Fighter;
+import io.github.sinri.drydock.aviation.Bomber;
+import io.github.sinri.drydock.aviation.Drone;
+import io.github.sinri.drydock.aviation.Fighter;
 import io.github.sinri.drydock.common.health.HealthMonitor;
 import io.github.sinri.drydock.common.health.HealthMonitorMixin;
 import io.github.sinri.drydock.common.health.HealthMonitorWithIssueRecorder;
 import io.github.sinri.drydock.common.health.HealthMonitorWithMetricRecorder;
-import io.github.sinri.drydock.common.logging.DryDockLogTopics;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSIssueAdapterImpl;
-import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSMetricRecorder;
 import io.github.sinri.keel.core.json.JsonifiableSerializer;
 import io.github.sinri.keel.facade.cli.KeelCliOption;
-import io.github.sinri.keel.logger.event.KeelEventLog;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
@@ -22,7 +19,6 @@ import io.vertx.core.VertxOptions;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
@@ -45,7 +41,6 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     private Bomber bomber;
     private Drone drone;
     private Fighter fighter;
-    private KeelMetricRecorder metricRecorder;
 
     protected abstract Bomber constructBomber();
 
@@ -140,6 +135,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     /**
      * @return the built VertxOptions instance.
      */
+    @Nonnull
     protected abstract VertxOptions buildVertxOptions();
 
     /**
@@ -150,111 +146,57 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     protected abstract Future<Void> loadRemoteConfiguration();
 
     @Override
-    protected final void runWithCommandLine() {
-        long startTime = System.currentTimeMillis();
-
-        // as of 2.1.0, register JsonifiableSerializer before everything.
-        this.loadJsonifiableSerializer();
-
-        loadLocalConfiguration();
-        getUnitLogger().info("LOCAL CONFIG LOADED (if any)");
-
-        VertxOptions vertxOptions = buildVertxOptions();
-
-        // todo 此处未考虑舰队模式，如果需要要新增 cluster master 的设定
-        Keel.initializeVertx(vertxOptions)
-            .onSuccess(init -> {
-                startWithKeelInitialized()
-                        .onSuccess(over -> {
-                            long endTime = System.currentTimeMillis();
-                            getUnitLogger().info("Ready, spent " + (endTime - startTime) + " ms");
-                        })
-                        .onFailure(throwable -> {
-                            getUnitLogger().exception(throwable, "SINK");
-                            System.exit(4);
-                        });
-            })
-            .onFailure(throwable -> {
-                getUnitLogger().exception(throwable, "Keel-Vertx Initialization Failed");
-                System.exit(2);
-            });
-    }
-
-    private Future<Void> startWithKeelInitialized() {
-        return Future.succeededFuture()
-                     .compose(initialized -> {
-                         getUnitLogger().info("KEEL INITIALIZED");
-                         // Keel.setLogger(getLogger());
-                         return loadRemoteConfiguration();
-                     })
-                     .compose(done -> {
-                         getUnitLogger().info("REMOTE CONFIG LOADED (if any)");
-                         var c = buildIssueRecordCenter();
-                         replaceIssueRecordCenter(c);
-                         Keel.setIssueRecordCenter(c);
-                         // 航海日志共享大计
-                         if (!Objects.equals(getIssueRecordCenter(), KeelIssueRecordCenter.outputCenter())) {
-                             var bypassLogger = getIssueRecordCenter().generateIssueRecorder(DryDockLogTopics.TopicDryDock, KeelEventLog::new);
-                             this.getUnitLogger().addBypassIssueRecorder(bypassLogger);
-                         } else {
-                             this.getUnitLogger().info("Bypass logging is ignored.");
-                         }
-
-                         // Metric Recorder
-                         this.metricRecorder = new AliyunSLSMetricRecorder();
-                         this.metricRecorder.start();
-
-                         return loadHealthMonitor();
-                     })
-                     .compose(v -> {
-                         getUnitLogger().info("Loaded Health Monitor");
-                         return prepare();
-                     })
-                     .compose(v -> {
-                         getUnitLogger().info("Prepared For Biz");
-                         boolean disableQueue = isQueueDisabled();
-                         if (!disableQueue) {
-                             drone = constructDrone();
-                         }
-                         if (drone != null) {
-                             return drone.load()
-                                         .onSuccess(done -> {
-                                             getUnitLogger().info("Loaded Queue");
-                                         });
-                         }
-                         return Future.succeededFuture();
-                     })
-                     .compose(v -> {
-                         boolean disableSundial = isSundialDisabled();
-                         if (!disableSundial) {
-                             bomber = constructBomber();
-                         }
-                         if (bomber != null) {
-                             return bomber.load()
+    protected Future<Void> launchAsWarship() {
+        return loadHealthMonitor()
+                .compose(v -> {
+                    getUnitLogger().info("Loaded Health Monitor: " + v);
+                    return prepare();
+                })
+                .compose(v -> {
+                    getUnitLogger().info("Prepared For Biz");
+                    boolean disableQueue = isQueueDisabled();
+                    if (!disableQueue) {
+                        drone = constructDrone();
+                    }
+                    if (drone != null) {
+                        return drone.load()
+                                    .onSuccess(done -> {
+                                        getUnitLogger().info("Loaded Queue");
+                                    });
+                    }
+                    return Future.succeededFuture(null);
+                })
+                .compose(v -> {
+                    boolean disableSundial = isSundialDisabled();
+                    if (!disableSundial) {
+                        bomber = constructBomber();
+                    }
+                    if (bomber != null) {
+                        return bomber.load()
+                                     .onSuccess(done -> {
+                                         getUnitLogger().info("Loaded Sundial");
+                                     });
+                    }
+                    return Future.succeededFuture(null);
+                })
+                .compose(v -> {
+                    boolean disableReceptionist = isReceptionistDisabled();
+                    if (!disableReceptionist) {
+                        String s = getCliArgs().readOption(optionReceptionistPort);
+                        Integer receptionistPort = (s == null ? null : Integer.parseInt(s));
+                        fighter = constructFighter(receptionistPort);
+                        if (fighter != null) {
+                            return fighter.load()
                                           .onSuccess(done -> {
-                                              getUnitLogger().info("Loaded Sundial");
+                                              getUnitLogger().info("Loaded Http Server on port: " + fighter.getHttpServerPort());
                                           });
-                         }
-                         return Future.succeededFuture();
-                     })
-                     .compose(v -> {
-                         boolean disableReceptionist = isReceptionistDisabled();
-                         if (!disableReceptionist) {
-                             String s = getCliArgs().readOption(optionReceptionistPort);
-                             Integer receptionistPort = (s == null ? null : Integer.parseInt(s));
-                             fighter = constructFighter(receptionistPort);
-                             if (fighter != null) {
-                                 return fighter.load()
-                                               .onSuccess(done -> {
-                                                   getUnitLogger().info("Loaded Http Server on port: " + fighter.configuredHttpServerPort());
-                                               });
-                             }
-                         }
-                         return Future.succeededFuture();
-                     })
-                     .compose(v -> {
-                         return ready();
-                     });
+                        }
+                    }
+                    return Future.succeededFuture();
+                })
+                .compose(v -> {
+                    return Future.succeededFuture();
+                });
     }
 
     /**
@@ -284,6 +226,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      */
     @Override
     public HealthMonitor<?> buildHealthMonitor() {
+        KeelMetricRecorder metricRecorder = getMetricRecorder();
         if (metricRecorder == null) {
             return new HealthMonitorWithIssueRecorder(generateIssueRecorder(HealthMonitorIssueRecord.TopicHealthMonitor, HealthMonitorIssueRecord::new));
         } else {
@@ -298,12 +241,4 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     @Nonnull
     protected abstract Future<Void> prepare();
 
-    @Nonnull
-    protected abstract Future<Void> ready();
-
-    @Nonnull
-    @Override
-    public KeelMetricRecorder getMetricRecorder() {
-        return this.metricRecorder;
-    }
 }

@@ -1,44 +1,20 @@
 package io.github.sinri.drydock.naval.raider;
 
 import io.github.sinri.drydock.naval.base.Warship;
+import io.github.sinri.keel.facade.cli.KeelCliArgsParser;
 import io.github.sinri.keel.logger.KeelLogLevel;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CountDownLatch;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
-/**
- * 私掠船 - 用于快速原型开发和测试的轻量级战舰实现。
- * <p>
- * 私掠船类提供了一个简化的战舰实现，主要用于：
- * <ul>
- *   <li>快速原型开发和测试</li>
- *   <li>简单的应用程序启动</li>
- *   <li>开发过程中的调试和验证</li>
- * </ul>
- *
- * <p>
- * 版本演进：
- * <ul>
- *   <li>2.1.0: 重构实现，与之前版本不兼容</li>
- *   <li>2.1.1: 支持 JDK 21+ 虚拟线程特性</li>
- * </ul>
- *
- * <p>
- * 使用方式：
- * <ol>
- *   <li>继承此类并实现 {@link #launchAsPrivateer()} 方法</li>
- *   <li>在IDE中通过 {@link #main(String[])} 方法启动，其会调用 {@link #launch()} 方法。注意不要自行重写 main 方法或直接调用 {@link #launch()} 方法。</li>
- *   <li>可选择性重写 {@link #starting()} 和 {@link #ending()} 方法自定义生命周期</li>
- * </ol>
- *
- * @since 2.1.0
- */
 public abstract class Privateer extends Warship {
     /**
      * 用于控制程序退出的同步锁。
@@ -77,9 +53,15 @@ public abstract class Privateer extends Warship {
         testInstance.countDownLatch = new CountDownLatch(1);
 
         // 启动私掠船实例
-        testInstance.launch();
+        testInstance.launch(args);
 
         testInstance.countDownLatch.await();
+    }
+
+    @Nullable
+    @Override
+    protected KeelCliArgsParser buildCliArgParser() {
+        return null;
     }
 
     /**
@@ -106,6 +88,7 @@ public abstract class Privateer extends Warship {
      *
      * @return 默认的 VertxOptions 实例
      */
+    @Nonnull
     @Override
     public VertxOptions buildVertxOptions() {
         return new VertxOptions();
@@ -225,8 +208,8 @@ public abstract class Privateer extends Warship {
      * @param startTime 战舰启航的时间戳
      */
     @Override
-    protected void whenWarshipSetOff(long startTime) {
-        super.whenWarshipSetOff(startTime);
+    protected void whenLaunched(long startTime) {
+        super.whenLaunched(startTime);
         System.exit(0);
     }
 }
