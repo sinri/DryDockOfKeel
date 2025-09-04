@@ -55,14 +55,14 @@ public abstract class AircraftCarrierDeck implements CommonUnit {
             this.cliArgs = argsParser.parse(args);
             runWithCommandLine();
         } catch (KeelCliArgsDefinitionError e) {
-            unitLogger.exception(e, "Failed to build command line parser.");
+            System.err.println("=== Define Error ===");
+            System.err.println(e.getMessage());
             System.exit(1);
         } catch (KeelCliArgsParseError e) {
-            // unitLogger.exception(e, "Failed to parse command line.");
-            System.out.printf("=== %s ===%n", buildCliName());
-            System.out.printf(buildCliDescription());
-            System.out.println("=== Arguments Error ===");
-            System.out.println(e.getMessage());
+            System.err.printf("=== %s ===%n", buildCliName());
+            System.err.println(buildCliDescription());
+            System.err.println("=== Arguments Error ===");
+            System.err.println(e.getMessage());
             System.exit(2);
         }
     }
