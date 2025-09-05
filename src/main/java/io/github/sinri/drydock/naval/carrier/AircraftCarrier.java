@@ -24,24 +24,48 @@ import java.util.regex.Pattern;
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
- * An further implementation of AircraftCarrierDeck.
- * By default, support Health Monitor, Queue, Sundial, HTTP Server.
+ * An advanced implementation of AircraftCarrierDeck that provides a complete application framework.
  * <p>
- * The start-up command line is
+ * This abstract class extends AircraftCarrierDeck with built-in support for:
+ * <ul>
+ *   <li>Health monitoring and metrics collection</li>
+ *   <li>Queue-based task processing (via Drone)</li>
+ *   <li>Scheduled task execution (via Bomber/Sundial)</li>
+ *   <li>HTTP server capabilities (via Fighter)</li>
+ * </ul>
+ * <p>
+ * Command line options:
  * {@code java -jar X.jar [--disableQueue] [--disableSundial] [--disableReceptionist] [--receptionistPort=8080]}
- * </p>
+ * <p>
+ * Subclasses must implement the abstract methods to provide specific component implementations.
  *
  * @since 1.5.0
  */
 public abstract class AircraftCarrier extends AircraftCarrierDeck implements HealthMonitorMixin {
+    /** Command line option to disable queue functionality. */
     public static final String optionDisableQueue = "disableQueue";
+    /** Command line option to disable sundial functionality. */
     public static final String optionDisableSundial = "disableSundial";
+    /** Command line option to disable receptionist functionality. */
     public static final String optionDisableReceptionist = "disableReceptionist";
+    /** Command line option to specify receptionist port. */
     public static final String optionReceptionistPort = "receptionistPort";
+    
+    /** The bomber component for scheduled task execution. */
     private Bomber bomber;
+    /** The drone component for queue-based task processing. */
     private Drone drone;
+    /** The fighter component for HTTP server capabilities. */
     private Fighter fighter;
 
+    /**
+     * Constructs the bomber component for scheduled task execution.
+     * <p>
+     * This method should return a configured Bomber instance that will handle
+     * time-related scheduled tasks through the Sundial system.
+     *
+     * @return a configured Bomber instance, or null if bomber functionality is disabled
+     */
     protected abstract Bomber constructBomber();
 
     /**
@@ -53,6 +77,14 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
         return bomber;
     }
 
+    /**
+     * Constructs the drone component for queue-based task processing.
+     * <p>
+     * This method should return a configured Drone instance that will handle
+     * queued tasks through the Queue system.
+     *
+     * @return a configured Drone instance, or null if queue functionality is disabled
+     */
     protected abstract Drone constructDrone();
 
     /**
@@ -64,6 +96,15 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
         return drone;
     }
 
+    /**
+     * Constructs the fighter component for HTTP server capabilities.
+     * <p>
+     * This method should return a configured Fighter instance that will provide
+     * HTTP server functionality on the specified port.
+     *
+     * @param port the port number for the HTTP server, or null to use default
+     * @return a configured Fighter instance, or null if receptionist functionality is disabled
+     */
     protected abstract Fighter constructFighter(@Nullable Integer port);
 
     /**
@@ -103,6 +144,9 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     }
 
     /**
+     * Checks if queue functionality is disabled via command line option.
+     *
+     * @return true if queue is disabled, false otherwise
      * @since 1.5.2
      */
     protected boolean isQueueDisabled() {
@@ -110,6 +154,9 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     }
 
     /**
+     * Checks if sundial functionality is disabled via command line option.
+     *
+     * @return true if sundial is disabled, false otherwise
      * @since 1.5.2
      */
     protected boolean isSundialDisabled() {
@@ -117,6 +164,9 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     }
 
     /**
+     * Checks if receptionist functionality is disabled via command line option.
+     *
+     * @return true if receptionist is disabled, false otherwise
      * @since 1.5.2
      */
     protected boolean isReceptionistDisabled() {
@@ -124,27 +174,50 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     }
 
     /**
-     * Load the local configuration synchronously into `Keel.getConfiguration()`.
-     * By default, it reads the local file "config.properties" to fetch config.
-     *
+     * Loads the local configuration synchronously into the Keel configuration system.
+     * <p>
+     * By default, this method reads the "config.properties" file from the classpath
+     * and loads it into the global Keel configuration.
      */
     protected void loadLocalConfiguration() {
         Keel.getConfiguration().loadPropertiesFile("config.properties");
     }
 
     /**
-     * @return the built VertxOptions instance.
+     * Builds the VertxOptions instance for the Vert.x runtime configuration.
+     * <p>
+     * This method should return a properly configured VertxOptions instance
+     * that defines the behavior of the Vert.x runtime.
+     *
+     * @return the configured VertxOptions instance
      */
     @Nonnull
     protected abstract VertxOptions buildVertxOptions();
 
     /**
-     * Load the remote configuration asynchronously into `Keel.getConfiguration()`.
+     * Loads the remote configuration asynchronously into the Keel configuration system.
+     * <p>
+     * This method should handle loading configuration from remote sources such as
+     * configuration servers, databases, or cloud services.
      *
-     * @return a future after done
+     * @return a Future that completes when the remote configuration is loaded
      */
     protected abstract Future<Void> loadRemoteConfiguration();
 
+    /**
+     * Launches the aircraft carrier as a warship with all configured components.
+     * <p>
+     * This method orchestrates the startup sequence:
+     * <ol>
+     *   <li>Loads health monitoring system</li>
+     *   <li>Prepares for business logic</li>
+     *   <li>Deploys queue system (if enabled)</li>
+     *   <li>Deploys sundial system (if enabled)</li>
+     *   <li>Deploys HTTP server (if enabled)</li>
+     * </ol>
+     *
+     * @return a Future that completes when all components are successfully deployed
+     */
     @Override
     protected Future<Void> launchAsWarship() {
         return loadHealthMonitor()
@@ -159,7 +232,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                         drone = constructDrone();
                     }
                     if (drone != null) {
-                        return drone.load()
+                        return drone.deployMe()
                                     .onSuccess(done -> {
                                         getUnitLogger().info("Loaded Queue");
                                     });
@@ -172,7 +245,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                         bomber = constructBomber();
                     }
                     if (bomber != null) {
-                        return bomber.load()
+                        return bomber.deployMe()
                                      .onSuccess(done -> {
                                          getUnitLogger().info("Loaded Sundial");
                                      });
@@ -186,7 +259,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                         Integer receptionistPort = (s == null ? null : Integer.parseInt(s));
                         fighter = constructFighter(receptionistPort);
                         if (fighter != null) {
-                            return fighter.load()
+                            return fighter.deployMe()
                                           .onSuccess(done -> {
                                               getUnitLogger().info("Loaded Http Server on port: " + fighter.getHttpServerPort());
                                           });
@@ -200,12 +273,26 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     }
 
     /**
+     * Loads and registers the JsonifiableSerializer for JSON serialization support.
+     * <p>
+     * This method registers the JsonifiableSerializer with the Keel framework,
+     * enabling automatic JSON serialization for objects that implement Jsonifiable.
+     *
      * @since 2.1.0
      */
     protected void loadJsonifiableSerializer() {
         JsonifiableSerializer.register();
     }
 
+    /**
+     * Builds the issue record center for logging and monitoring.
+     * <p>
+     * This method creates a KeelIssueRecordCenter that can send issue records
+     * to Aliyun SLS (Simple Log Service) if properly configured, or falls back
+     * to console output if SLS is disabled or unavailable.
+     *
+     * @return a configured KeelIssueRecordCenter instance
+     */
     protected KeelIssueRecordCenter buildIssueRecordCenter() {
         AliyunSLSIssueAdapterImpl aliyunSLSIssueAdapter = new AliyunSLSIssueAdapterImpl();
         boolean disabled = aliyunSLSIssueAdapter.isDisabled();
@@ -222,7 +309,15 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     }
 
     /**
-     * 如果不需要 HealthMonitor，重写方法使之返回null。
+     * Builds the health monitor instance for this aircraft carrier.
+     * <p>
+     * This method creates a health monitor that can record both issues and metrics.
+     * If a metric recorder is available, it uses HealthMonitorWithMetricRecorder;
+     * otherwise, it falls back to HealthMonitorWithIssueRecorder.
+     * <p>
+     * To disable health monitoring, override this method to return null.
+     *
+     * @return a configured HealthMonitor instance, or null to disable health monitoring
      */
     @Override
     public HealthMonitor<?> buildHealthMonitor() {
@@ -235,8 +330,13 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     }
 
     /**
-     * Prepare for business, after logger and health monitor initialized.
+     * Prepares the aircraft carrier for business operations.
+     * <p>
+     * This method is called after the logger and health monitor are initialized,
+     * but before the queue, sundial, and HTTP server components are deployed.
+     * Subclasses should implement their initialization logic here.
      *
+     * @return a Future that completes when preparation is finished
      */
     @Nonnull
     protected abstract Future<Void> prepare();

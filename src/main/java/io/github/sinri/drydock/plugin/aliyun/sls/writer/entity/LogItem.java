@@ -12,7 +12,7 @@ import java.util.List;
  * @see <a href=
  *         "https://help.aliyun.com/zh/sls/developer-reference/api-sls-2020-12-30-struct-logitem"
  *         >LogItem 实体格式定义</a>
- * @since 1.0
+ * @since 2.1.0
  */
 public class LogItem {
     private final int time;

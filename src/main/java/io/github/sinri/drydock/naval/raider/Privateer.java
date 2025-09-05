@@ -15,27 +15,44 @@ import java.util.concurrent.CountDownLatch;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
+/**
+ * Abstract base class for Privateer, providing a quick local testing and development startup framework.
+ * <p>
+ * Privateer is a special type of warship designed for rapid local testing and development scenarios.
+ * It implements automatic startup of subclasses through reflection mechanism and provides complete lifecycle management.
+ * <p>
+ * Key features:
+ * <ul>
+ *   <li>Automatic startup of subclass instances through reflection</li>
+ *   <li>Complete configuration loading and logging management</li>
+ *   <li>Virtual thread support (JDK 21+)</li>
+ *   <li>Automatic program exit after task completion</li>
+ * </ul>
+ * <p>
+ * Usage: Subclasses only need to implement the {@link #launchAsPrivateer()} method,
+ * then directly run the main method to start.
+ */
 public abstract class Privateer extends Warship {
     /**
-     * 用于控制程序退出的同步锁。
+     * Synchronization lock used to control program exit.
      * <p>
-     * 在 main 方法中创建，在启动完成后通过 {@link #launchAsWarship()} 方法释放，
-     * 确保程序能够正确退出。
+     * Created in the main method and released after startup completion through the {@link #launchAsWarship()} method,
+     * ensuring the program can exit properly.
      */
     private CountDownLatch countDownLatch;
 
     /**
-     * 私掠船的主入口点。
+     * Main entry point for Privateer.
      * <p>
-     * 通过反射机制动态创建调用类的实例并启动。
-     * 这种设计允许子类直接使用 main 方法启动而无需重复编写启动逻辑。
+     * Dynamically creates and starts an instance of the calling class through reflection mechanism.
+     * This design allows subclasses to directly use the main method for startup without duplicating startup logic.
      *
-     * @param args 命令行参数（当前未使用）
-     * @throws ClassNotFoundException    当无法找到调用类时抛出
-     * @throws NoSuchMethodException     当调用类缺少无参构造函数时抛出
-     * @throws InvocationTargetException 当构造函数调用失败时抛出
-     * @throws InstantiationException    当无法实例化调用类时抛出
-     * @throws IllegalAccessException    当访问构造函数被拒绝时抛出
+     * @param args Command line arguments (currently unused)
+     * @throws ClassNotFoundException    When the calling class cannot be found
+     * @throws NoSuchMethodException     When the calling class lacks a no-argument constructor
+     * @throws InvocationTargetException When constructor invocation fails
+     * @throws InstantiationException    When the calling class cannot be instantiated
+     * @throws IllegalAccessException    When access to constructor is denied
      */
     public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, InterruptedException {
         // 获取调用此 main 方法的类名
@@ -65,14 +82,14 @@ public abstract class Privateer extends Warship {
     }
 
     /**
-     * 构建事件日志记录中心。
+     * Builds the event log record center.
      * <p>
-     * 私掠船提供默认实现：使用简单的输出中心，将日志直接输出到控制台，
-     * 适用于开发和测试环境。
+     * Privateer provides a default implementation: uses a simple output center that directly outputs logs to console,
+     * suitable for development and testing environments.
      * <p>
-     * 子类可以重写此方法以提供自定义的日志记录中心实现。
+     * Subclasses can override this method to provide custom log record center implementation.
      *
-     * @return 输出类型的事件日志记录中心
+     * @return Output-type event log record center
      */
     @Override
     protected KeelIssueRecordCenter buildIssueRecordCenter() {
@@ -80,13 +97,13 @@ public abstract class Privateer extends Warship {
     }
 
     /**
-     * 构建 Vert.x 选项配置。
+     * Builds Vert.x options configuration.
      * <p>
-     * 私掠船提供默认实现：使用默认的 Vert.x 配置，适用于大多数开发和测试场景。
+     * Privateer provides a default implementation: uses default Vert.x configuration, suitable for most development and testing scenarios.
      * <p>
-     * 子类可以重写此方法以提供自定义的 Vert.x 配置。
+     * Subclasses can override this method to provide custom Vert.x configuration.
      *
-     * @return 默认的 VertxOptions 实例
+     * @return Default VertxOptions instance
      */
     @Nonnull
     @Override
@@ -95,12 +112,12 @@ public abstract class Privateer extends Warship {
     }
 
     /**
-     * 加载本地配置文件。
+     * Loads local configuration file.
      * <p>
-     * 私掠船提供默认实现：尝试加载 "config.properties" 配置文件。
-     * 如果文件不存在，操作会静默失败。
+     * Privateer provides a default implementation: attempts to load "config.properties" configuration file.
+     * If the file does not exist, the operation fails silently.
      * <p>
-     * 子类可以重写此方法以实现自定义的本地配置加载逻辑。
+     * Subclasses can override this method to implement custom local configuration loading logic.
      */
     @Override
     protected void loadLocalConfiguration() {
@@ -108,13 +125,13 @@ public abstract class Privateer extends Warship {
     }
 
     /**
-     * 加载远程配置。
+     * Loads remote configuration.
      * <p>
-     * 私掠船提供默认实现：不加载任何远程配置，直接返回成功的 Future。
+     * Privateer provides a default implementation: does not load any remote configuration, directly returns a successful Future.
      * <p>
-     * 子类可以重写此方法以实现自定义的远程配置加载逻辑。
+     * Subclasses can override this method to implement custom remote configuration loading logic.
      *
-     * @return 表示加载完成的成功 Future
+     * @return Future representing successful completion of loading
      */
     @Override
     protected Future<Void> loadRemoteConfiguration() {
@@ -122,19 +139,19 @@ public abstract class Privateer extends Warship {
     }
 
     /**
-     * 作为战舰启动的具体实现。
+     * Specific implementation for launching as a warship.
      * <p>
-     * 启动流程：
+     * Startup process:
      * <ol>
-     *   <li>设置日志级别为 DEBUG</li>
-     *   <li>执行启动前的准备工作 {@link #starting()}</li>
-     *   <li>调用子类实现的 {@link #launchAsPrivateer()}</li>
-     *   <li>无论成功或失败都执行清理工作 {@link #ending()}</li>
+     *   <li>Set log level to DEBUG</li>
+     *   <li>Execute pre-startup preparation work {@link #starting()}</li>
+     *   <li>Call subclass implementation of {@link #launchAsPrivateer()}</li>
+     *   <li>Execute cleanup work {@link #ending()} regardless of success or failure</li>
      * </ol>
      * <p>
-     * 自 2.1.1 版本起，在 JDK 21+ 环境下将自动应用虚拟线程特性。
+     * Since version 2.1.1, virtual thread features will be automatically applied in JDK 21+ environments.
      *
-     * @return 表示启动完成的 Future
+     * @return Future representing startup completion
      */
     @Override
     protected final Future<Void> launchAsWarship() {
@@ -159,25 +176,25 @@ public abstract class Privateer extends Warship {
     }
 
     /**
-     * 私掠船特定的启动逻辑。
+     * Privateer-specific startup logic.
      * <p>
-     * 子类必须实现此方法以定义具体的业务逻辑。
-     * 此方法在完成基础设施初始化后被调用。
+     * Subclasses must implement this method to define specific business logic.
+     * This method is called after infrastructure initialization is complete.
      * <p>
-     * 自 2.1.1 版本起，在 JDK 21+ 环境下将自动应用虚拟线程特性。
+     * Since version 2.1.1, virtual thread features will be automatically applied in JDK 21+ environments.
      *
-     * @return 表示私掠船启动完成的 Future
+     * @return Future representing Privateer startup completion
      */
     abstract protected Future<Void> launchAsPrivateer();
 
     /**
-     * 启动前的准备工作。
+     * Pre-startup preparation work.
      * <p>
-     * 私掠船提供默认实现：记录启动日志并返回成功的 Future。
+     * Privateer provides a default implementation: logs startup message and returns a successful Future.
      * <p>
-     * 子类可以重写此方法以添加自定义的启动前准备工作。
+     * Subclasses can override this method to add custom pre-startup preparation work.
      *
-     * @return 表示准备工作完成的 Future
+     * @return Future representing completion of preparation work
      */
     protected Future<Void> starting() {
         getUnitLogger().debug("starting...");
@@ -185,14 +202,14 @@ public abstract class Privateer extends Warship {
     }
 
     /**
-     * 结束时的清理工作。
+     * Cleanup work at the end.
      * <p>
-     * 私掠船提供默认实现：记录结束日志并返回成功的 Future。
-     * 无论启动成功或失败，此方法都会被调用。
+     * Privateer provides a default implementation: logs ending message and returns a successful Future.
+     * This method will be called regardless of whether startup succeeds or fails.
      * <p>
-     * 子类可以重写此方法以添加自定义的清理逻辑。
+     * Subclasses can override this method to add custom cleanup logic.
      *
-     * @return 表示清理工作完成的 Future
+     * @return Future representing completion of cleanup work
      */
     protected Future<Void> ending() {
         getUnitLogger().debug("ending...");
@@ -200,12 +217,12 @@ public abstract class Privateer extends Warship {
     }
 
     /**
-     * 战舰启航后的处理逻辑。
+     * Post-launch processing logic for warship.
      * <p>
-     * 私掠船在完成所有任务后，通过调用 {@link System#exit(int)} 强制退出程序。
-     * 这种设计确保了私掠船作为快速本地测试工具能够及时释放资源并退出。
+     * After completing all tasks, Privateer forces program exit by calling {@link System#exit(int)}.
+     * This design ensures that Privateer, as a rapid local testing tool, can timely release resources and exit.
      *
-     * @param startTime 战舰启航的时间戳
+     * @param startTime Timestamp when the warship launched
      */
     @Override
     protected void whenLaunched(long startTime) {

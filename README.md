@@ -3,30 +3,13 @@
 ![Maven Central](https://img.shields.io/maven-central/v/io.github.sinri/DryDock)
 ![GitHub](https://img.shields.io/github/license/sinri/DryDockOfKeel)
 
-以原型快速构建一个JAVA项目！
+快速构建一个可以运行的Java项目。
+目标是打包成jar文件通过命令行运行。
 
 ```xml
 
 <dependency>
   <groupId>io.github.sinri</groupId>
   <artifactId>DryDock</artifactId>
-  <version>2.1.1-rc.1</version>
 </dependency>
 ```
-
-# Units
-
-* Naval
-  * Carrier
-    * AircraftCarrier
-  * Melee
-    * Galley
-    * Caravel
-    * Ironclad
-    * Destroyer
-  * Ranged
-    * Quadrireme
-    * Frigate
-  * Raider
-    * Privateer
-    * ClassFileGeneratorForMySQLTables

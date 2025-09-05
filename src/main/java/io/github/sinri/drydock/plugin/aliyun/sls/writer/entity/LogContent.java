@@ -6,7 +6,7 @@ import io.github.sinri.drydock.plugin.aliyun.sls.writer.protocol.LogEntityDescri
 /**
  * @see <a
  *         href="https://help.aliyun.com/zh/sls/developer-reference/api-sls-2020-12-30-struct-logcontent">LogContent</a>
- * @since 1.0
+ * @since 2.1.0
  */
 public class LogContent {
     private final String key;

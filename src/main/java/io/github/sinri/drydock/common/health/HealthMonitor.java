@@ -9,8 +9,9 @@ import io.vertx.core.Future;
 import javax.annotation.Nonnull;
 
 /**
+ * As of 1.4.0, be abstract for two implementations.
+ *
  * @since 1.0.0
- * @since 1.4.0 be abstract for two implementations.
  */
 public abstract class HealthMonitor<X> extends KeelVerticleImpl {
     protected final long startTimestamp;

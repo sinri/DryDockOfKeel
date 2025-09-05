@@ -8,9 +8,11 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
  * A remote configuration loader based on Kumori-Baiyatan Protocol.
+ * <p>
+ * Expected to be used in `io.github.sinri.drydock.naval.base.Warship#loadRemoteConfiguration()`.
  *
  * @since 1.4.9
- * For `io.github.sinri.drydock.naval.base.Warship#loadRemoteConfiguration()`.
+ *
  */
 public final class BaiyatanConfigurationLoader {
     private final String kumoriUrl;
@@ -29,29 +31,30 @@ public final class BaiyatanConfigurationLoader {
         body.put("timestamp", timestamp);
         body.put("checksum", Keel.digestHelper().md5(kumoriClientCode + "@" + timestamp + "@" + kumoriClientSecret));
         return Keel.useWebClient(webClient -> webClient
-                        .postAbs(kumoriUrl + api)
-                        .sendJsonObject(body)
-                )
-                .compose(bufferHttpResponse -> {
-                    if (bufferHttpResponse.statusCode() != 200) {
-                        Keel.getLogger().error("CODE IS NOT 200 BUT " + bufferHttpResponse.statusCode() + ", Body: " + bufferHttpResponse.bodyAsString());
-                        throw new RuntimeException("CODE IS NOT 200 BUT " + bufferHttpResponse.statusCode());
-                    }
+                           .postAbs(kumoriUrl + api)
+                           .sendJsonObject(body)
+                   )
+                   .compose(bufferHttpResponse -> {
+                       if (bufferHttpResponse.statusCode() != 200) {
+                           Keel.getLogger()
+                               .error("CODE IS NOT 200 BUT " + bufferHttpResponse.statusCode() + ", Body: " + bufferHttpResponse.bodyAsString());
+                           throw new RuntimeException("CODE IS NOT 200 BUT " + bufferHttpResponse.statusCode());
+                       }
 
-                    JsonObject jsonObject = bufferHttpResponse.bodyAsJsonObject();
-                    if (jsonObject == null) {
-                        Keel.getLogger().error("Body NOT JSON OBJECT: " + bufferHttpResponse.bodyAsString());
-                        throw new RuntimeException("RESP IS NOT JSON Object but " + bufferHttpResponse.bodyAsString());
-                    }
+                       JsonObject jsonObject = bufferHttpResponse.bodyAsJsonObject();
+                       if (jsonObject == null) {
+                           Keel.getLogger().error("Body NOT JSON OBJECT: " + bufferHttpResponse.bodyAsString());
+                           throw new RuntimeException("RESP IS NOT JSON Object but " + bufferHttpResponse.bodyAsString());
+                       }
 
-                    String code = jsonObject.getString("code");
-                    if ("OK".equals(code)) {
-                        return Future.succeededFuture(jsonObject);
-                    } else {
-                        Object data = body.getValue("data");
-                        return Future.failedFuture("Kumori API RESPONDED FAILURE: " + data);
-                    }
-                });
+                       String code = jsonObject.getString("code");
+                       if ("OK".equals(code)) {
+                           return Future.succeededFuture(jsonObject);
+                       } else {
+                           Object data = body.getValue("data");
+                           return Future.failedFuture("Kumori API RESPONDED FAILURE: " + data);
+                       }
+                   });
     }
 
     /**

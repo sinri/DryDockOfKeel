@@ -43,8 +43,7 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
             return new AliyunSLSLogPutter(
                     aliyunSlsConfig.getAccessKeyId(),
                     aliyunSlsConfig.getAccessKeySecret(),
-                    aliyunSlsConfig.getEndpoint()
-            );
+                    aliyunSlsConfig.getEndpoint());
         } else {
             return null;
         }
@@ -52,12 +51,13 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
 
     @Override
     protected Future<Void> handleForTopic(String topic, List<KeelMetricRecord> buffer) {
-        if (buffer.isEmpty()) return Future.succeededFuture();
+        if (buffer.isEmpty())
+            return Future.succeededFuture();
 
         if (aliyunSlsConfig.isDisabled()) {
             buffer.forEach(item -> Keel.getLogger().debug(log -> {
                 log.classification("TOPIC:" + topic);
-                log.context(item.toJsonObject());
+                item.toJsonObject().forEach(entry -> log.context(entry.getKey(), entry.getValue()));
             }));
             return Future.succeededFuture();
         }
@@ -71,14 +71,14 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
         return logPutter.putLogs(
                 aliyunSlsConfig.getProject(),
                 aliyunSlsConfig.getLogstore(),
-                logGroup
-        );
+                logGroup);
     }
 
     /**
      * metricName: the metric name, eg: http_requests_count
-     * labels:     labels map, eg: {'idc': 'idc1', 'ip': '192.0.2.0', 'hostname': 'appserver1'}
-     * value:      double value, eg: 1.234
+     * labels: labels map, eg: {'idc': 'idc1', 'ip': '192.0.2.0', 'hostname':
+     * 'appserver1'}
+     * value: double value, eg: 1.234
      *
      * @return LogItem
      */

@@ -6,7 +6,7 @@ import com.google.protobuf.Descriptors;
 /**
  * Aliyun SLS Protobuf Definitions
  *
- * @since 1.0
+ * @since 2.1.0
  */
 public final class LogEntityDescriptors {
     private static final LogEntityDescriptors instance = new LogEntityDescriptors();

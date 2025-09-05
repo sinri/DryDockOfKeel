@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @since 1.0
+ * @since 2.1.0
  */
 public class LogGroupList {
     private final List<LogGroup> logGroups;

@@ -11,17 +11,19 @@ import javax.annotation.Nullable;
 public interface CommonUnit {
 
     /**
-     * @return a KeelIssueRecordCenter instance maintained by the implementation unit.
+     * @return the {@link KeelIssueRecordCenter} instance maintained by the implementation.
      * @since 1.3.4
      */
     KeelIssueRecordCenter getIssueRecordCenter();
 
 
     /**
-     * Retrieves a KeelMetricRecorder instance associated with the current unit.
+     * Retrieves the {@link KeelMetricRecorder} instance associated with the current unit,
+     * if existed, to record metrics.
+     * <p>
      * If no metric recorder is associated, this method returns null.
      *
-     * @return the KeelMetricRecorder instance, or null if not available.
+     * @return the {@link KeelMetricRecorder} instance, or null if not maintained.
      */
     @Nullable
     default KeelMetricRecorder getMetricRecorder() {

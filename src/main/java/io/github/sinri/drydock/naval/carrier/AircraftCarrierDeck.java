@@ -9,24 +9,26 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * A base class for a unit as a program entrance with command line options.
- * Default KeelIssueRecordCenter and KeelEventLogger provided.
+ * Aircraft carrier deck management system for naval operations.
  * <p>
- * The start-up command line is
- * {@code java -jar X.jar [...]}
+ * Provides command line interface capabilities for aircraft carrier deck operations,
+ * extending the base warship functionality with specialized deck management features.
  * <p>
- * This class is designed to be the base of the Program Entrance Class,
- * which would contain the `main` method where the `launch` method should be
- * called.
- * <p>
- * As of 2.1.0, the CLI module of vert.x is deprecated, so we use Picocli instead follow vert.x docs.
- * <p>
- * As of 2.1.1, the CLI module use {@link KeelCliArgsParser} to parse command line arguments.
+ * This class handles CLI argument parsing and provides abstract methods for
+ * defining program name and description specific to carrier deck operations.
  *
- * @since 1.5.0
+ * @since 3.0.0
  */
 public abstract class AircraftCarrierDeck extends Warship {
 
+    /**
+     * Builds the CLI argument parser with configured options.
+     * <p>
+     * Creates a new parser instance and adds all options returned by
+     * {@link #buildCliOptions()} method.
+     *
+     * @return configured CLI argument parser
+     */
     @Nonnull
     @Override
     protected final KeelCliArgsParser buildCliArgParser() {
@@ -40,23 +42,43 @@ public abstract class AircraftCarrierDeck extends Warship {
         return keelCliArgsParser;
     }
 
+    /**
+     * Builds the list of CLI options for the carrier deck operations.
+     * <p>
+     * Subclasses should override this method to provide specific command line
+     * options for their carrier deck implementation.
+     *
+     * @return list of CLI options, or null if no options are needed
+     */
     @Nullable
     protected List<KeelCliOption> buildCliOptions() {
         return null;
     }
 
     /**
-     * @return The command line program name.
+     * Builds the command line program name for carrier deck operations.
+     *
+     * @return the command line program name
      */
     @Nonnull
     protected abstract String buildCliName();
 
     /**
-     * @return The command line program description.
+     * Builds the command line program description for carrier deck operations.
+     *
+     * @return the command line program description
      */
     @Nonnull
     protected abstract String buildCliDescription();
 
+    /**
+     * Handles errors during carrier deck operations.
+     * <p>
+     * Logs the program name and description before delegating to the parent
+     * error handling mechanism.
+     *
+     * @param throwable the error to handle
+     */
     @Override
     public void handleError(Throwable throwable) {
         getUnitLogger().error("Program: " + buildCliName());

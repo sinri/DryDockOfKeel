@@ -1,15 +1,18 @@
 package io.github.sinri.drydock.common;
 
 /**
+ * The interface to define the abilities of a boat.
  * @since 3.0.0
  */
 public interface Boat extends CommonUnit {
 
     /**
      * Initiates the launching process for the current instance.
+     * <p>
      * This typically involves setting up configurations, initializing systems, and starting the main processing logic.
      *
-     * @param args An array of command-line arguments used during the launch.
+     * @param args An array of command-line arguments used during the launch,
+     *             commonly from the static method {@code main} of the main class.
      *             These arguments may be passed to customize and influence the launch behavior.
      */
     void launch(String[] args);
