@@ -88,7 +88,9 @@ abstract public class Warship extends KeelCliProgram implements Boat {
      * @return custom metric recorder, or null to disable metrics
      */
     @Nullable
-    abstract protected KeelMetricRecorder buildMetricRecorder();
+    protected KeelMetricRecorder buildMetricRecorder() {
+        return null;
+    }
 
     /**
      * Builds Vert.x options for the warship.

@@ -9,6 +9,7 @@ import io.github.sinri.drydock.common.health.HealthMonitorWithIssueRecorder;
 import io.github.sinri.drydock.common.health.HealthMonitorWithMetricRecorder;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSIssueAdapterImpl;
+import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSMetricRecorder;
 import io.github.sinri.keel.core.json.JsonifiableSerializer;
 import io.github.sinri.keel.facade.cli.KeelCliOption;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
@@ -299,6 +300,12 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                 throw e;
             }
         }
+    }
+
+    @Nullable
+    @Override
+    protected KeelMetricRecorder buildMetricRecorder() {
+        return new AliyunSLSMetricRecorder();
     }
 
     /**

@@ -21,6 +21,7 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
     private final String source;
     private final AliyunSlsConfigElement aliyunSlsConfig;
+    @Nullable
     private final AliyunSLSLogPutter logPutter;
 
     public AliyunSLSMetricRecorder() {
@@ -51,8 +52,9 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
 
     @Override
     protected Future<Void> handleForTopic(String topic, List<KeelMetricRecord> buffer) {
-        if (buffer.isEmpty())
+        if (buffer.isEmpty() || logPutter == null) {
             return Future.succeededFuture();
+        }
 
         if (aliyunSlsConfig.isDisabled()) {
             buffer.forEach(item -> Keel.getLogger().debug(log -> {
