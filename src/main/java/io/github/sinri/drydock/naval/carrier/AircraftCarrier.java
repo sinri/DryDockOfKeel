@@ -21,8 +21,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static io.github.sinri.keel.facade.KeelInstance.Keel;
-
 /**
  * An advanced implementation of AircraftCarrierDeck that provides a complete application framework.
  * <p>
@@ -42,20 +40,34 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * @since 1.5.0
  */
 public abstract class AircraftCarrier extends AircraftCarrierDeck implements HealthMonitorMixin {
-    /** Command line option to disable queue functionality. */
+    /**
+     * Command line option to disable queue functionality.
+     */
     public static final String optionDisableQueue = "disableQueue";
-    /** Command line option to disable sundial functionality. */
+    /**
+     * Command line option to disable sundial functionality.
+     */
     public static final String optionDisableSundial = "disableSundial";
-    /** Command line option to disable receptionist functionality. */
+    /**
+     * Command line option to disable receptionist functionality.
+     */
     public static final String optionDisableReceptionist = "disableReceptionist";
-    /** Command line option to specify receptionist port. */
+    /**
+     * Command line option to specify receptionist port.
+     */
     public static final String optionReceptionistPort = "receptionistPort";
-    
-    /** The bomber component for scheduled task execution. */
+
+    /**
+     * The bomber component for scheduled task execution.
+     */
     private Bomber bomber;
-    /** The drone component for queue-based task processing. */
+    /**
+     * The drone component for queue-based task processing.
+     */
     private Drone drone;
-    /** The fighter component for HTTP server capabilities. */
+    /**
+     * The fighter component for HTTP server capabilities.
+     */
     private Fighter fighter;
 
     /**
@@ -173,15 +185,6 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
         return getCliArgs().readFlag(optionDisableReceptionist);
     }
 
-    /**
-     * Loads the local configuration synchronously into the Keel configuration system.
-     * <p>
-     * By default, this method reads the "config.properties" file from the classpath
-     * and loads it into the global Keel configuration.
-     */
-    protected void loadLocalConfiguration() {
-        Keel.getConfiguration().loadPropertiesFile("config.properties");
-    }
 
     /**
      * Builds the VertxOptions instance for the Vert.x runtime configuration.
@@ -193,16 +196,6 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      */
     @Nonnull
     protected abstract VertxOptions buildVertxOptions();
-
-    /**
-     * Loads the remote configuration asynchronously into the Keel configuration system.
-     * <p>
-     * This method should handle loading configuration from remote sources such as
-     * configuration servers, databases, or cloud services.
-     *
-     * @return a Future that completes when the remote configuration is loaded
-     */
-    protected abstract Future<Void> loadRemoteConfiguration();
 
     /**
      * Launches the aircraft carrier as a warship with all configured components.

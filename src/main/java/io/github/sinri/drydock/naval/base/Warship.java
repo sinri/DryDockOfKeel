@@ -21,13 +21,17 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * Base class for naval warships that extends KeelCliProgram and implements Boat interface.
  * <p>Provides common functionality for warship initialization, configuration loading, and lifecycle management.
  * <p>Supports both local and remote configuration loading, issue recording, and metric collection.
- * 
+ *
  * @since 3.0.0
  */
 abstract public class Warship extends KeelCliProgram implements Boat {
-    /** Exit code when Keel initialization fails. */
+    /**
+     * Exit code when Keel initialization fails.
+     */
     public static final int EXIT_CODE_FOR_KEEL_INIT_FAILED = 1;
-    /** Exit code when warship intentionally sinks. */
+    /**
+     * Exit code when warship intentionally sinks.
+     */
     public static final int EXIT_CODE_FOR_SELF_SINK = 0;
     private final KeelIssueRecorder<KeelEventLog> unitLogger;
     private KeelIssueRecordCenter issueRecordCenter;
@@ -45,9 +49,10 @@ abstract public class Warship extends KeelCliProgram implements Boat {
     }
 
     /**
-     * Builds custom issue record center for logging.
-     * <p>Override to provide custom logging configuration.
-     * 
+     * Builds a custom issue record center for logging.
+     * <p>
+     * To provide custom logging configuration, a non-null instance should be returned.
+     *
      * @return custom issue record center, or null to use default
      */
     @Nullable
@@ -55,7 +60,7 @@ abstract public class Warship extends KeelCliProgram implements Boat {
 
     /**
      * Gets the current issue record center.
-     * 
+     *
      * @return the issue record center
      */
     public final KeelIssueRecordCenter getIssueRecordCenter() {
@@ -64,10 +69,10 @@ abstract public class Warship extends KeelCliProgram implements Boat {
 
     /**
      * Generates an issue recorder for the specified topic.
-     * 
-     * @param topic the logging topic
+     *
+     * @param topic              the logging topic
      * @param issueRecordBuilder supplier for creating issue records
-     * @param <T> the type of issue record
+     * @param <T>                the type of issue record
      * @return the generated issue recorder
      */
     public final <T extends KeelIssueRecord<T>> KeelIssueRecorder<T> generateIssueRecorder(
@@ -79,7 +84,7 @@ abstract public class Warship extends KeelCliProgram implements Boat {
     /**
      * Builds custom metric recorder for monitoring.
      * <p>Override to provide custom metric collection.
-     * 
+     *
      * @return custom metric recorder, or null to disable metrics
      */
     @Nullable
@@ -88,7 +93,7 @@ abstract public class Warship extends KeelCliProgram implements Boat {
     /**
      * Builds Vert.x options for the warship.
      * <p>Override to customize Vert.x configuration.
-     * 
+     *
      * @return Vert.x options configuration
      */
     @Nonnull
@@ -97,7 +102,7 @@ abstract public class Warship extends KeelCliProgram implements Boat {
     /**
      * Builds cluster manager for distributed mode.
      * <p>Override to enable clustering support.
-     * 
+     *
      * @return cluster manager, or null for single-node mode
      */
     @Nullable
@@ -158,7 +163,7 @@ abstract public class Warship extends KeelCliProgram implements Boat {
     /**
      * Called when warship successfully launches.
      * <p>Override to add custom post-launch logic.
-     * 
+     *
      * @param startTime the launch start time in milliseconds
      */
     protected void whenLaunched(long startTime) {
@@ -167,23 +172,31 @@ abstract public class Warship extends KeelCliProgram implements Boat {
     }
 
     /**
-     * Loads local configuration files.
-     * <p>Override to implement custom local configuration loading.
+     * Loads the local configuration synchronously into the Keel configuration system.
+     * <p>
+     * By default, this method reads the "config.properties" file from the classpath
+     * and loads it into the global Keel configuration.
      */
-    abstract protected void loadLocalConfiguration();
+    protected void loadLocalConfiguration() {
+        Keel.getConfiguration().loadPropertiesFile("config.properties");
+    }
 
     /**
-     * Loads remote configuration from external sources.
-     * <p>Override to implement custom remote configuration loading.
-     * 
+     * Loads remote configuration from external sources if needed.
+     * <p>
+     * By default, it is passed over.
+     * Override to implement custom remote configuration loading.
+     *
      * @return future that completes when configuration is loaded
      */
-    abstract protected Future<Void> loadRemoteConfiguration();
+    protected Future<Void> loadRemoteConfiguration() {
+        return Future.succeededFuture();
+    }
 
     /**
      * Launches the warship with all configurations loaded.
      * <p>Override to implement the main warship functionality.
-     * 
+     *
      * @return future that completes when warship is ready
      */
     abstract protected Future<Void> launchAsWarship();
@@ -202,7 +215,7 @@ abstract public class Warship extends KeelCliProgram implements Boat {
 
     /**
      * Gets the unit logger for this warship.
-     * 
+     *
      * @return the unit logger
      */
     public final KeelIssueRecorder<KeelEventLog> getUnitLogger() {
@@ -211,7 +224,7 @@ abstract public class Warship extends KeelCliProgram implements Boat {
 
     /**
      * Gets the metric recorder for this warship.
-     * 
+     *
      * @return the metric recorder, or null if not configured
      */
     @Nullable

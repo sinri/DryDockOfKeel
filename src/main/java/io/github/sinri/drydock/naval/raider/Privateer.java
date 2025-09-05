@@ -19,7 +19,8 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
  * Abstract base class for Privateer, providing a quick local testing and development startup framework.
  * <p>
  * Privateer is a special type of warship designed for rapid local testing and development scenarios.
- * It implements automatic startup of subclasses through reflection mechanism and provides complete lifecycle management.
+ * It implements automatic startup of subclasses through reflection mechanism and provides complete lifecycle
+ * management.
  * <p>
  * Key features:
  * <ul>
@@ -99,7 +100,8 @@ public abstract class Privateer extends Warship {
     /**
      * Builds Vert.x options configuration.
      * <p>
-     * Privateer provides a default implementation: uses default Vert.x configuration, suitable for most development and testing scenarios.
+     * Privateer provides a default implementation: uses default Vert.x configuration, suitable for most development and
+     * testing scenarios.
      * <p>
      * Subclasses can override this method to provide custom Vert.x configuration.
      *
@@ -124,19 +126,6 @@ public abstract class Privateer extends Warship {
         Keel.getConfiguration().loadPropertiesFile("config.properties");
     }
 
-    /**
-     * Loads remote configuration.
-     * <p>
-     * Privateer provides a default implementation: does not load any remote configuration, directly returns a successful Future.
-     * <p>
-     * Subclasses can override this method to implement custom remote configuration loading logic.
-     *
-     * @return Future representing successful completion of loading
-     */
-    @Override
-    protected Future<Void> loadRemoteConfiguration() {
-        return Future.succeededFuture();
-    }
 
     /**
      * Specific implementation for launching as a warship.

@@ -57,11 +57,6 @@ public class DryDockerLauncher extends AircraftCarrierDeck {
     }
 
     @Override
-    protected Future<Void> loadRemoteConfiguration() {
-        return Future.succeededFuture();
-    }
-
-    @Override
     protected Future<Void> launchAsWarship() {
         getUnitLogger().info(buildCliName() + ": " + buildCliDescription());
         return Keel.asyncSleep(1000)
