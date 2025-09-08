@@ -146,14 +146,18 @@ abstract public class Warship extends KeelCliProgram implements Boat {
                               getClass().getSimpleName(), KeelEventLog::new
                       ));
                       Keel.setIssueRecordCenter(issueRecordCenter);
+                      getUnitLogger().info("CUSTOM ISSUE RECORD CENTER LOADED");
                   }
 
                   // metric recording
                   this.metricRecorder = buildMetricRecorder();
                   if (this.metricRecorder != null) {
                       this.metricRecorder.start();
+                      getUnitLogger().info("CUSTOM METRIC RECORDER LOADED");
                   }
-
+                  return Future.succeededFuture();
+              })
+              .compose(v -> {
                   return launchAsWarship();
               })
               .onSuccess(done -> {

@@ -14,6 +14,7 @@ import io.vertx.core.json.JsonArray;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.github.sinri.keel.facade.KeelInstance.Keel;
@@ -25,9 +26,26 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
     private final String source;
     private final AliyunSlsConfigElement aliyunSlsConfig;
     private final AtomicBoolean stopRef = new AtomicBoolean(false);
-    private final AliyunSLSLogPutter logPutter;
+    private final int bufferSize;
+    @Nullable
+    private AliyunSLSLogPutter logPutter;
 
     public AliyunSLSIssueAdapterImpl() {
+        this(128);
+    }
+
+    /**
+     * Constructs an instance of {@code AliyunSLSIssueAdapterImpl} with the specified buffer size.
+     * Initializes the configuration for Aliyun SLS logging, and sets up the necessary components
+     * such as source and log producer based on the configuration.
+     *
+     * @param bufferSize the size of the buffer to be used for managing issue records. This determines
+     *                   how many issue records can be held before processing.
+     * @since 3.0.0
+     */
+    public AliyunSLSIssueAdapterImpl(int bufferSize) {
+        this.bufferSize = bufferSize;
+
         KeelConfigElement extract = Keel.getConfiguration().extract("aliyun", "sls");
         if (extract == null) {
             KeelConfigElement temp = new KeelConfigElement("sls");
@@ -63,7 +81,7 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
     @Override
     protected Future<Void> handleIssueRecordsForTopic(@Nonnull String topic, @Nonnull List<KeelIssueRecord<?>> buffer) {
-        if (aliyunSlsConfig.isDisabled()) {
+        if (aliyunSlsConfig.isDisabled() || logPutter == null) {
             buffer.forEach(item -> SyncStdoutAdapter.getInstance().record(topic, item));
             return Future.succeededFuture();
         }
@@ -99,8 +117,14 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
     @Override
     public void close(@Nonnull Promise<Void> promise) {
+        this.stopRef.set(true);
         if (this.logPutter != null) {
-            this.logPutter.close();
+            Keel.getVertx().executeBlocking((Callable<Void>) () -> {
+                awaitRecording();
+                return null;
+            });
+            logPutter.close();
+            logPutter = null;
         }
         promise.complete();
     }
@@ -112,14 +136,14 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
 
     @Override
     public boolean isClosed() {
-        if (aliyunSlsConfig.isDisabled()) {
-            return isStopped();
-        }
+        //        if (aliyunSlsConfig.isDisabled()) {
+        //            return isStopped();
+        //        }
         return isStopped() && this.logPutter == null;
     }
 
     @Override
     protected int bufferSize() {
-        return 512;
+        return bufferSize;
     }
 }
