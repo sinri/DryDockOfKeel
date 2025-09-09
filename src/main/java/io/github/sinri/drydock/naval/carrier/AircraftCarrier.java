@@ -8,6 +8,7 @@ import io.github.sinri.drydock.common.health.HealthMonitorMixin;
 import io.github.sinri.drydock.common.health.HealthMonitorWithIssueRecorder;
 import io.github.sinri.drydock.common.health.HealthMonitorWithMetricRecorder;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
+import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSDisabled;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSIssueAdapterImpl;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSMetricRecorder;
 import io.github.sinri.keel.core.json.JsonifiableSerializer;
@@ -288,17 +289,12 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      * @return a configured KeelIssueRecordCenter instance
      */
     protected KeelIssueRecordCenter buildIssueRecordCenter() {
-        AliyunSLSIssueAdapterImpl aliyunSLSIssueAdapter = new AliyunSLSIssueAdapterImpl();
-        boolean disabled = aliyunSLSIssueAdapter.isDisabled();
-        if (disabled) {
-            return KeelIssueRecordCenter.outputCenter();
-        } else {
-            try {
-                return KeelIssueRecordCenter.build(aliyunSLSIssueAdapter);
-            } catch (Throwable e) {
-                getUnitLogger().exception(e, "buildIssueRecordCenter error");
-                throw e;
-            }
+        try {
+            AliyunSLSIssueAdapterImpl aliyunSLSIssueAdapter = new AliyunSLSIssueAdapterImpl();
+            return KeelIssueRecordCenter.build(aliyunSLSIssueAdapter);
+        } catch (AliyunSLSDisabled e) {
+            getUnitLogger().exception(e, "buildIssueRecordCenter error");
+            return null;
         }
     }
 

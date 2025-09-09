@@ -8,6 +8,7 @@ import io.github.sinri.keel.logger.issue.record.KeelIssueRecord;
 import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.spi.cluster.ClusterManager;
 
@@ -143,9 +144,25 @@ abstract public class Warship extends KeelCliProgram implements Boat {
                   if (builtIssueRecordCenter != null && builtIssueRecordCenter != issueRecordCenter) {
                       issueRecordCenter = builtIssueRecordCenter;
                       this.unitLogger.addBypassIssueRecorder(builtIssueRecordCenter.generateIssueRecorder(
-                              getClass().getSimpleName(), KeelEventLog::new
+                              this.unitLogger.topic(), () -> {
+                                  KeelEventLog keelEventLog = new KeelEventLog();
+                                  Handler<KeelEventLog> recordFormatter = unitLogger.getRecordFormatter();
+                                  if (recordFormatter != null) {
+                                      recordFormatter.handle(keelEventLog);
+                                  }
+                                  return keelEventLog;
+                              }
                       ));
-                      Keel.setIssueRecordCenter(issueRecordCenter);
+                      Keel.getLogger().addBypassIssueRecorder(builtIssueRecordCenter.generateIssueRecorder(
+                              Keel.getLogger().topic(), () -> {
+                                  KeelEventLog keelEventLog = new KeelEventLog();
+                                  Handler<KeelEventLog> recordFormatter = Keel.getLogger().getRecordFormatter();
+                                  if (recordFormatter != null) {
+                                      recordFormatter.handle(keelEventLog);
+                                  }
+                                  return keelEventLog;
+                              }
+                      ));
                       getUnitLogger().info("CUSTOM ISSUE RECORD CENTER LOADED");
                   }
 
