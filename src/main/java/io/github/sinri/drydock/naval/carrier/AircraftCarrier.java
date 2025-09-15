@@ -301,7 +301,12 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     @Nullable
     @Override
     protected KeelMetricRecorder buildMetricRecorder() {
-        return new AliyunSLSMetricRecorder();
+        try {
+            return new AliyunSLSMetricRecorder();
+        } catch (AliyunSLSDisabled e) {
+            getUnitLogger().exception(e, "buildMetricRecorder error");
+            return null;
+        }
     }
 
     /**

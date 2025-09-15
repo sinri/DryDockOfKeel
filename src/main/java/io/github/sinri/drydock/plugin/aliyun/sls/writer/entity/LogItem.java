@@ -61,4 +61,19 @@ public class LogItem {
         }
         return builder.build();
     }
+
+    /**
+     * Computes and returns the probable size of all log contents combined.
+     * The size is calculated by summing the probable sizes of individual {@link LogContent} instances
+     * in the content list. If the list is empty, the method returns 0.
+     *
+     * @return The total probable size of all log contents in bytes.
+     * @since 3.0.0
+     */
+    public Integer getProbableSize() {
+        return getContents().stream()
+                            .map(LogContent::getProbableSize)
+                            .reduce(Integer::sum)
+                            .orElse(0);
+    }
 }

@@ -49,19 +49,15 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         }
 
         aliyunSlsConfig = new AliyunSlsConfigElement(extract);
-        ensureEnabled();
+        if (aliyunSlsConfig.isDisabled()) {
+            throw new AliyunSLSDisabled();
+        }
 
         this.source = AliyunSLSLogPutter.buildSource(aliyunSlsConfig.getSource());
         this.logPutter = this.buildProducer();
 
         // let us start
         this.start();
-    }
-
-    public void ensureEnabled() throws AliyunSLSDisabled {
-        if (aliyunSlsConfig.isDisabled()) {
-            throw new AliyunSLSDisabled();
-        }
     }
 
     private AliyunSLSLogPutter buildProducer() {

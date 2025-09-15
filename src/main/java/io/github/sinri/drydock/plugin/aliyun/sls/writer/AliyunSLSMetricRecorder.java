@@ -8,7 +8,7 @@ import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -21,46 +21,35 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
     private final String source;
     private final AliyunSlsConfigElement aliyunSlsConfig;
-    @Nullable
+    @Nonnull
     private final AliyunSLSLogPutter logPutter;
 
-    public AliyunSLSMetricRecorder() {
+    public AliyunSLSMetricRecorder() throws AliyunSLSDisabled {
         KeelConfigElement extract = Keel.getConfiguration().extract("aliyun", "sls_metric");
         if (extract == null) {
-            KeelConfigElement temp = new KeelConfigElement("sls_metric");
-            temp.ensureChild("disabled").setValue("YES");
-            aliyunSlsConfig = new AliyunSlsConfigElement(temp);
-        } else {
-            aliyunSlsConfig = new AliyunSlsConfigElement(extract);
+            throw new AliyunSLSDisabled();
+        }
+        aliyunSlsConfig = new AliyunSlsConfigElement(extract);
+        if (aliyunSlsConfig.isDisabled()) {
+            throw new AliyunSLSDisabled();
         }
 
         this.source = AliyunSLSLogPutter.buildSource(aliyunSlsConfig.getSource());
         this.logPutter = this.buildProducer();
     }
 
-    @Nullable
+    @Nonnull
     private AliyunSLSLogPutter buildProducer() {
-        if (!aliyunSlsConfig.isDisabled()) {
-            return new AliyunSLSLogPutter(
-                    aliyunSlsConfig.getAccessKeyId(),
-                    aliyunSlsConfig.getAccessKeySecret(),
-                    aliyunSlsConfig.getEndpoint());
-        } else {
-            return null;
-        }
+        return new AliyunSLSLogPutter(
+                aliyunSlsConfig.getAccessKeyId(),
+                aliyunSlsConfig.getAccessKeySecret(),
+                aliyunSlsConfig.getEndpoint()
+        );
     }
 
     @Override
     protected Future<Void> handleForTopic(String topic, List<KeelMetricRecord> buffer) {
-        if (buffer.isEmpty() || logPutter == null) {
-            return Future.succeededFuture();
-        }
-
-        if (aliyunSlsConfig.isDisabled()) {
-            buffer.forEach(item -> Keel.getLogger().debug(log -> {
-                log.classification("TOPIC:" + topic);
-                item.toJsonObject().forEach(entry -> log.context(entry.getKey(), entry.getValue()));
-            }));
+        if (buffer.isEmpty()) {
             return Future.succeededFuture();
         }
 
@@ -73,7 +62,8 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
         return logPutter.putLogs(
                 aliyunSlsConfig.getProject(),
                 aliyunSlsConfig.getLogstore(),
-                logGroup);
+                logGroup
+        );
     }
 
     /**
@@ -113,5 +103,11 @@ public class AliyunSLSMetricRecorder extends KeelMetricRecorder {
         }
         logItem.addContent(labelsKey, labelsBuilder.toString());
         return logItem;
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        logPutter.close();
     }
 }

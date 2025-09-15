@@ -12,6 +12,7 @@ import java.util.List;
  * @since 2.1.0
  */
 public class LogGroup {
+    final static long maxSizeBytes = 5L * 1024 * 1024; // 5MB limit
     private final String topic;
     private final String source;
     private final List<LogTag> logTags;
@@ -38,7 +39,6 @@ public class LogGroup {
     public String getTopic() {
         return topic;
     }
-
 
     /**
      * Get the log source
@@ -111,5 +111,70 @@ public class LogGroup {
         logItems.forEach(logItem -> builder.addRepeatedField(logGroupDescriptor.findFieldByName("Logs"), logItem.toProtobuf()));
         logTags.forEach(logTag -> builder.addRepeatedField(logGroupDescriptor.findFieldByName("LogTags"), logTag.toProtobuf()));
         return builder.build();
+    }
+
+    /**
+     * 阿里云日志服务要求日志组中每条日志下的Value部分建议不超过1MB，而写入日志的接口每一次可以接受的原始数据大小不超过10MB。
+     * 所以需要将日志组拆分成多个日志组，尽量确保每次调用不超标。
+     * <p>
+     * 拆分规则为仅看日志组里的Value部分字节数来计算，在日志组内Value已达到5MB时即拆分。
+     *
+     * @return 拆分后的日志组列表
+     */
+    public List<LogGroup> divide() {
+        final List<LogItem> logItems = getLogItems();
+
+        // Early exit if no items to process
+        if (logItems.isEmpty()) {
+            return List.of(this);
+        }
+
+        // Use divideLogItemsParts to get the divided log item groups
+        List<List<LogItem>> logItemParts = divideLogItemsParts();
+
+        // Convert each part to a LogGroup
+        final List<LogGroup> result = new ArrayList<>();
+        final List<LogTag> sharedLogTags = getLogTags(); // Cache to avoid repeated calls
+
+        for (List<LogItem> part : logItemParts) {
+            LogGroup group = new LogGroup(getTopic(), getSource());
+            group.addLogTags(sharedLogTags);
+            group.addLogItems(part);
+            result.add(group);
+        }
+
+        return result;
+    }
+
+    private List<List<LogItem>> divideLogItemsParts() {
+        final List<LogItem> logItems = getLogItems();
+        if (logItems.isEmpty()) {
+            return List.of();
+        }
+
+        final List<List<LogItem>> parts = new ArrayList<>();
+        List<LogItem> part = new ArrayList<>();
+        long cache = 0;
+
+        for (LogItem logItem : logItems) {
+            long itemSize = logItem.getProbableSize();
+
+            // Check if adding this item would exceed the limit
+            if (cache > 0 && (cache + itemSize) > maxSizeBytes) {
+                // Current part is full, start a new one
+                parts.add(part);
+                part = new ArrayList<>();
+                cache = 0;
+            }
+
+            // Add item to current part
+            part.add(logItem);
+            cache += itemSize;
+        }
+
+        // Add the last part if it has items
+        parts.add(part);
+
+        return parts;
     }
 }

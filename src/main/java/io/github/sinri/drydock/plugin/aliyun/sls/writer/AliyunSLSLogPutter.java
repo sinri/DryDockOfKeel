@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -24,7 +25,7 @@ import static io.github.sinri.keel.facade.KeelInstance.Keel;
 /**
  * @since 2.1.0
  */
-class AliyunSLSLogPutter {
+class AliyunSLSLogPutter implements Closeable {
     @Nonnull
     private final String accessKeyId;
     @Nonnull
@@ -62,6 +63,7 @@ class AliyunSLSLogPutter {
         return configuredSourceExpression.replaceAll("\\[IP]", localHostAddress);
     }
 
+    @Override
     public void close() {
         Keel.getLogger().debug("Closing AliyunSLSLogPutter web client");
         this.webClient.close();
@@ -75,7 +77,9 @@ class AliyunSLSLogPutter {
      *
      * @param logGroup 需要拆分的日志组
      * @return 拆分后的日志组列表
+     * @deprecated use {@link LogGroup#divide()}
      */
+    @Deprecated
     private List<LogGroup> divideLogGroup(@Nonnull LogGroup logGroup) {
         List<LogGroup> array = new ArrayList<>();
 
@@ -110,7 +114,7 @@ class AliyunSLSLogPutter {
     }
 
     public Future<Void> putLogs(@Nonnull String project, @Nonnull String logstore, @Nonnull LogGroup logGroup) {
-        List<LogGroup> logGroups = divideLogGroup(logGroup);
+        List<LogGroup> logGroups = logGroup.divide();
         return Keel.asyncCallIteratively(logGroups, x -> putLogsImpl(project, logstore, x));
     }
 
@@ -189,7 +193,7 @@ class AliyunSLSLogPutter {
     }
 
     /**
-     * Get current date in GMT format as required by SLS API.
+     * Get the current date in GMT format as required by SLS API.
      *
      * @return Date string in RFC1123 format
      */
