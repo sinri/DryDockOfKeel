@@ -1,7 +1,6 @@
 package io.github.sinri.drydock.plugin.aliyun.sls.writer;
 
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.entity.LogGroup;
-import io.github.sinri.drydock.plugin.aliyun.sls.writer.entity.LogItem;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.protocol.Lz4Utils;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
@@ -67,50 +66,6 @@ class AliyunSLSLogPutter implements Closeable {
     public void close() {
         Keel.getLogger().debug("Closing AliyunSLSLogPutter web client");
         this.webClient.close();
-    }
-
-    /**
-     * 阿里云日志服务要求日志组中每条日志下的Value部分建议不超过1MB，而写入日志的接口每一次可以接受的原始数据大小不超过10MB。
-     * 所以需要将日志组拆分成多个日志组，尽量确保每次调用不超标。
-     * <p>
-     * 拆分规则为仅看日志组里的Value部分字节数来计算，在日志组内Value已达到5MB时即拆分。
-     *
-     * @param logGroup 需要拆分的日志组
-     * @return 拆分后的日志组列表
-     * @deprecated use {@link LogGroup#divide()}
-     */
-    @Deprecated
-    private List<LogGroup> divideLogGroup(@Nonnull LogGroup logGroup) {
-        List<LogGroup> array = new ArrayList<>();
-
-        LogGroup ptr = new LogGroup(logGroup.getTopic(), logGroup.getSource());
-        ptr.addLogTags(logGroup.getLogTags());
-
-        List<LogItem> logItems = logGroup.getLogItems();
-        long byteCount = 0;
-        for (var logItem : logItems) {
-            for (var c : logItem.getContents()) {
-                String v = c.getValue();
-                if (v != null) {
-                    byteCount += v.getBytes(StandardCharsets.UTF_8).length;
-                }
-            }
-            ptr.addLogItem(logItem);
-
-            if (byteCount > 5 * 1024 * 1024) {
-                // divide here
-                array.add(ptr);
-                ptr = new LogGroup(logGroup.getTopic(), logGroup.getSource());
-                ptr.addLogTags(logGroup.getLogTags());
-                byteCount = 0; // Reset byte count for new group
-            }
-        }
-
-        if (!ptr.getLogItems().isEmpty()) {
-            array.add(ptr);
-        }
-
-        return array;
     }
 
     public Future<Void> putLogs(@Nonnull String project, @Nonnull String logstore, @Nonnull LogGroup logGroup) {
