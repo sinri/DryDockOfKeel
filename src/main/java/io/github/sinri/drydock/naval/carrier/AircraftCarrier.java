@@ -3,17 +3,15 @@ package io.github.sinri.drydock.naval.carrier;
 import io.github.sinri.drydock.aviation.Bomber;
 import io.github.sinri.drydock.aviation.Drone;
 import io.github.sinri.drydock.aviation.Fighter;
-import io.github.sinri.drydock.common.health.HealthMonitor;
-import io.github.sinri.drydock.common.health.HealthMonitorMixin;
-import io.github.sinri.drydock.common.health.HealthMonitorWithIssueRecorder;
-import io.github.sinri.drydock.common.health.HealthMonitorWithMetricRecorder;
+import io.github.sinri.drydock.aviation.ObservationBalloon;
+import io.github.sinri.drydock.common.health.ObservationBalloonDelegate;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSDisabled;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSIssueAdapterImpl;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSMetricRecorder;
-import io.github.sinri.keel.core.json.JsonifiableSerializer;
 import io.github.sinri.keel.facade.cli.KeelCliOption;
 import io.github.sinri.keel.logger.issue.center.KeelIssueRecordCenter;
+import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
@@ -41,7 +39,11 @@ import java.util.regex.Pattern;
  *
  * @since 1.5.0
  */
-public abstract class AircraftCarrier extends AircraftCarrierDeck implements HealthMonitorMixin {
+public abstract class AircraftCarrier extends AircraftCarrierDeck {
+    /**
+     * Command line option to disable monitor functionality.
+     */
+    public static final String optionDisableMonitor = "disableMonitor";
     /**
      * Command line option to disable queue functionality.
      */
@@ -62,15 +64,40 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
     /**
      * The bomber component for scheduled task execution.
      */
+    @Nullable
     private Bomber bomber;
     /**
      * The drone component for queue-based task processing.
      */
+    @Nullable
     private Drone drone;
     /**
      * The fighter component for HTTP server capabilities.
      */
+    @Nullable
     private Fighter fighter;
+    /**
+     * The observation balloon component for runtime monitoring.
+     */
+    @Nullable
+    private ObservationBalloon observationBalloon;
+
+    /**
+     * Constructs the observation balloon component for runtime monitoring.
+     *
+     * @return the created {@link ObservationBalloon} instance, or null if disabled
+     */
+    @Nullable
+    protected ObservationBalloon constructObservationBalloon() {
+        KeelMetricRecorder metricRecorder = getMetricRecorder();
+        if (metricRecorder == null) {
+            KeelIssueRecorder<HealthMonitorIssueRecord> issueRecorder = generateIssueRecorder(HealthMonitorIssueRecord.TopicHealthMonitor, HealthMonitorIssueRecord::new);
+            ObservationBalloonDelegate delegate = ObservationBalloonDelegate.createWithIssueRecorder(issueRecorder);
+            return new ObservationBalloon(this, delegate);
+        } else {
+            return new ObservationBalloon(this, ObservationBalloonDelegate.createWithMetricRecorder(metricRecorder));
+        }
+    }
 
     /**
      * Constructs the bomber component for scheduled task execution.
@@ -80,6 +107,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      *
      * @return a configured Bomber instance, or null if bomber functionality is disabled
      */
+    @Nullable
     protected abstract Bomber constructBomber();
 
     /**
@@ -87,6 +115,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      *
      * @since 1.5.2
      */
+    @Nullable
     public Bomber getBomber() {
         return bomber;
     }
@@ -99,6 +128,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      *
      * @return a configured Drone instance, or null if queue functionality is disabled
      */
+    @Nullable
     protected abstract Drone constructDrone();
 
     /**
@@ -106,6 +136,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      *
      * @since 1.5.2
      */
+    @Nullable
     public Drone getDrone() {
         return drone;
     }
@@ -119,6 +150,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      * @param port the port number for the HTTP server, or null to use default
      * @return a configured Fighter instance, or null if receptionist functionality is disabled
      */
+    @Nullable
     protected abstract Fighter constructFighter(@Nullable Integer port);
 
     /**
@@ -126,6 +158,7 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      *
      * @since 1.5.2
      */
+    @Nullable
     public Fighter getFighter() {
         return this.fighter;
     }
@@ -153,14 +186,28 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
                                           .matcher(s)
                                           .matches();
                         })
-                        .description("Port for the receptionist")
+                        .description("Port for the receptionist"),
+                new KeelCliOption()
+                        .alias(optionDisableMonitor)
+                        .flag()
+                        .description("Disable monitor functionality")
         );
+    }
+
+    /**
+     * Checks if the monitor functionality is disabled via the specified command line option.
+     *
+     * @return true if the monitor is disabled, false otherwise
+     * @since 3.0.1
+     */
+    protected boolean isMonitorDisabled() {
+        return getCliArgs().readFlag(optionDisableMonitor);
     }
 
     /**
      * Checks if queue functionality is disabled via command line option.
      *
-     * @return true if queue is disabled, false otherwise
+     * @return true if the queue is disabled, false otherwise
      * @since 1.5.2
      */
     protected boolean isQueueDisabled() {
@@ -215,68 +262,70 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
      */
     @Override
     protected Future<Void> launchAsWarship() {
-        return loadHealthMonitor()
-                .compose(v -> {
-                    getUnitLogger().info("Loaded Health Monitor: " + v);
-                    return prepare();
-                })
-                .compose(v -> {
-                    getUnitLogger().info("Prepared For Biz");
-                    boolean disableQueue = isQueueDisabled();
-                    if (!disableQueue) {
-                        drone = constructDrone();
-                    }
-                    if (drone != null) {
-                        return drone.deployMe()
-                                    .onSuccess(done -> {
-                                        getUnitLogger().info("Loaded Queue");
-                                    });
-                    }
-                    return Future.succeededFuture(null);
-                })
-                .compose(v -> {
-                    boolean disableSundial = isSundialDisabled();
-                    if (!disableSundial) {
-                        bomber = constructBomber();
-                    }
-                    if (bomber != null) {
-                        return bomber.deployMe()
-                                     .onSuccess(done -> {
-                                         getUnitLogger().info("Loaded Sundial");
-                                     });
-                    }
-                    return Future.succeededFuture(null);
-                })
-                .compose(v -> {
-                    boolean disableReceptionist = isReceptionistDisabled();
-                    if (!disableReceptionist) {
-                        String s = getCliArgs().readOption(optionReceptionistPort);
-                        Integer receptionistPort = (s == null ? null : Integer.parseInt(s));
-                        fighter = constructFighter(receptionistPort);
-                        if (fighter != null) {
-                            return fighter.deployMe()
+        return Future.succeededFuture()
+                     .compose(v -> {
+                         boolean disableMonitor = isMonitorDisabled();
+                         if (!disableMonitor) {
+                             observationBalloon = constructObservationBalloon();
+                         }
+                         if (observationBalloon != null) {
+                             return observationBalloon.deployMe()
+                                                      .onSuccess(done -> {
+                                                          getUnitLogger().info("Loaded Health Monitor");
+                                                      });
+                         }
+                         return Future.succeededFuture(null);
+                     })
+                     .compose(v -> {
+                         return prepare()
+                                 .onSuccess(done -> {
+                                     getUnitLogger().info("Prepared For Biz");
+                                 });
+                     })
+                     .compose(v -> {
+                         boolean disableQueue = isQueueDisabled();
+                         if (!disableQueue) {
+                             drone = constructDrone();
+                         }
+                         if (drone != null) {
+                             return drone.deployMe()
+                                         .onSuccess(done -> {
+                                             getUnitLogger().info("Loaded Queue");
+                                         });
+                         }
+                         return Future.succeededFuture(null);
+                     })
+                     .compose(v -> {
+                         boolean disableSundial = isSundialDisabled();
+                         if (!disableSundial) {
+                             bomber = constructBomber();
+                         }
+                         if (bomber != null) {
+                             return bomber.deployMe()
                                           .onSuccess(done -> {
-                                              getUnitLogger().info("Loaded Http Server on port: " + fighter.getHttpServerPort());
+                                              getUnitLogger().info("Loaded Sundial");
                                           });
-                        }
-                    }
-                    return Future.succeededFuture();
-                })
-                .compose(v -> {
-                    return Future.succeededFuture();
-                });
-    }
-
-    /**
-     * Loads and registers the JsonifiableSerializer for JSON serialization support.
-     * <p>
-     * This method registers the JsonifiableSerializer with the Keel framework,
-     * enabling automatic JSON serialization for objects that implement Jsonifiable.
-     *
-     * @since 2.1.0
-     */
-    protected void loadJsonifiableSerializer() {
-        JsonifiableSerializer.register();
+                         }
+                         return Future.succeededFuture(null);
+                     })
+                     .compose(v -> {
+                         boolean disableReceptionist = isReceptionistDisabled();
+                         if (!disableReceptionist) {
+                             String s = getCliArgs().readOption(optionReceptionistPort);
+                             Integer receptionistPort = (s == null ? null : Integer.parseInt(s));
+                             fighter = constructFighter(receptionistPort);
+                             if (fighter != null) {
+                                 return fighter.deployMe()
+                                               .onSuccess(done -> {
+                                                   getUnitLogger().info("Loaded Http Server on port: " + fighter.getHttpServerPort());
+                                               });
+                             }
+                         }
+                         return Future.succeededFuture();
+                     })
+                     .compose(v -> {
+                         return Future.succeededFuture();
+                     });
     }
 
     /**
@@ -306,27 +355,6 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck implements Hea
         } catch (AliyunSLSDisabled e) {
             getUnitLogger().exception(e, "buildMetricRecorder error");
             return null;
-        }
-    }
-
-    /**
-     * Builds the health monitor instance for this aircraft carrier.
-     * <p>
-     * This method creates a health monitor that can record both issues and metrics.
-     * If a metric recorder is available, it uses HealthMonitorWithMetricRecorder;
-     * otherwise, it falls back to HealthMonitorWithIssueRecorder.
-     * <p>
-     * To disable health monitoring, override this method to return null.
-     *
-     * @return a configured HealthMonitor instance, or null to disable health monitoring
-     */
-    @Override
-    public HealthMonitor<?> buildHealthMonitor() {
-        KeelMetricRecorder metricRecorder = getMetricRecorder();
-        if (metricRecorder == null) {
-            return new HealthMonitorWithIssueRecorder(generateIssueRecorder(HealthMonitorIssueRecord.TopicHealthMonitor, HealthMonitorIssueRecord::new));
-        } else {
-            return new HealthMonitorWithMetricRecorder(metricRecorder);
         }
     }
 
