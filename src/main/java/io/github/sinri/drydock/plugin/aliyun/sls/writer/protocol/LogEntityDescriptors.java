@@ -14,6 +14,7 @@ public final class LogEntityDescriptors {
     private final Descriptors.Descriptor contentDescriptor;
     private final Descriptors.Descriptor logTagDescriptor;
     private final Descriptors.Descriptor logGroupDescriptor;
+    @Deprecated
     private final Descriptors.Descriptor logGroupListDescriptor;
 
     private LogEntityDescriptors() {
@@ -198,6 +199,7 @@ public final class LogEntityDescriptors {
         return logTagDescriptor;
     }
 
+    @Deprecated
     public Descriptors.Descriptor getLogGroupListDescriptor() {
         return logGroupListDescriptor;
     }

@@ -69,8 +69,9 @@ class AliyunSLSLogPutter implements Closeable {
     }
 
     public Future<Void> putLogs(@Nonnull String project, @Nonnull String logstore, @Nonnull LogGroup logGroup) {
-        List<LogGroup> logGroups = logGroup.divide();
-        return Keel.asyncCallIteratively(logGroups, x -> putLogsImpl(project, logstore, x));
+        //List<LogGroup> logGroups = logGroup.divide();
+        //return Keel.asyncCallIteratively(logGroups, x -> putLogsImpl(project, logstore, x));
+        return putLogsImpl(project, logstore, logGroup);
     }
 
     /**
@@ -179,7 +180,8 @@ class AliyunSLSLogPutter implements Closeable {
             String date,
             Map<String, String> headers,
             String uri,
-            @Nullable String queries) {
+            @Nullable String queries
+    ) {
         StringBuilder sb = new StringBuilder();
         sb.append(method).append("\n");
         if (body != null) {

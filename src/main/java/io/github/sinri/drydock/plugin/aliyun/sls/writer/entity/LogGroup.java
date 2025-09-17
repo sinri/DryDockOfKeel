@@ -17,6 +17,7 @@ public class LogGroup {
     private final String source;
     private final List<LogTag> logTags;
     private final List<LogItem> logItems;
+    private int probableSize = 0;
 
     /**
      * Create a LogGroup with topic and source
@@ -90,12 +91,16 @@ public class LogGroup {
      * @return this instance for chaining
      */
     public LogGroup addLogItems(List<LogItem> logItems) {
-        this.logItems.addAll(logItems);
+        for (var logItem : logItems) {
+            addLogItem(logItem);
+        }
+
         return this;
     }
 
     public LogGroup addLogItem(LogItem logItem) {
         this.logItems.add(logItem);
+        probableSize += logItem.getProbableSize();
         return this;
     }
 
@@ -120,7 +125,9 @@ public class LogGroup {
      * 拆分规则为仅看日志组里的Value部分字节数来计算，在日志组内Value已达到5MB时即拆分。
      *
      * @return 拆分后的日志组列表
+     * @deprecated 在上层直接divide，而不是在
      */
+    @Deprecated(since = "3.0.0.2", forRemoval = true)
     public List<LogGroup> divide() {
         final List<LogItem> logItems = getLogItems();
 
@@ -146,6 +153,7 @@ public class LogGroup {
         return result;
     }
 
+    @Deprecated(since = "3.0.0.2", forRemoval = true)
     private List<List<LogItem>> divideLogItemsParts() {
         final List<LogItem> logItems = getLogItems();
         if (logItems.isEmpty()) {
@@ -176,5 +184,13 @@ public class LogGroup {
         parts.add(part);
 
         return parts;
+    }
+
+    /**
+     * @return 缓存好的大约尺寸
+     * @since 3.0.0.2
+     */
+    public int getProbableSize() {
+        return probableSize;
     }
 }
