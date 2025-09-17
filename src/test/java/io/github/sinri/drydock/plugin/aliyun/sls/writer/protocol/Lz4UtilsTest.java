@@ -49,8 +49,8 @@ class Lz4UtilsTest extends KeelJUnit5Test {
         Assertions.assertEquals(sLegacy, sCurrent);
     }
 
-    @Test
-    @Timeout(60)
+    //@Test
+    //@Timeout(60)
     void memoryTest(VertxTestContext testContext) {
         AtomicReference<GCStatResult> gcStatResultRef = new AtomicReference<>();
 

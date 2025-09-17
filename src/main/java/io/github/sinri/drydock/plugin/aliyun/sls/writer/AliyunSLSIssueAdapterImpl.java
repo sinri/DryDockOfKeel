@@ -74,39 +74,47 @@ public class AliyunSLSIssueAdapterImpl extends AliyunSLSIssueAdapter {
         AtomicReference<LogGroup> currentLogGroupRef = new AtomicReference<>(new LogGroup(topic, source));
 
         return Keel.asyncCallIteratively(buffer, eventLog -> {
-            LogItem logItem = new LogItem(Math.toIntExact(eventLog.timestamp() / 1000));
-            logItem.addContent(KeelIssueRecord.AttributeLevel, eventLog.level().name());
-            List<String> classification = eventLog.classification();
-            if (!classification.isEmpty()) {
-                logItem.addContent(KeelIssueRecord.AttributeClassification,
-                        String.valueOf(new JsonArray(classification)));
-            }
-            eventLog.attributes().forEach(entry -> {
-                if (entry.getValue() == null) {
-                    logItem.addContent(entry.getKey(), null);
-                } else {
-                    logItem.addContent(entry.getKey(), String.valueOf(entry.getValue()));
-                }
-            });
-            Throwable exception = eventLog.exception();
-            if (exception != null) {
-                // as of 2.1.0.1, use JsonifiedThrowable
-                JsonifiedThrowable jsonifiedThrowable = JsonifiedThrowable.wrap(exception);
-                logItem.addContent(KeelIssueRecord.AttributeException, jsonifiedThrowable.toJsonExpression());
-            }
+                       LogItem logItem = new LogItem(Math.toIntExact(eventLog.timestamp() / 1000));
+                       logItem.addContent(KeelIssueRecord.AttributeLevel, eventLog.level().name());
+                       List<String> classification = eventLog.classification();
+                       if (!classification.isEmpty()) {
+                           logItem.addContent(KeelIssueRecord.AttributeClassification,
+                                   String.valueOf(new JsonArray(classification)));
+                       }
+                       eventLog.attributes().forEach(entry -> {
+                           if (entry.getValue() == null) {
+                               logItem.addContent(entry.getKey(), null);
+                           } else {
+                               logItem.addContent(entry.getKey(), String.valueOf(entry.getValue()));
+                           }
+                       });
+                       Throwable exception = eventLog.exception();
+                       if (exception != null) {
+                           // as of 2.1.0.1, use JsonifiedThrowable
+                           JsonifiedThrowable jsonifiedThrowable = JsonifiedThrowable.wrap(exception);
+                           logItem.addContent(KeelIssueRecord.AttributeException, jsonifiedThrowable.toJsonExpression());
+                       }
 
-            LogGroup currentLogGroup = currentLogGroupRef.get();
-            currentLogGroup.addLogItem(logItem);
-            if (currentLogGroup.getProbableSize() > 5 * 1024 * 1024) {
-                return this.logPutter.putLogs(aliyunSlsConfig.getProject(), aliyunSlsConfig.getLogstore(), currentLogGroup)
-                                     .compose(v -> {
-                                         currentLogGroupRef.set(new LogGroup(topic, source));
-                                         return Future.succeededFuture();
-                                     });
-            } else {
-                return Future.succeededFuture();
-            }
-        });
+                       LogGroup currentLogGroup = currentLogGroupRef.get();
+                       currentLogGroup.addLogItem(logItem);
+                       if (currentLogGroup.getProbableSize() > 5 * 1024 * 1024) {
+                           return this.logPutter.putLogs(aliyunSlsConfig.getProject(), aliyunSlsConfig.getLogstore(), currentLogGroup)
+                                                .compose(v -> {
+                                                    currentLogGroupRef.set(new LogGroup(topic, source));
+                                                    return Future.succeededFuture();
+                                                });
+                       } else {
+                           return Future.succeededFuture();
+                       }
+                   })
+                   .compose(v -> {
+                       LogGroup currentLogGroup = currentLogGroupRef.get();
+                       if (currentLogGroup.getProbableSize() > 0) {
+                           return this.logPutter.putLogs(aliyunSlsConfig.getProject(), aliyunSlsConfig.getLogstore(), currentLogGroup);
+                       } else {
+                           return Future.succeededFuture();
+                       }
+                   });
     }
 
     @Deprecated(forRemoval = true, since = "3.0.0.2")
