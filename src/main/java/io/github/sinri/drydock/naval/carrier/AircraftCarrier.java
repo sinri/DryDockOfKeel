@@ -6,6 +6,7 @@ import io.github.sinri.drydock.aviation.Fighter;
 import io.github.sinri.drydock.aviation.ObservationBalloon;
 import io.github.sinri.drydock.common.health.ObservationBalloonDelegate;
 import io.github.sinri.drydock.common.logging.issue.HealthMonitorIssueRecord;
+import io.github.sinri.drydock.naval.base.Warship;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSDisabled;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSIssueAdapterImpl;
 import io.github.sinri.drydock.plugin.aliyun.sls.writer.AliyunSLSMetricRecorder;
@@ -257,11 +258,14 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck {
      *   <li>Deploys sundial system (if enabled)</li>
      *   <li>Deploys HTTP server (if enabled)</li>
      * </ol>
+     * <p>
+     *     As of 3.0.2, this method is final.
+     *     Override {@link AircraftCarrier#prepare()} and {@link Warship#whenLaunched(long)} to handle your customized business logic.
      *
      * @return a Future that completes when all components are successfully deployed
      */
     @Override
-    protected Future<Void> launchAsWarship() {
+    protected final Future<Void> launchAsWarship() {
         return Future.succeededFuture()
                      .compose(v -> {
                          boolean disableMonitor = isMonitorDisabled();
