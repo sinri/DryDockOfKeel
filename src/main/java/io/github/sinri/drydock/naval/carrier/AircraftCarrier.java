@@ -16,11 +16,15 @@ import io.github.sinri.keel.logger.issue.recorder.KeelIssueRecorder;
 import io.github.sinri.keel.logger.metric.KeelMetricRecorder;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
+import io.vertx.ext.web.client.WebClient;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+
+import static io.github.sinri.keel.facade.KeelInstance.Keel;
 
 /**
  * An advanced implementation of AircraftCarrierDeck that provides a complete application framework.
@@ -61,6 +65,9 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck {
      * Command line option to specify receptionist port.
      */
     public static final String optionReceptionistPort = "receptionistPort";
+
+    @Nullable
+    private WebClient sharedWebClient;
 
     /**
      * The bomber component for scheduled task execution.
@@ -266,6 +273,8 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck {
      */
     @Override
     protected final Future<Void> launchAsWarship() {
+        sharedWebClient = constructSharedWebClient();
+
         return Future.succeededFuture()
                      .compose(v -> {
                          boolean disableMonitor = isMonitorDisabled();
@@ -374,4 +383,47 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck {
     @Nonnull
     protected abstract Future<Void> prepare();
 
+
+    /**
+     * Constructs a shared {@link WebClient} instance for use within the application.
+     * This method provides a centralized WebClient that can be shared across
+     * various components to perform HTTP-based operations using the Vert.x framework.
+     *
+     * @return a shared {@link WebClient} instance, or null if shared WebClient is not enabled
+     * @since 3.0.2
+     */
+    @Nullable
+    protected WebClient constructSharedWebClient() {
+        return WebClient.create(Keel.getVertx());
+    }
+
+    /**
+     * Executes an operation using a shared or temporary {@link WebClient} instance.
+     * If a shared WebClient is available, it uses the shared instance. Otherwise,
+     * it creates a temporary WebClient instance for the requested operation, ensuring
+     * proper cleanup of the temporary instance after use.
+     *
+     * @param <R>   the type of the result produced by the operation performed on the WebClient
+     * @param usage the function representing the operation to be performed, which takes a
+     *              {@link WebClient} as input and returns a {@link Future} of type R. Must not close the WebClient.
+     * @return a {@link Future} that represents the result of the operation performed on the WebClient
+     */
+    @Nonnull
+    public <R> Future<R> useSharedWebClient(@Nonnull Function<WebClient, Future<R>> usage) {
+        return Future.succeededFuture()
+                     .compose(v -> {
+                         if (sharedWebClient == null) {
+                             WebClient tempWebClient = WebClient.create(Keel.getVertx());
+                             return Future.succeededFuture()
+                                          .compose(vv -> {
+                                              return usage.apply(tempWebClient);
+                                          })
+                                          .andThen(ar -> {
+                                              tempWebClient.close();
+                                          });
+                         } else {
+                             return usage.apply(sharedWebClient);
+                         }
+                     });
+    }
 }
