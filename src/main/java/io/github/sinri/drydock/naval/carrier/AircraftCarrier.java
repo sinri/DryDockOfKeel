@@ -91,20 +91,31 @@ public abstract class AircraftCarrier extends AircraftCarrierDeck {
     private ObservationBalloon observationBalloon;
 
     /**
+     * @return the delegate for observation balloon component
+     * @since 4.1.5
+     */
+    @Nullable
+    protected ObservationBalloonDelegate constructObservationBalloonDelegate() {
+        KeelMetricRecorder metricRecorder = getMetricRecorder();
+        if (metricRecorder == null) {
+            KeelIssueRecorder<HealthMonitorIssueRecord> issueRecorder = generateIssueRecorder(HealthMonitorIssueRecord.TopicHealthMonitor, HealthMonitorIssueRecord::new);
+            return ObservationBalloonDelegate.createWithIssueRecorder(issueRecorder, null);
+        } else {
+            return ObservationBalloonDelegate.createWithMetricRecorder(metricRecorder, null);
+        }
+    }
+
+    /**
      * Constructs the observation balloon component for runtime monitoring.
+     * As of 4.1.5, it is final, use {@link AircraftCarrier#constructObservationBalloonDelegate()} instead to customize.
      *
      * @return the created {@link ObservationBalloon} instance, or null if disabled
      */
     @Nullable
-    protected ObservationBalloon constructObservationBalloon() {
-        KeelMetricRecorder metricRecorder = getMetricRecorder();
-        if (metricRecorder == null) {
-            KeelIssueRecorder<HealthMonitorIssueRecord> issueRecorder = generateIssueRecorder(HealthMonitorIssueRecord.TopicHealthMonitor, HealthMonitorIssueRecord::new);
-            ObservationBalloonDelegate delegate = ObservationBalloonDelegate.createWithIssueRecorder(issueRecorder);
-            return new ObservationBalloon(this, delegate);
-        } else {
-            return new ObservationBalloon(this, ObservationBalloonDelegate.createWithMetricRecorder(metricRecorder));
-        }
+    protected final ObservationBalloon constructObservationBalloon() {
+        ObservationBalloonDelegate delegate = constructObservationBalloonDelegate();
+        if (delegate == null) return null;
+        return new ObservationBalloon(this, delegate);
     }
 
     /**
