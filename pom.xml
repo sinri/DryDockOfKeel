@@ -6,14 +6,14 @@
 
     <groupId>io.github.sinri</groupId>
     <artifactId>DryDock</artifactId>
-    <!--            <version>3.0.2-SNAPSHOT</version>-->
-    <version>3.0.2-rc.5</version>
+    <version>3.0.2</version>
+    <!--    <version>3.0.2-rc.6</version>-->
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <vertxVersion>5.0.4</vertxVersion>
+        <vertxVersion>5.0.5</vertxVersion>
     </properties>
 
     <name>Dry Dock of Keel</name>
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>io.github.sinri</groupId>
             <artifactId>Keel</artifactId>
-            <version>4.1.5-rc.5</version>
+            <version>4.1.5</version>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

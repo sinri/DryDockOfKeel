@@ -181,6 +181,7 @@ abstract public class Warship extends KeelCliProgram implements Boat {
                   whenLaunched(startTime);
               })
               .onFailure(this::handleError);
+        affix();
     }
 
     /**
@@ -254,5 +255,12 @@ abstract public class Warship extends KeelCliProgram implements Boat {
     @Override
     public final KeelMetricRecorder getMetricRecorder() {
         return metricRecorder;
+    }
+
+    /**
+     * @since 3.0.2
+     */
+    protected void affix() {
+        // do nothing by default, or you may need a latch to keep the main process alive.
     }
 }
